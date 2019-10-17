@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 using BinaryPack.Delegates;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Helpers;
+using BinaryPack.Serialization.Extensions;
 
 namespace BinaryPack.Serialization
 {
@@ -43,17 +44,7 @@ namespace BinaryPack.Serialization
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitStackalloc(property.PropertyType);
-                    il.EmitStoreLocal(0);
-                    il.EmitLoadLocal(0);
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.EmitReadMember(property);
-                    il.EmitStoreToAddress(property.PropertyType);
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.EmitLoadLocal(0);
-                    il.EmitLoadInt32(property.PropertyType.GetSize());
-                    il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
-                    il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Write, null);
+                    il.EmitSerializeUnmanagedProperty(property);
                 }
 
                 il.Emit(OpCodes.Ret);
@@ -82,19 +73,7 @@ namespace BinaryPack.Serialization
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitStackalloc(property.PropertyType);
-                    il.EmitLoadInt32(property.PropertyType.GetSize());
-                    il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
-                    il.EmitStoreLocal(1);
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.EmitLoadLocal(1);
-                    il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
-                    il.Emit(OpCodes.Pop);
-                    il.EmitLoadLocal(0);
-                    il.Emit(OpCodes.Ldloca_S, 1);
-                    il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
-                    il.EmitLoadFromAddress(property.PropertyType);
-                    il.EmitWriteMember(property);
+                    il.EmitDeserializeUnmanagedProperty(property);
                 }
 
                 il.EmitLoadLocal(0);
