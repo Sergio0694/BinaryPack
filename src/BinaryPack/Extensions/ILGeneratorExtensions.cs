@@ -172,7 +172,7 @@ namespace System.Reflection.Emit
         /// <param name="size">The number of items of the specified type to fit onto the created buffer</param>
         public static void EmitStackalloc(this ILGenerator il, Type type, int size = 1)
         {
-            il.EmitLoadInt32(Marshal.SizeOf(type) * size);
+            il.EmitLoadInt32(type.GetSize() * size);
             il.Emit(OpCodes.Conv_U);
             il.Emit(OpCodes.Localloc);
         }

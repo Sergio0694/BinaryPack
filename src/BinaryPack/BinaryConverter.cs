@@ -37,7 +37,7 @@ namespace BinaryPack
                     il.EmitStoreToAddress(property.PropertyType);
                     il.Emit(OpCodes.Ldarg_1);
                     il.EmitLoadLocal(0);
-                    il.EmitLoadInt32(Marshal.SizeOf(property.PropertyType));
+                    il.EmitLoadInt32(property.PropertyType.GetSize());
                     il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
                     il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Write, null);
                 }
