@@ -33,5 +33,19 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadFromAddress(property.PropertyType);
             il.EmitWriteMember(property);
         }
+
+        /// <summary>
+        /// Emits the necessary instructions to deserialize a <see cref="string"/> value to a target <see cref="System.IO.Stream"/> instance
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="property">The property to deserialize</param>
+        public static void EmitDeserializeStringProperty(this ILGenerator il, PropertyInfo property)
+        {
+            il.EmitLoadArgument(Arguments.Read.Stream);
+            il.EmitStackalloc(typeof(int));
+            il.EmitLoadInt32(sizeof(int));
+            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
+            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
+        }
     }
 }

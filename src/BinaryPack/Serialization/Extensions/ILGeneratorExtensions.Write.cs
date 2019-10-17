@@ -40,31 +40,42 @@ namespace BinaryPack.Serialization.Extensions
         /// <param name="property">The property to serialize</param>
         public static void EmitSerializeStringProperty(this ILGenerator il, PropertyInfo property)
         {
-            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property)];
+            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
+            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
-            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
+            il.EmitCall(OpCodes.Call, KnownMethods.String.AsSpan, null);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetByteCount, null);
             il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Write.Int);
+            il.EmitLoadInt32(sizeof(int));
+            il.Emit(OpCodes.Add);
             il.EmitStackalloc();
             il.EmitStoreLocal(Locals.Write.BytePtr);
 
-            // _ = Encoding.UTF8.GetBytes(obj.Property.AsSpan(), new Span<byte>(p, size);
+            // *p = size;
+            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitLoadLocal(Locals.Write.Int);
+            il.EmitStoreToAddress(typeof(int));
+
+            // _ = Encoding.UTF8.GetBytes(obj.Property.AsSpan(), new Span<byte>(p + 4, size);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
-            il.Emit(OpCodes.Newobj, KnownMethods.String.AsSpan);
+            il.EmitCall(OpCodes.Call, KnownMethods.String.AsSpan, null);
             il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitAddOffset(sizeof(int));
             il.EmitLoadLocal(Locals.Write.Int);
             il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetBytes, null);
             il.Emit(OpCodes.Pop);
 
-            // stream.Write(new Span<byte>(p, size));'
+            // stream.Write(new Span<byte>(p, size + 4));
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.Int);
+            il.EmitLoadInt32(sizeof(int));
+            il.Emit(OpCodes.Add);
             il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Write, null);
         }
