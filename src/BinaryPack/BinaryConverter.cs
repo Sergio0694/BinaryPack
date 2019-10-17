@@ -72,7 +72,6 @@ namespace BinaryPack
                     il.EmitLoadLocal(0);
                     il.Emit(OpCodes.Ldloca_S, 1);
                     il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
-                    il.EmitCall(OpCodes.Call, KnownMethods.Unsafe<byte>.As(property.PropertyType), null);
                     il.EmitLoadFromAddress(property.PropertyType);
                     il.EmitWriteMember(property);
                 }
