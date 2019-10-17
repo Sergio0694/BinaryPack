@@ -94,8 +94,7 @@ namespace BinaryPack.Extensions
                 from method in typeof(System.IO.Stream).GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 where method.Name.Equals(nameof(System.IO.Stream.Write))
                 let args = method.GetParameters()
-                where args.Length == 1 &&
-                      args[0].ParameterType == typeof(ReadOnlySpan<byte>)
+                where args.Length == 1
                 select method).First();
         }
     }
