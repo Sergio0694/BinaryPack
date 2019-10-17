@@ -23,7 +23,7 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadInt32(property.PropertyType.GetSize());
             il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
-            il.Emit(OpCodes.Ldarg_0);
+            il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
             il.Emit(OpCodes.Pop);

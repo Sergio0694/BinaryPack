@@ -22,6 +22,29 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         }
 
         /// <summary>
+        /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load</param>
+        public static void EmitLoadArgument(this ILGenerator il, int index)
+        {
+            if (index <= 3)
+            {
+                il.Emit(index switch
+                {
+                    0 => OpCodes.Ldarg_0,
+                    1 => OpCodes.Ldarg_1,
+                    2 => OpCodes.Ldarg_2,
+                    3 => OpCodes.Ldarg_3,
+                    _ => throw new InvalidOperationException($"Invalid argument index [{index}]")
+                });
+            }
+            else if (index <= 255) il.Emit(OpCodes.Ldarg_S, (byte)index);
+            else if (index <= 65534) il.Emit(OpCodes.Ldarg, (short)index);
+            else throw new ArgumentOutOfRangeException($"Invalid argument index {index}");
+        }
+
+        /// <summary>
         /// Puts the appropriate <see langword="ldloc"/> instruction to read a local variable onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>

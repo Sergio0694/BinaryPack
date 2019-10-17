@@ -11,9 +11,9 @@
         public static class Read
         {
             /// <summary>
-            /// The index of the <typeparam name="T">T</typeparam> local variable
+            /// The index of the input instance
             /// </summary>
-            public const int T = 0;
+            public const int Obj = 0;
 
             /// <summary>
             /// The index of the <see cref="byte"/> <see cref="System.Span{T}"/> local variable

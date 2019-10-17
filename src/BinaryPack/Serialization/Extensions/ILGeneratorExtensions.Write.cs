@@ -23,10 +23,10 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitStackalloc(property.PropertyType);
             il.EmitStoreLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.Emit(OpCodes.Ldarg_0); // The input object is always argument 0
+            il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.EmitStoreToAddress(property.PropertyType);
-            il.Emit(OpCodes.Ldarg_1); // The target stream is argument 1
+            il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(property.PropertyType.GetSize());
             il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
@@ -41,7 +41,7 @@ namespace BinaryPack.Serialization.Extensions
         public static void EmitSerializeStringProperty(this ILGenerator il, PropertyInfo property)
         {
             // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property)];
-            il.Emit(OpCodes.Ldarg_0);
+            il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetByteCount, null);
@@ -52,7 +52,7 @@ namespace BinaryPack.Serialization.Extensions
 
             // _ = Encoding.UTF8.GetBytes(obj.Property.AsSpan(), new Span<byte>(p, size);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
-            il.Emit(OpCodes.Ldarg_0);
+            il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Newobj, KnownMethods.String.AsSpan);
             il.EmitLoadLocal(Locals.Write.BytePtr);
@@ -62,7 +62,7 @@ namespace BinaryPack.Serialization.Extensions
             il.Emit(OpCodes.Pop);
 
             // stream.Write(new Span<byte>(p, size));'
-            il.Emit(OpCodes.Ldarg_1);
+            il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.Int);
             il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
