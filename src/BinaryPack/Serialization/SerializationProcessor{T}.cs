@@ -41,6 +41,7 @@ namespace BinaryPack.Serialization
                     select prop;
 
                 il.DeclareLocal(typeof(byte*));
+                il.DeclareLocal(typeof(int));
 
                 foreach (PropertyInfo property in properties)
                 {
