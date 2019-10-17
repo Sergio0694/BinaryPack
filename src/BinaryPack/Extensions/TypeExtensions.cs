@@ -36,5 +36,27 @@ namespace System
 
             return size;
         }
+
+
+        private static class _IsUnmanaged<T> where T : unmanaged { }
+
+        /// <summary>
+        /// Checks whether or not the input type respects the <see langword="unmanaged"/> constraint
+        /// </summary>
+        /// <param name="type">The input type to analyze</param>
+        [Pure]
+        public static bool IsUnmanaged(this Type type)
+        {
+            try
+            {
+                _ = typeof(_IsUnmanaged<>).MakeGenericType(type);
+                return true;
+            }
+            catch
+            {
+                // Not unmanaged
+                return false;
+            }
+        }
     }
 }
