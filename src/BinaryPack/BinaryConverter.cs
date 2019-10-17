@@ -4,14 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using BinaryPack.Delegates;
 using BinaryPack.Extensions;
 
 namespace BinaryPack
 {
-    public delegate void BinarySerializer<in T>(T obj, Stream stream) where T : new();
-
-    public delegate T BinaryDeserializer<out T>(Stream stream) where T : new();
-
     public static class BinaryConverter
     {
         public static void Serialize<T>(T obj, Stream stream) where T : new()
