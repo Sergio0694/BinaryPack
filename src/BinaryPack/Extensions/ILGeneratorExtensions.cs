@@ -84,6 +84,25 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
+        /// Puts the appropriate <see langword="ldsfld"/>, <see langword="ldfld"/>, <see langword="call"/> or <see langword="callvirt"/> instruction to write a member on the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="member">The member to write</param>
+        public static void EmitWriteMember(this ILGenerator il, MemberInfo member)
+        {
+            switch (member)
+            {
+                case FieldInfo field:
+                    il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
+                    break;
+                case PropertyInfo property when property.CanRead:
+                    il.EmitCall(property.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, property.SetMethod, null);
+                    break;
+                default: throw new ArgumentException($"The input {member.GetType()} instance can't be written");
+            }
+        }
+
+        /// <summary>
         /// Puts the appropriate <see langword="ldc.i4"/> instruction to load an <see langword="int"/> value on the execution stack
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
@@ -131,6 +150,40 @@ namespace System.Reflection.Emit
             il.EmitLoadInt32(offset);
             il.Emit(OpCodes.Conv_I);
             il.Emit(OpCodes.Add);
+        }
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldind"/> or <see langword="ldobj"/> instruction to read from a reference onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="type">The type of value being read from the current reference on top of the execution stack</param>
+        public static void EmitLoadFromAddress(this ILGenerator il, Type type)
+        {
+            if (type.IsValueType)
+            {
+                // Pick the optimal opcode to set a value type
+                OpCode opcode = Marshal.SizeOf(type) switch
+                {
+                    // Use the faster op codes for sizes <= 8
+                    1 when type == typeof(bool) || type == typeof(byte) => OpCodes.Ldind_U1,
+                    1 when type == typeof(sbyte) => OpCodes.Ldind_I1,
+                    2 when type == typeof(short) => OpCodes.Ldind_I2,
+                    2 when type == typeof(ushort) => OpCodes.Ldind_U2,
+                    4 when type == typeof(float) => OpCodes.Ldind_R4,
+                    4 when type == typeof(int) => OpCodes.Ldind_I4,
+                    4 when type == typeof(uint) => OpCodes.Ldind_U4,
+                    8 when type == typeof(double) => OpCodes.Ldind_R8,
+                    8 when type == typeof(long) || type == typeof(ulong) => OpCodes.Ldind_I8,
+
+                    // Default to ldobj for all other value types
+                    _ => OpCodes.Ldobj
+                };
+
+                // Also pass the type token if ldobj is used
+                if (opcode == OpCodes.Ldobj) il.Emit(opcode, type);
+                else il.Emit(opcode);
+            }
+            else il.Emit(OpCodes.Ldind_Ref);
         }
 
         /// <summary>
