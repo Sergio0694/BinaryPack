@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using BinaryPack.Extensions;
 
 namespace System.Reflection.Emit
 {
@@ -166,19 +165,16 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
-        /// Loads a <see cref="Span{T}"/> of type <see cref="byte"/> onto the execution stack, through the use of <see langword="stackalloc"/>
+        /// Loads a buffer of type <see cref="byte"/> onto the execution stack, through the use of <see langword="stackalloc"/>
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="type">The type of item for the buffer to create</param>
-        /// <param name="size">The number of items of type <typeparamref name="T"/> to fit onto the created <see cref="Span{T}"/></param>
+        /// <param name="size">The number of items of the specified type to fit onto the created buffer</param>
         public static void EmitStackalloc(this ILGenerator il, Type type, int size = 1)
         {
-            int count = Marshal.SizeOf(type) * size;
-            il.EmitLoadInt32(count);
+            il.EmitLoadInt32(Marshal.SizeOf(type) * size);
             il.Emit(OpCodes.Conv_U);
             il.Emit(OpCodes.Localloc);
-            il.EmitLoadInt32(count);
-            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
         }
     }
 }
