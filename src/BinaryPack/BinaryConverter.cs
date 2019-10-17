@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,15 @@ namespace BinaryPack
 {
     public static class BinaryConverter
     {
+        public static Memory<byte> Serialize<T>(T obj) where T : new()
+        {
+            using MemoryStream stream = new MemoryStream();
+            Serialize(obj, stream);
+
+            byte[] data = stream.GetBuffer();
+            return new Memory<byte>(data, 0, (int)stream.Position);
+        }
+
         public static void Serialize<T>(T obj, Stream stream) where T : new()
         {
             DynamicMethod<BinarySerializer<T>>.New(il =>
@@ -39,6 +49,14 @@ namespace BinaryPack
 
                 il.Emit(OpCodes.Ret);
             })(obj, stream);
+        }
+
+        public static unsafe T Deserialize<T>(Memory<byte> memory) where T : new()
+        {
+            using MemoryHandle handle = memory.Pin();
+            using UnmanagedMemoryStream stream = new UnmanagedMemoryStream((byte*)handle.Pointer, memory.Length);
+
+            return Deserialize<T>(stream);
         }
 
         public static T Deserialize<T>(Stream stream) where T : new()
