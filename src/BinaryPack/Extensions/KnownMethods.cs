@@ -12,6 +12,18 @@ namespace BinaryPack.Extensions
     public static class KnownMethods
     {
         /// <summary>
+        /// A <see langword="class"/> containing methods from the generic types
+        /// </summary>
+        /// <typeparam name="T">The generic type argument for the target type to work on</typeparam>
+        public static class Type<T> where T : new()
+        {
+            /// <summary>
+            /// Gets the default constructor for the type <typeparamref name="T"/>
+            /// </summary>
+            public static ConstructorInfo DefaultConstructor { get; } = typeof(T).GetConstructor(Type.EmptyTypes);
+        }
+
+        /// <summary>
         /// A <see langword="class"/> containing methods from the <see cref="System.Span{T}"/> type
         /// </summary>
         /// <typeparam name="T">The generic type argument for the target <see cref="System.Span{T}"/> type</typeparam>
@@ -31,7 +43,10 @@ namespace BinaryPack.Extensions
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Span{T}.GetPinnableReference"/> method
             /// </summary>
-            public static MethodInfo GetPinnableReference { get; } = typeof(Span<T>).GetMethod(nameof(System.Span<T>.GetPinnableReference));
+            public static MethodInfo GetPinnableReference { get; } = (
+                from method in typeof(System.Span<T>).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                where method.Name.Equals(nameof(System.Span<T>.GetPinnableReference))
+                select method).First(); // Simply calling GetMethod returns null
         }
 
         /// <summary>
@@ -84,9 +99,18 @@ namespace BinaryPack.Extensions
         /// <summary>
         /// A <see langword="class"/> containing methods from the <see cref="Unsafe"/> type
         /// </summary>
-        /// <typeparam name="T">The generic type argument for generic methods</typeparam>
         public static class Stream
         {
+            /// <summary>
+            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.IO.Stream.Read(System.Span{byte})"/> method
+            /// </summary>
+            public static MethodInfo Read { get; } = (
+                from method in typeof(System.IO.Stream).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                where method.Name.Equals(nameof(System.IO.Stream.Read))
+                let args = method.GetParameters()
+                where args.Length == 1
+                select method).First();
+
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.IO.Stream.Write(System.ReadOnlySpan{byte})"/> method
             /// </summary>
