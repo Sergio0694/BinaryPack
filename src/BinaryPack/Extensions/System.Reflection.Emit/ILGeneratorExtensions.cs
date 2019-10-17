@@ -1,7 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace System.Reflection.Emit
+namespace BinaryPack.Extensions.System.Reflection.Emit
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see langword="ILGenerator"/> type

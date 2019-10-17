@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace BinaryPack.Extensions
+namespace BinaryPack.Helpers
 {
     /// <summary>
     /// A <see langword="class"/> exposing some frequently used methods for quick lookup

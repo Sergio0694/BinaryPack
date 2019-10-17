@@ -1,8 +1,11 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading;
 
-namespace System.Reflection.Emit
+namespace BinaryPack.Extensions.System.Reflection.Emit
 {
     /// <summary>
     /// A <see langword="class"/> that can be used to easily (lol) create dynamic methods

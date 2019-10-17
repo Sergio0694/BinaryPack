@@ -5,7 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Delegates;
-using BinaryPack.Extensions;
+using BinaryPack.Extensions.System.Reflection.Emit;
+using BinaryPack.Helpers;
 
 namespace BinaryPack.Serialization
 {

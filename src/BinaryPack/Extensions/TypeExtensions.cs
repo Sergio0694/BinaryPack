@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using BinaryPack.Extensions.System.Reflection.Emit;
 
 namespace System
 {
