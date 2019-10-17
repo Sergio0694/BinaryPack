@@ -3,9 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack", "BinaryPack.csproj", "{F687958F-FCF9-430F-9C5E-857DD9C43DBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack", "BinaryPack.csproj", "{F687958F-FCF9-430F-9C5E-857DD9C43DBA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit", "unit", "{80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack.Unit", "..\..\unit\BinaryPack.Unit\BinaryPack.Unit.csproj", "{4D7B806F-68F3-4493-98CA-E78760D4F94F}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BinaryPack.Models", "..\..\unit\BinaryPack.Models\BinaryPack.Models.shproj", "{44D0250E-AC2D-48AF-A426-847EF917D151}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\unit\BinaryPack.Models\BinaryPack.Models.projitems*{44d0250e-ac2d-48af-a426-847ef917d151}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -15,9 +24,17 @@ Global
 		{F687958F-FCF9-430F-9C5E-857DD9C43DBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F687958F-FCF9-430F-9C5E-857DD9C43DBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F687958F-FCF9-430F-9C5E-857DD9C43DBA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D7B806F-68F3-4493-98CA-E78760D4F94F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D7B806F-68F3-4493-98CA-E78760D4F94F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D7B806F-68F3-4493-98CA-E78760D4F94F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D7B806F-68F3-4493-98CA-E78760D4F94F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4D7B806F-68F3-4493-98CA-E78760D4F94F} = {80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}
+		{44D0250E-AC2D-48AF-A426-847EF917D151} = {80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A51744AB-1AE0-4935-B984-CE81201E3CF6}
