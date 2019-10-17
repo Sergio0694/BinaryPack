@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using BinaryPack.Models.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BinaryPack.Unit
@@ -13,7 +14,12 @@ namespace BinaryPack.Unit
         /// Runs a test with a new instance of a specified type
         /// </summary>
         /// <typeparam name="T">The type of model to test</typeparam>
-        public static void Test<T>() where T : IEquatable<T>, new() => Test(new T());
+        public static void Test<T>() where T : IInitializable, IEquatable<T>, new()
+        {
+            T obj = new T();
+            obj.Initialize();
+            Test(obj);
+        }
 
         /// <summary>
         /// Runs a test with a given instance of a specified type

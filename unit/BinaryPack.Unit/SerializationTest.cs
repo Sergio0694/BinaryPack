@@ -8,5 +8,8 @@ namespace BinaryPack.Unit
     {
         [TestMethod]
         public void MessagePackSample() => TestRunner.Test<MessagePackSampleModel>();
+
+        [TestMethod]
+        public void HelloWorldSample() => TestRunner.Test<HelloWorldModel>();
     }
 }
