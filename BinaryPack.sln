@@ -3,17 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29411.108
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack", "BinaryPack.csproj", "{F687958F-FCF9-430F-9C5E-857DD9C43DBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack", "src\BinaryPack\BinaryPack.csproj", "{F687958F-FCF9-430F-9C5E-857DD9C43DBA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unit", "unit", "{80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit", "unit", "{80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack.Unit", "..\..\unit\BinaryPack.Unit\BinaryPack.Unit.csproj", "{4D7B806F-68F3-4493-98CA-E78760D4F94F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack.Unit", "unit\BinaryPack.Unit\BinaryPack.Unit.csproj", "{4D7B806F-68F3-4493-98CA-E78760D4F94F}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BinaryPack.Models", "..\..\unit\BinaryPack.Models\BinaryPack.Models.shproj", "{44D0250E-AC2D-48AF-A426-847EF917D151}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BinaryPack.Models", "unit\BinaryPack.Models\BinaryPack.Models.shproj", "{44D0250E-AC2D-48AF-A426-847EF917D151}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_SolutionItems", "_SolutionItems", "{E875B132-8D10-4958-BF2A-4EB2F8A5E6EF}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\..\unit\BinaryPack.Models\BinaryPack.Models.projitems*{44d0250e-ac2d-48af-a426-847ef917d151}*SharedItemsImports = 13
+		unit\BinaryPack.Models\BinaryPack.Models.projitems*{44d0250e-ac2d-48af-a426-847ef917d151}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
