@@ -1,10 +1,10 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
-using BinaryPack.Helpers;
 using BinaryPack.Serialization.Constants;
+using BinaryPack.Serialization.Reflection;
 
 namespace BinaryPack.Serialization.Extensions
 {
@@ -48,7 +48,7 @@ namespace BinaryPack.Serialization.Extensions
             // if (obj.Property == null) { } else { }
             Label
                 notNull = il.DefineLabel(),
-                end = il.DefineLabel();
+                serialize = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Brtrue_S, notNull);
@@ -61,7 +61,7 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitStoreToAddress(typeof(int));
             il.EmitLoadInt32(0);
             il.EmitStoreLocal(Locals.Write.Int);
-            il.Emit(OpCodes.Br_S, end);
+            il.Emit(OpCodes.Br_S, serialize);
 
             // if (obj.Property.Length == 0) { } else { }
             Label notEmpty = il.DefineLabel();
@@ -79,7 +79,7 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitStoreToAddress(typeof(int));
             il.EmitLoadInt32(0);
             il.EmitStoreLocal(Locals.Write.Int);
-            il.Emit(OpCodes.Br_S, end);
+            il.Emit(OpCodes.Br_S, serialize);
 
             // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
             il.MarkLabel(notEmpty);
@@ -112,8 +112,8 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetBytes, null);
             il.Emit(OpCodes.Pop);
 
-            // stream.Write(new Span<byte>(p, size + 4));
-            il.MarkLabel(end);
+            // stream.Write(new ReadOnlySpan<byte>(p, size + 4));
+            il.MarkLabel(serialize);
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.Int);
