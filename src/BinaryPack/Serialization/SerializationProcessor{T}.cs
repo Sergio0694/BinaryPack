@@ -83,16 +83,17 @@ namespace BinaryPack.Serialization
 
                 // T obj = new T();
                 il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
-                il.EmitStoreLocal(Locals.Read.Obj);
+                il.EmitStoreLocal(Locals.Read.T);
 
                 foreach (PropertyInfo property in properties)
                 {
                     if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
+                    else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
-                il.EmitLoadLocal(Locals.Read.Obj);
+                il.EmitLoadLocal(Locals.Read.T);
                 il.Emit(OpCodes.Ret);
             });
         }

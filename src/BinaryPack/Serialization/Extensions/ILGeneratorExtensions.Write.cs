@@ -173,7 +173,7 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(property.PropertyType));
-            il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsBytes(property.PropertyType.GetElementType()), null);
+            il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteReadOnlySpan(property.PropertyType.GetElementType()), null);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
 
             il.MarkLabel(end);

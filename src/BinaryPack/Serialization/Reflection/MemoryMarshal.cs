@@ -12,9 +12,23 @@ namespace BinaryPack.Serialization.Reflection
         public static class MemoryMarshal
         {
             /// <summary>
+            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
+            /// </summary>
+            private static MethodInfo _AsByteSpan { get; } = (
+                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
+                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.Span<>)
+                select method).First();
+
+            /// <summary>
+            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
+            /// </summary>
+            public static MethodInfo AsByteSpan(Type type) => _AsByteSpan.MakeGenericMethod(type);
+
+            /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
             /// </summary>
-            private static MethodInfo _AsBytes { get; } = (
+            private static MethodInfo _AsByteReadOnlySpan { get; } = (
                 from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
                       method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.ReadOnlySpan<>)
@@ -23,7 +37,7 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
             /// </summary>
-            public static MethodInfo AsBytes(Type type) => _AsBytes.MakeGenericMethod(type);
+            public static MethodInfo AsByteReadOnlySpan(Type type) => _AsByteReadOnlySpan.MakeGenericMethod(type);
         }
     }
 }

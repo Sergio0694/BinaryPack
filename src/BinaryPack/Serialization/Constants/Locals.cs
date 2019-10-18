@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Constants
             /// <summary>
             /// The index of the input instance
             /// </summary>
-            public const int Obj = 0;
+            public const int T = 0;
 
             /// <summary>
             /// The index of the <see cref="byte"/> <see cref="System.Span{T}"/> local variable
@@ -28,6 +28,12 @@ namespace BinaryPack.Serialization.Constants
             /// </summary>
             [LocalType(typeof(int))]
             public const int Int = 2;
+
+            /// <summary>
+            /// The index of an <see cref="object"/> local variable to store reference values
+            /// </summary>
+            [LocalType(typeof(object))]
+            public const int Obj = 3;
         }
 
         /// <summary>
