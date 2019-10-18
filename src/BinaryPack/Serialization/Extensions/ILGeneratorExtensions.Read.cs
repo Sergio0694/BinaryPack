@@ -65,6 +65,13 @@ namespace BinaryPack.Serialization.Extensions
             il.Emit(OpCodes.Ldind_I4);
             il.EmitStoreLocal(Locals.Read.Int);
 
+            // if (size != -1) { }
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Int);
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Ceq);
+            il.Emit(OpCodes.Brtrue_S, end);
+
             // span = stackalloc byte[size];
             il.EmitLoadLocal(Locals.Read.Int);
             il.EmitStackalloc();
@@ -86,6 +93,7 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadLocal(Locals.Read.Int);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetString, null);
             il.EmitWriteMember(property);
+            il.MarkLabel(end);
         }
     }
 }

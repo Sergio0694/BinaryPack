@@ -149,7 +149,8 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         {
             // Push the value to the stack
             if (value < -128) il.Emit(OpCodes.Ldc_I4, value);
-            else if (value < 0) il.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
+            else if (value < -1) il.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
+            else if (value == -1) il.Emit(OpCodes.Ldc_I4_M1);
             else if (value <= 8)
             {
                 il.Emit(value switch

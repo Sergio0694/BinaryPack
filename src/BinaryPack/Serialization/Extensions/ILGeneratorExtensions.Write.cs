@@ -45,7 +45,26 @@ namespace BinaryPack.Serialization.Extensions
         /// <param name="property">The property to serialize</param>
         public static void EmitSerializeStringProperty(this ILGenerator il, PropertyInfo property)
         {
+            // if (obj.Property == null) { } else { }
+            Label
+                notNull = il.DefineLabel(),
+                end = il.DefineLabel();
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitReadMember(property);
+            il.Emit(OpCodes.Brtrue_S, notNull);
+
+            // void* p = stackalloc byte[4]; *p = -1; size = 0;
+            il.EmitStackalloc(typeof(int));
+            il.EmitStoreLocal(Locals.Write.BytePtr);
+            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitLoadInt32(-1);
+            il.EmitStoreToAddress(typeof(int));
+            il.EmitLoadInt32(0);
+            il.EmitStoreLocal(Locals.Write.Int);
+            il.Emit(OpCodes.Br_S, end);
+
             // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
+            il.MarkLabel(notNull);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
@@ -76,6 +95,7 @@ namespace BinaryPack.Serialization.Extensions
             il.Emit(OpCodes.Pop);
 
             // stream.Write(new Span<byte>(p, size + 4));
+            il.MarkLabel(end);
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.Int);
