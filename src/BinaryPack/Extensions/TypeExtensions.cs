@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using BinaryPack.Extensions.System.Reflection.Emit;
+using BinaryPack.Helpers;
 
 namespace System
 {
@@ -27,11 +26,7 @@ namespace System
         {
             if (!SizeMap.TryGetValue(type, out int size))
             {
-                size = DynamicMethod<Func<int>>.New(il =>
-                {
-                    il.Emit(OpCodes.Sizeof, type);
-                    il.Emit(OpCodes.Ret);
-                })();
+                size = (int)KnownMethods.Unsafe.SizeOf.MakeGenericMethod(type).Invoke(null, null);
                 SizeMap.Add(type, size);
             }
 
