@@ -10,6 +10,20 @@ namespace BinaryPack.Unit
         public void MessagePackSample() => TestRunner.Test<MessagePackSampleModel>();
 
         [TestMethod]
-        public void HelloWorldSample() => TestRunner.Test<HelloWorldModel>();
+        public void HelloWorldSample1() => TestRunner.Test<HelloWorldModel>();
+
+        [TestMethod]
+        public void HelloWorldSample2()
+        {
+            HelloWorldModel model = new HelloWorldModel { Value = 17 };
+            TestRunner.Test(model);
+        }
+
+        [TestMethod]
+        public void HelloWorldSample3()
+        {
+            HelloWorldModel model = new HelloWorldModel { Property = "", Value = 999 };
+            TestRunner.Test(model);
+        }
     }
 }

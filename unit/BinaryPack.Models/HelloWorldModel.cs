@@ -10,15 +10,23 @@ namespace BinaryPack.Models
     {
         public string Property { get; set; }
 
+        public int Value { get; set; }
+
         /// <inheritdoc/>
-        public void Initialize() => Property = "Hello world";
+        public void Initialize()
+        {
+            Property = "Hello world";
+            Value = 13;
+        }
 
         /// <inheritdoc/>
         public bool Equals(HelloWorldModel other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Property.Equals("Hello world");
+            return (Property == null && other.Property == null ||
+                    Property?.Equals(other.Property) == true) &&
+                   Value == other.Value;
         }
     }
 }
