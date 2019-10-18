@@ -45,7 +45,7 @@ namespace BinaryPack.Serialization
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitSerializeUnmanagedProperty(property);
+                    il.EmitSerializeStringProperty(property);
                 }
 
                 il.Emit(OpCodes.Ret);
@@ -68,13 +68,14 @@ namespace BinaryPack.Serialization
 
                 il.DeclareLocal(typeof(T));
                 il.DeclareLocal(typeof(Span<byte>));
+                il.DeclareLocal(typeof(int));
 
                 il.Emit(OpCodes.Newobj, KnownMethods.Type<T>.DefaultConstructor);
                 il.EmitStoreLocal(0);
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitDeserializeUnmanagedProperty(property);
+                    il.EmitDeserializeStringProperty(property);
                 }
 
                 il.EmitLoadLocal(0);

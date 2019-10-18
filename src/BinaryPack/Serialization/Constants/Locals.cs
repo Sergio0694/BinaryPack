@@ -19,6 +19,11 @@
             /// The index of the <see cref="byte"/> <see cref="System.Span{T}"/> local variable
             /// </summary>
             public const int SpanByte = 1;
+
+            /// <summary>
+            /// The index of the <see cref="int"/> local variable
+            /// </summary>
+            public const int Int = 2;
         }
 
         /// <summary>

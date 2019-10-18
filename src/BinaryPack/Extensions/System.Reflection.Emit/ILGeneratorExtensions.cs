@@ -68,6 +68,18 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         }
 
         /// <summary>
+        /// Puts the appropriate <see langword="ldloca"/> instruction to read a local variable address onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to load the address for</param>
+        public static void EmitLoadLocalAddress(this ILGenerator il, int index)
+        {
+            if (index <= 255) il.Emit(OpCodes.Ldloca_S, (byte)index);
+            else if (index <= 65534) il.Emit(OpCodes.Ldloca, (short)index);
+            else throw new ArgumentOutOfRangeException($"Invalid local index {index}");
+        }
+
+        /// <summary>
         /// Puts the appropriate <see langword="stloc"/> instruction to write a local variable onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>

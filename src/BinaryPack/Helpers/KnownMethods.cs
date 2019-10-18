@@ -166,6 +166,18 @@ namespace BinaryPack.Helpers
                       args[0].ParameterType == typeof(System.ReadOnlySpan<char>) &&
                       args[1].ParameterType == typeof(System.Span<byte>)
                 select method).First();
+
+            /// <summary>
+            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Text.Encoding.GetString(byte*,int)"/> method
+            /// </summary>
+            public static MethodInfo GetString { get; } = (
+                from method in typeof(System.Text.Encoding).GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                where method.Name.Equals(nameof(System.Text.Encoding.GetString))
+                let args = method.GetParameters()
+                where args.Length == 2 &&
+                      args[0].ParameterType == typeof(byte*) &&
+                      args[1].ParameterType == typeof(int)
+                select method).First();
         }
     }
 }
