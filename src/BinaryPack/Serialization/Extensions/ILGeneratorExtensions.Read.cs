@@ -65,14 +65,24 @@ namespace BinaryPack.Serialization.Extensions
             il.Emit(OpCodes.Ldind_I4);
             il.EmitStoreLocal(Locals.Read.Int);
 
-            // if (size != -1) { }
+            // if (size == -1) { } else { }
             Label end = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Int);
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Ceq);
             il.Emit(OpCodes.Brtrue_S, end);
 
+            // if (size == 0) { obj.Property = ""; } else { }
+            Label notEmpty = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Int);
+            il.Emit(OpCodes.Brtrue_S, notEmpty);
+            il.EmitLoadLocal(Locals.Read.Obj);
+            il.Emit(OpCodes.Ldstr, string.Empty);
+            il.EmitWriteMember(property);
+            il.Emit(OpCodes.Br_S, end);
+
             // span = stackalloc byte[size];
+            il.MarkLabel(notEmpty);
             il.EmitLoadLocal(Locals.Read.Int);
             il.EmitStackalloc();
             il.EmitLoadLocal(Locals.Read.Int);

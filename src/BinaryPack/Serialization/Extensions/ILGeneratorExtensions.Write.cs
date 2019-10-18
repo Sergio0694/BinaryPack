@@ -63,8 +63,26 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitStoreLocal(Locals.Write.Int);
             il.Emit(OpCodes.Br_S, end);
 
-            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
+            // if (obj.Property.Length == 0) { } else { }
+            Label notEmpty = il.DefineLabel();
             il.MarkLabel(notNull);
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitReadMember(property);
+            il.EmitReadMember(typeof(string).GetProperty(nameof(string.Length)));
+            il.Emit(OpCodes.Brtrue_S, notEmpty);
+
+            // void* p = stackalloc byte[4]; *p = 0; size = 0;
+            il.EmitStackalloc(typeof(int));
+            il.EmitStoreLocal(Locals.Write.BytePtr);
+            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitLoadInt32(0);
+            il.EmitStoreToAddress(typeof(int));
+            il.EmitLoadInt32(0);
+            il.EmitStoreLocal(Locals.Write.Int);
+            il.Emit(OpCodes.Br_S, end);
+
+            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
+            il.MarkLabel(notEmpty);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
