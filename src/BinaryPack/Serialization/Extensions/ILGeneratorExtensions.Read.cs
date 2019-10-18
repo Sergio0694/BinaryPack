@@ -24,19 +24,19 @@ namespace BinaryPack.Serialization.Extensions
             // Span<byte> span = stackalloc byte[Unsafe.SizeOf<TProperty>()];
             il.EmitStackalloc(property.PropertyType);
             il.EmitLoadInt32(property.PropertyType.GetSize());
-            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
             il.Emit(OpCodes.Pop);
 
             // obj.Property = Unsafe.As<byte, TProperty>(ref span.GetPinnableReference());
             il.EmitLoadLocal(Locals.Read.Obj);
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
             il.EmitLoadFromAddress(property.PropertyType);
             il.EmitWriteMember(property);
         }
@@ -51,18 +51,18 @@ namespace BinaryPack.Serialization.Extensions
             // Span<byte> span = stackalloc byte[4];
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
             il.Emit(OpCodes.Pop);
 
             // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
             il.Emit(OpCodes.Ldind_I4);
             il.EmitStoreLocal(Locals.Read.Int);
 
@@ -87,22 +87,22 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadLocal(Locals.Read.Int);
             il.EmitStackalloc();
             il.EmitLoadLocal(Locals.Read.Int);
-            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
             il.Emit(OpCodes.Pop);
 
             // obj.Property = Encoding.UTF8.GetString(&span.GetPinnableReference(), size);
             il.EmitLoadLocal(Locals.Read.Obj);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
             il.EmitLoadLocal(Locals.Read.Int);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetString, null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetString, null);
             il.EmitWriteMember(property);
             il.MarkLabel(end);
         }

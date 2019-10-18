@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
@@ -34,8 +33,8 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(property.PropertyType.GetSize());
-            il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Write, null);
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace BinaryPack.Serialization.Extensions
             il.MarkLabel(notNull);
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
-            il.EmitReadMember(typeof(string).GetProperty(nameof(string.Length)));
+            il.EmitReadMember(KnownMembers.String.Length);
             il.Emit(OpCodes.Brtrue_S, notEmpty);
 
             // void* p = stackalloc byte[4]; *p = 0; size = 0;
@@ -83,11 +82,11 @@ namespace BinaryPack.Serialization.Extensions
 
             // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
             il.MarkLabel(notEmpty);
-            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
+            il.EmitReadMember(KnownMembers.Encoding.UTF8);
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
-            il.EmitCall(OpCodes.Call, KnownMethods.String.AsSpan, null);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetByteCount, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetByteCount, null);
             il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Write.Int);
             il.EmitLoadInt32(sizeof(int));
@@ -101,15 +100,15 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitStoreToAddress(typeof(int));
 
             // _ = Encoding.UTF8.GetBytes(obj.Property.AsSpan(), new Span<byte>(p + 4, size);
-            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
+            il.EmitReadMember(KnownMembers.Encoding.UTF8);
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
-            il.EmitCall(OpCodes.Call, KnownMethods.String.AsSpan, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitAddOffset(sizeof(int));
             il.EmitLoadLocal(Locals.Write.Int);
-            il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Encoding.GetBytes, null);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetBytes, null);
             il.Emit(OpCodes.Pop);
 
             // stream.Write(new ReadOnlySpan<byte>(p, size + 4));
@@ -119,8 +118,8 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitLoadLocal(Locals.Write.Int);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Newobj, KnownMethods.ReadOnlySpan<byte>.UnsafeConstructor);
-            il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Write, null);
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
         }
     }
 }

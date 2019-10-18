@@ -27,7 +27,7 @@ namespace BinaryPack.Extensions
         {
             if (!SizeMap.TryGetValue(type, out int size))
             {
-                size = (int)KnownMethods.Unsafe.SizeOf.MakeGenericMethod(type).Invoke(null, null);
+                size = (int)KnownMembers.Unsafe.SizeOf.MakeGenericMethod(type).Invoke(null, null);
                 SizeMap.Add(type, size);
             }
 

@@ -81,7 +81,7 @@ namespace BinaryPack.Serialization
                 }
 
                 // T obj = new T();
-                il.Emit(OpCodes.Newobj, KnownMethods.Type<T>.DefaultConstructor);
+                il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
                 il.EmitStoreLocal(Locals.Read.Obj);
 
                 foreach (PropertyInfo property in properties)

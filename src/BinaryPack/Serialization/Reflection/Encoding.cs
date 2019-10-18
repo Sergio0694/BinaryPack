@@ -4,15 +4,20 @@ using System.Reflection;
 namespace BinaryPack.Serialization.Reflection
 {
     /// <summary>
-    /// A <see langword="class"/> exposing some frequently used methods for quick lookup
+    /// A <see langword="class"/> exposing some frequently used members for quick lookup
     /// </summary>
-    internal static partial class KnownMethods
+    internal static partial class KnownMembers
     {
         /// <summary>
-        /// A <see langword="class"/> containing methods from the <see cref="Encoding"/> type
+        /// A <see langword="class"/> containing members from the <see cref="Encoding"/> type
         /// </summary>
         public static class Encoding
         {
+            /// <summary>
+            /// Gets the <see cref="PropertyInfo"/> instance mapping the <see cref="System.Text.Encoding.UTF8"/> property
+            /// </summary>
+            public static PropertyInfo UTF8 { get; } = typeof(System.Text.Encoding).GetProperty(nameof(System.Text.Encoding.UTF8));
+
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Text.Encoding.GetByteCount(System.ReadOnlySpan{char})"/> method
             /// </summary>

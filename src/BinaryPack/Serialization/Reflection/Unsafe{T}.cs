@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
 {
-    internal static partial class KnownMethods
+    internal static partial class KnownMembers
     {
 
         /// <summary>

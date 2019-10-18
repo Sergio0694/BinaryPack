@@ -4,13 +4,18 @@ using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
 {
-    internal static partial class KnownMethods
+    internal static partial class KnownMembers
     {
         /// <summary>
-        /// A <see langword="class"/> containing methods from the <see cref="string"/> type
+        /// A <see langword="class"/> containing members from the <see cref="string"/> type
         /// </summary>
         public static class String
         {
+            /// <summary>
+            /// Gets the <see cref="PropertyInfo"/> instance mapping the <see cref="string.Length"/> property
+            /// </summary>
+            public static PropertyInfo Length { get; } = typeof(string).GetProperty(nameof(string.Length));
+
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="MemoryExtensions.AsSpan(string)"/> method
             /// </summary>

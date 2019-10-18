@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
 {
-    internal static partial class KnownMethods
+    internal static partial class KnownMembers
     {
         /// <summary>
         /// A <see langword="class"/> containing methods from the <see cref="System.Span{T}"/> type
