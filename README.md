@@ -44,3 +44,7 @@ Here is a list of the property types currently supported by the library:
 The **BinaryPack** library requires .NET Standard 2.1 support and it has no external dependencies.
 
 Additionally, you need an IDE with .NET Core 3.0 and C# 8.0 support to compile the library and samples on your PC.
+
+# Special thanks
+
+Icon made by [freepik](https://www.flaticon.com/authors/freepik) from www.flaticon.com.
