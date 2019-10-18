@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using BinaryPack.Extensions.System.Reflection.Emit;
@@ -57,6 +58,17 @@ namespace System
                 // Not unmanaged
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Gets a sequence of attributes of type <typeparamref name="TAttribute"/> from the members of a given type
+        /// </summary>
+        /// <typeparam name="TAttribute">The attribute type to look for</typeparam>
+        /// <param name="type">The input type to analyze</param>
+        [Pure]
+        public static IEnumerable<TAttribute> GetAttributes<TAttribute>(this Type type) where TAttribute : Attribute
+        {
+            return type.GetMembers().Select(m => m.GetCustomAttributes(typeof(TAttribute), false).FirstOrDefault()).OfType<TAttribute>();
         }
     }
 }

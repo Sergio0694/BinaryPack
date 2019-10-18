@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 using BinaryPack.Delegates;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Helpers;
+using BinaryPack.Serialization.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
 
@@ -41,9 +42,11 @@ namespace BinaryPack.Serialization
                     where prop.CanRead && prop.CanWrite
                     select prop;
 
-                // byte* p; int i;
-                il.DeclareLocal(typeof(byte*));
-                il.DeclareLocal(typeof(int));
+                // Local serialization variables
+                foreach (Type type in typeof(Locals.Write).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
+                {
+                    il.DeclareLocal(type);
+                }
 
                 foreach (PropertyInfo property in properties)
                 {
@@ -59,7 +62,6 @@ namespace BinaryPack.Serialization
         /// <summary>
         /// Builds a new <see cref="BinaryDeserializer{T}"/> instance for the type <typeparamref name="T"/>
         /// </summary>
-        /// <returns></returns>
         [Pure]
         private static BinaryDeserializer<T> BuildDeserializer()
         {
@@ -70,10 +72,12 @@ namespace BinaryPack.Serialization
                     where prop.CanRead && prop.CanWrite
                     select prop;
 
-                // T obj; Span<byte> span; int i;
+                // T obj; ...;
                 il.DeclareLocal(typeof(T));
-                il.DeclareLocal(typeof(Span<byte>));
-                il.DeclareLocal(typeof(int));
+                foreach (Type type in typeof(Locals.Read).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
+                {
+                    il.DeclareLocal(type);
+                }
 
                 // T obj = new T();
                 il.Emit(OpCodes.Newobj, KnownMethods.Type<T>.DefaultConstructor);
