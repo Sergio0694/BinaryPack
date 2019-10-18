@@ -2,9 +2,10 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
-using BinaryPack.Helpers;
 using BinaryPack.Serialization.Constants;
+using BinaryPack.Serialization.Reflection;
 
 namespace BinaryPack.Serialization.Extensions
 {

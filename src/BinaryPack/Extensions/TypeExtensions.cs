@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using BinaryPack.Helpers;
+using BinaryPack.Serialization.Reflection;
 
-namespace System
+namespace BinaryPack.Extensions
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see cref="Type"/> type
