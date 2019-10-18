@@ -12,14 +12,18 @@ namespace BinaryPack.Serialization.Reflection
         public static class MemoryMarshal
         {
             /// <summary>
-            /// Gets the <see cref="System.ReadOnlySpan{T}"/> constructor that takes a <typeparamref name="T"/> array
+            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
             /// </summary>
-            public static ConstructorInfo ArrayConstructor(Type type) => (
-                from ctor in typeof(System.ReadOnlySpan<>).MakeGenericType(type.GetElementType()).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 1 &&
-                      args[0].ParameterType == type
-                select ctor).First();
+            private static MethodInfo _AsBytes { get; } = (
+                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
+                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.ReadOnlySpan<>)
+                select method).First();
+
+            /// <summary>
+            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
+            /// </summary>
+            public static MethodInfo AsBytes(Type type) => _AsBytes.MakeGenericMethod(type);
         }
     }
 }
