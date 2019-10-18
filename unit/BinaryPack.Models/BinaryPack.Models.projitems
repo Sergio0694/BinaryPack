@@ -12,5 +12,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)HelloWorldModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IInitializable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MessagePackSampleModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UnmanagedArrayModel.cs" />
   </ItemGroup>
 </Project>

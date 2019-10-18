@@ -1,3 +1,4 @@
+using System;
 using BinaryPack.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -23,6 +24,23 @@ namespace BinaryPack.Unit
         public void HelloWorldSample3()
         {
             HelloWorldModel model = new HelloWorldModel { Property = "", Value = 999 };
+            TestRunner.Test(model);
+        }
+
+        [TestMethod]
+        public void UnmanagedArraySample1() => TestRunner.Test<UnmanagedArrayModel>();
+
+        [TestMethod]
+        public void UnmanagedArraySample2()
+        {
+            UnmanagedArrayModel model = new UnmanagedArrayModel { Value = 17 };
+            TestRunner.Test(model);
+        }
+
+        [TestMethod]
+        public void UnmanagedArraySample3()
+        {
+            UnmanagedArrayModel model = new UnmanagedArrayModel { Items = Array.Empty<DateTime>(), Value = 999 };
             TestRunner.Test(model);
         }
     }
