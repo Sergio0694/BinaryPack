@@ -49,7 +49,15 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
         /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
         [Pure]
-        public static T New(Action<ILGenerator> builder)
+        public static T New(Action<ILGenerator> builder) => New((il, _) => builder(il));
+
+        /// <summary>
+        /// Creates a new <typeparamref name="T"/> <see langword="delegate"/> for the target owner
+        /// </summary>
+        /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
+        /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
+        [Pure]
+        public static T New(Action<ILGenerator, MethodInfo> builder)
         {
             // Create a new dynamic method with a unique id
             string id = $"__IL__{typeof(T).Name}_{Interlocked.Increment(ref _Count)}";
@@ -57,7 +65,7 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
 
             // Build the IL bytecode
             ILGenerator il = method.GetILGenerator();
-            builder(il);
+            builder(il, method);
 
             // Build and delegate instance
             return (T)method.CreateDelegate(typeof(T));
