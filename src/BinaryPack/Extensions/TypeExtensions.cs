@@ -34,7 +34,10 @@ namespace BinaryPack.Extensions
             return size;
         }
 
-
+        /// <summary>
+        /// Helper <see langword="class"/> for the <see cref="IsUnmanaged"/> method
+        /// </summary>
+        /// <typeparam name="T">The type to check against the <see langword="unmanaged"/> constraint</typeparam>
         private static class _IsUnmanaged<T> where T : unmanaged { }
 
         /// <summary>
@@ -49,7 +52,7 @@ namespace BinaryPack.Extensions
                 _ = typeof(_IsUnmanaged<>).MakeGenericType(type);
                 return true;
             }
-            catch
+            catch (ArgumentException)
             {
                 // Not unmanaged
                 return false;

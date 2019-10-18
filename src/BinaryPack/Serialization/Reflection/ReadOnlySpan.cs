@@ -12,7 +12,7 @@ namespace BinaryPack.Serialization.Reflection
         public static class ReadOnlySpan
         {
             /// <summary>
-            /// Gets the <see cref="System.ReadOnlySpan{T}"/> constructor that takes a <typeparamref name="T"/> array
+            /// Gets the <see cref="System.ReadOnlySpan{T}"/> constructor that takes a generic array
             /// </summary>
             public static ConstructorInfo ArrayConstructor(Type type) => (
                 from ctor in typeof(System.ReadOnlySpan<>).MakeGenericType(type.GetElementType()).GetConstructors()

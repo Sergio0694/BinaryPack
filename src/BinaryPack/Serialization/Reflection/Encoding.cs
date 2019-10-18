@@ -3,9 +3,6 @@ using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
 {
-    /// <summary>
-    /// A <see langword="class"/> exposing some frequently used members for quick lookup
-    /// </summary>
     internal static partial class KnownMembers
     {
         /// <summary>

@@ -53,6 +53,7 @@ namespace BinaryPack.Serialization
                 {
                     if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
+                    else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 

@@ -121,5 +121,62 @@ namespace BinaryPack.Serialization.Extensions
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
         }
+
+        /// <summary>
+        /// Emits the necessary instructions to serialize an array of <see langword="unmanaged"/> values to a target <see cref="System.IO.Stream"/> instance
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="property">The property to serialize</param>
+        public static void EmitSerializeUnmanagedArrayProperty(this ILGenerator il, PropertyInfo property)
+        {
+            // int size = obj.Property?.Length ?? -1;
+            Label
+                notNull = il.DefineLabel(),
+                lengthLoaded = il.DefineLabel();
+            il.EmitStackalloc(typeof(int));
+            il.EmitStoreLocal(Locals.Write.BytePtr);
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitReadMember(property);
+            il.Emit(OpCodes.Brtrue_S, notNull);
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Br_S, lengthLoaded);
+            il.MarkLabel(notNull);
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitReadMember(property);
+            il.EmitReadMember(KnownMembers.Array.Length);
+            il.MarkLabel(lengthLoaded);
+            il.EmitStoreLocal(Locals.Write.Int);
+
+            // void* p = stackalloc byte[4]; *p = size;
+            il.EmitStackalloc(typeof(int));
+            il.EmitStoreLocal(Locals.Write.BytePtr);
+            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitLoadLocal(Locals.Write.Int);
+            il.EmitStoreToAddress(typeof(int));
+
+            // stream.Write(new ReadOnlySpan<byte>(p, 4));
+            il.EmitLoadArgument(Arguments.Write.Stream);
+            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.EmitLoadInt32(sizeof(int));
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+
+            // if (size > 0) { }
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Write.Int);
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Cgt);
+            il.Emit(OpCodes.Brfalse_S, end);
+
+            // stream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan(obj.Property)));
+            il.EmitLoadArgument(Arguments.Write.Stream);
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitReadMember(property);
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(property.PropertyType));
+            il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsBytes(property.PropertyType.GetElementType()), null);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+
+            il.MarkLabel(end);
+        }
     }
 }
