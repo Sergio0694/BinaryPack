@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 using BinaryPack.Delegates;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Helpers;
+using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
 
 namespace BinaryPack.Serialization
@@ -40,12 +41,15 @@ namespace BinaryPack.Serialization
                     where prop.CanRead && prop.CanWrite
                     select prop;
 
+                // byte* p; int i;
                 il.DeclareLocal(typeof(byte*));
                 il.DeclareLocal(typeof(int));
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitSerializeStringProperty(property);
+                    if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
+                    else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
+                    else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
                 il.Emit(OpCodes.Ret);
@@ -66,19 +70,23 @@ namespace BinaryPack.Serialization
                     where prop.CanRead && prop.CanWrite
                     select prop;
 
+                // T obj; Span<byte> span; int i;
                 il.DeclareLocal(typeof(T));
                 il.DeclareLocal(typeof(Span<byte>));
                 il.DeclareLocal(typeof(int));
 
+                // T obj = new T();
                 il.Emit(OpCodes.Newobj, KnownMethods.Type<T>.DefaultConstructor);
-                il.EmitStoreLocal(0);
+                il.EmitStoreLocal(Locals.Read.Obj);
 
                 foreach (PropertyInfo property in properties)
                 {
-                    il.EmitDeserializeStringProperty(property);
+                    if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
+                    else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
+                    else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
-                il.EmitLoadLocal(0);
+                il.EmitLoadLocal(Locals.Read.Obj);
                 il.Emit(OpCodes.Ret);
             });
         }

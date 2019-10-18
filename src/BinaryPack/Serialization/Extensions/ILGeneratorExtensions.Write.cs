@@ -20,12 +20,17 @@ namespace BinaryPack.Serialization.Extensions
         /// <param name="property">The property to serialize</param>
         public static void EmitSerializeUnmanagedProperty(this ILGenerator il, PropertyInfo property)
         {
+            // byte* p = stackalloc byte[Unsafe.SizeOf<TProperty>()];
             il.EmitStackalloc(property.PropertyType);
             il.EmitStoreLocal(Locals.Write.BytePtr);
+
+            // Unsafe.Write<TProperty>(p, obj.Property);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadArgument(Arguments.Write.Obj);
             il.EmitReadMember(property);
             il.EmitStoreToAddress(property.PropertyType);
+
+            // stream.Write(new ReadOnlySpan<byte>(p, Unsafe.SizeOf<TProperty>()));
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(property.PropertyType.GetSize());

@@ -20,15 +20,20 @@ namespace BinaryPack.Serialization.Extensions
         /// <param name="property">The property to deserialize</param>
         public static void EmitDeserializeUnmanagedProperty(this ILGenerator il, PropertyInfo property)
         {
+            // Span<byte> span = stackalloc byte[Unsafe.SizeOf<TProperty>()];
             il.EmitStackalloc(property.PropertyType);
             il.EmitLoadInt32(property.PropertyType.GetSize());
             il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
+
+            // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
             il.Emit(OpCodes.Pop);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
+
+            // obj.Property = Unsafe.As<byte, TProperty>(ref span.GetPinnableReference());
+            il.EmitLoadLocal(Locals.Read.Obj);
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
             il.EmitLoadFromAddress(property.PropertyType);
