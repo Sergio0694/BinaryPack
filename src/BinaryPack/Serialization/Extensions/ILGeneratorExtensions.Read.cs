@@ -48,28 +48,32 @@ namespace BinaryPack.Serialization.Extensions
         public static void EmitDeserializeStringProperty(this ILGenerator il, PropertyInfo property)
         {
             // Span<byte> span = stackalloc byte[4];
-            il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
-            // stream.Read(span);
+            // _ = stream.Read(span);
+            il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
+            il.Emit(OpCodes.Pop);
 
-            // span = stackalloc byte[size];
+            // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Call, KnownMethods.Span<byte>.GetPinnableReference, null);
             il.Emit(OpCodes.Ldind_I4);
-            il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Read.Int);
+
+            // span = stackalloc byte[size];
+            il.EmitLoadLocal(Locals.Read.Int);
             il.EmitStackalloc();
             il.EmitLoadLocal(Locals.Read.Int);
             il.Emit(OpCodes.Newobj, KnownMethods.Span<byte>.UnsafeConstructor);
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
+            il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCall(OpCodes.Callvirt, KnownMethods.Stream.Read, null);
             il.Emit(OpCodes.Pop);
