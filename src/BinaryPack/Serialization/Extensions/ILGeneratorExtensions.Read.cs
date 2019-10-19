@@ -197,15 +197,15 @@ namespace BinaryPack.Serialization.Extensions
             // T obj = isNotNull ? new T() : null;
             Label
                 isNotNull = il.DefineLabel(),
-                store = il.DefineLabel();
+                end = il.DefineLabel();
             il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadLocalAddress(Locals.Read.T);
             il.Emit(OpCodes.Initobj, typeof(T));
-            il.Emit(OpCodes.Br_S, store);
+            il.Emit(OpCodes.Br_S, end);
             il.MarkLabel(isNotNull);
             il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
-            il.MarkLabel(store);
             il.EmitStoreLocal(Locals.Read.T);
+            il.MarkLabel(end);
         }
     }
 }
