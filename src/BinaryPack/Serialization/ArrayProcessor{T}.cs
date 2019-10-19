@@ -76,7 +76,7 @@ namespace BinaryPack.Serialization
                 // for (int i = 0; i < length; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
-                il.EmitStoreLocal(2);
+                il.EmitStoreLocal(Locals.Write.I);
                 il.Emit(OpCodes.Br_S, check);
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
@@ -89,15 +89,15 @@ namespace BinaryPack.Serialization
                 il.EmitCall(OpCodes.Call, SerializationProcessor<T>._Serializer.MethodInfo, null);
 
                 // i++;
-                il.EmitLoadLocal(2);
+                il.EmitLoadLocal(Locals.Write.I);
                 il.EmitLoadInt32(1);
                 il.Emit(OpCodes.Add);
                 il.EmitStoreLocal(2);
 
                 // Loop check
                 il.MarkLabel(check);
-                il.EmitLoadLocal(2);
                 il.EmitLoadLocal(Locals.Write.I);
+                il.EmitLoadLocal(Locals.Write.Length);
                 il.Emit(OpCodes.Blt_S, loop);
                 il.Emit(OpCodes.Ret);
             });
@@ -149,6 +149,7 @@ namespace BinaryPack.Serialization
                 il.MarkLabel(isNotNull);
                 il.EmitLoadLocal(Locals.Read.Length);
                 il.Emit(OpCodes.Newarr, typeof(T));
+                il.EmitStoreLocal(Locals.Read.Array);
 
                 // for (int i = 0; i < length; i++) { }
                 Label check = il.DefineLabel();
