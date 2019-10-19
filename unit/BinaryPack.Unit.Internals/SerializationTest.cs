@@ -15,14 +15,17 @@ namespace BinaryPack.Unit.Internals
         public void ReferenceTypesEmptyArraySerializationTest() => TestRunner.Test(Array.Empty<MessagePackSampleModel>());
 
         [TestMethod]
-        public void ReferenceTypesArraySerializationTest1() => TestRunner.Test((
+        public void ReferenceTypesArraySerializationTest1() => TestRunner.Test(new[] { new MessagePackSampleModel { Compact = true, Schema = 17 } });
+
+        [TestMethod]
+        public void ReferenceTypesArraySerializationTest2() => TestRunner.Test((
             from i in Enumerable.Range(0, 10)
             let compact = i % 2 == 0
             let model = new MessagePackSampleModel {Compact = compact, Schema = i}
             select model).ToArray());
 
         [TestMethod]
-        public void ReferenceTypesArraySerializationTest2() => TestRunner.Test((
+        public void ReferenceTypesArraySerializationTest3() => TestRunner.Test((
             from i in Enumerable.Range(0, 10)
             let compact = i % 2 == 0
             let model = compact ? null : new MessagePackSampleModel { Compact = compact, Schema = i }

@@ -10,9 +10,9 @@ namespace BinaryPack.Models
     /// </summary>
     public sealed class JsonResponseModel : IInitializable, IEquatable<JsonResponseModel>
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         public int Count { get; set; }
 
@@ -22,20 +22,20 @@ namespace BinaryPack.Models
 
         public DateTime ExpirationTime { get; set; }
 
-        public string PreviousPageId { get; set; }
+        public string? PreviousPageId { get; set; }
 
-        public string FollowingPageId { get; set; }
+        public string? FollowingPageId { get; set; }
 
         /// <summary>
         /// A model that represents a container for a fake API response
         /// </summary>
         public sealed class ApiModelContainer : IInitializable, IEquatable<ApiModelContainer>
         {
-            public string Id { get; set; }
+            public string? Id { get; set; }
 
-            public string Type { get; set; }
+            public string? Type { get; set; }
 
-            public RestApiModel Model { get; set; }
+            public RestApiModel? Model { get; set; }
 
             /// <inheritdoc/>
             public void Initialize()
@@ -47,7 +47,7 @@ namespace BinaryPack.Models
             }
 
             /// <inheritdoc/>
-            public bool Equals(ApiModelContainer other)
+            public bool Equals(ApiModelContainer? other)
             {
                 if (other is null) return false;
                 if (ReferenceEquals(this, other)) throw new InvalidOperationException();
@@ -58,7 +58,7 @@ namespace BinaryPack.Models
             }
         }
 
-        public ApiModelContainer[] ModelContainers { get; set; }
+        public ApiModelContainer[]? ModelContainers { get; set; }
 
         /// <inheritdoc/>
         public void Initialize()
@@ -80,9 +80,9 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(JsonResponseModel other)
+        public bool Equals(JsonResponseModel? other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return
                 Id == other.Id &&
@@ -103,21 +103,21 @@ namespace BinaryPack.Models
     /// </summary>
     public sealed class RestApiModel : IInitializable, IEquatable<RestApiModel>
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
-        public string Parent { get; set; }
+        public string? Parent { get; set; }
 
-        public string Author { get; set; }
+        public string? Author { get; set; }
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
-        public string Text { get; set; }
+        public string? Text { get; set; }
 
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
-        public string HtmlContent { get; set; }
+        public string? HtmlContent { get; set; }
 
         public int Upvotes { get; set; }
 
@@ -149,20 +149,20 @@ namespace BinaryPack.Models
 
         public bool Flag5 { get; set; }
 
-        public string Optional1 { get; set; }
+        public string? Optional1 { get; set; }
 
-        public string Optional2 { get; set; }
+        public string? Optional2 { get; set; }
 
-        public string Optional3 { get; set; }
+        public string? Optional3 { get; set; }
 
         /// <summary>
         /// A model that represents a collection of fake images
         /// </summary>
         public sealed class MediaInfoModel : IInitializable, IEquatable<MediaInfoModel>
         {
-            public string Id { get; set; }
+            public string? Id { get; set; }
 
-            public string AlbumUrl { get; set; }
+            public string? AlbumUrl { get; set; }
 
             public bool Property { get; set; }
 
@@ -171,7 +171,7 @@ namespace BinaryPack.Models
             /// </summary>
             public sealed class ImageModel : IInitializable, IEquatable<ImageModel>
             {
-                public string Url { get; set; }
+                public string? Url { get; set; }
 
                 public int Width { get; set; }
 
@@ -189,7 +189,7 @@ namespace BinaryPack.Models
                 }
 
                 /// <inheritdoc/>
-                public bool Equals(ImageModel other)
+                public bool Equals(ImageModel? other)
                 {
                     if (other is null) return false;
                     if (ReferenceEquals(this, other)) throw new InvalidOperationException();
@@ -201,7 +201,7 @@ namespace BinaryPack.Models
                 }
             }
 
-            public ImageModel[] Images { get; set; }
+            public ImageModel[]? Images { get; set; }
 
             /// <inheritdoc/>
             public void Initialize()
@@ -218,7 +218,7 @@ namespace BinaryPack.Models
             }
 
             /// <inheritdoc/>
-            public bool Equals(MediaInfoModel other)
+            public bool Equals(MediaInfoModel? other)
             {
                 if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
@@ -231,7 +231,7 @@ namespace BinaryPack.Models
             }
         }
 
-        public MediaInfoModel Info { get; set; }
+        public MediaInfoModel? Info { get; set; }
 
         /// <inheritdoc/>
         public void Initialize()
@@ -270,9 +270,9 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(RestApiModel other)
+        public bool Equals(RestApiModel? other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return
                 Id == other.Id &&
