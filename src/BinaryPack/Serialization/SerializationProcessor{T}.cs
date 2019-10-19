@@ -6,7 +6,6 @@ using System.Reflection.Emit;
 using BinaryPack.Delegates;
 using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
-using BinaryPack.Serialization.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
 using BinaryPack.Serialization.Reflection;
@@ -47,11 +46,7 @@ namespace BinaryPack.Serialization
         {
             return _Serializer.Build(il =>
             {
-                // Local serialization variables
-                foreach (Type type in typeof(Locals.Write).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
-                {
-                    il.DeclareLocal(type);
-                }
+                il.DeclareLocalsFromType<Locals.Write>();
 
                 // Null check if needed
                 if (!typeof(T).IsValueType)
@@ -102,10 +97,7 @@ namespace BinaryPack.Serialization
             {
                 // T obj; ...;
                 il.DeclareLocal(typeof(T));
-                foreach (Type type in typeof(Locals.Read).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
-                {
-                    il.DeclareLocal(type);
-                }
+                il.DeclareLocalsFromType<Locals.Read>();
 
                 // Initialize T obj to either new T() or null
                 il.EmitDeserializeEmptyInstanceOrNull<T>();

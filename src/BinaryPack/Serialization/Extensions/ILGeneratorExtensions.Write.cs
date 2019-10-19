@@ -7,9 +7,6 @@ using BinaryPack.Serialization.Reflection;
 
 namespace BinaryPack.Serialization.Extensions
 {
-    /// <summary>
-    /// A <see langword="class"/> that provides serialization extension methods for the <see langword="ILGenerator"/> type
-    /// </summary>
     internal static partial class ILGeneratorExtensions
     {
         /// <summary>

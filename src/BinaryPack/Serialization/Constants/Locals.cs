@@ -10,7 +10,7 @@ namespace BinaryPack.Serialization.Constants
         /// <summary>
         /// A <see langword="class"/> with a collection of indices for locals used during deserialization
         /// </summary>
-        public static class Read
+        public sealed class Read
         {
             /// <summary>
             /// The index of the input instance
@@ -39,7 +39,7 @@ namespace BinaryPack.Serialization.Constants
         /// <summary>
         /// A <see langword="class"/> with a collection of indices for locals used during serialization
         /// </summary>
-        public static class Write
+        public sealed class Write
         {
             /// <summary>
             /// The index of the <see cref="byte"/>* local variable
