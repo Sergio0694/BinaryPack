@@ -43,5 +43,8 @@ namespace BinaryPack.Unit
             UnmanagedArrayModel model = new UnmanagedArrayModel { Items = Array.Empty<DateTime>(), Value = 999 };
             TestRunner.Test(model);
         }
+
+        [TestMethod]
+        public void NestedHierarchySample1() => TestRunner.Test<NestedHierarchySimpleModel>();
     }
 }
