@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace BinaryPack.Extensions.System.Reflection.Emit
 {
@@ -201,7 +200,7 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
             if (type.IsValueType)
             {
                 // Pick the optimal opcode to set a value type
-                OpCode opcode = Marshal.SizeOf(type) switch
+                OpCode opcode = type.GetSize() switch
                 {
                     // Use the faster op codes for sizes <= 8
                     1 when type == typeof(bool) || type == typeof(byte) => OpCodes.Ldind_U1,
@@ -235,7 +234,7 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
             if (type.IsValueType)
             {
                 // Pick the optimal opcode to set a value type
-                OpCode opcode = Marshal.SizeOf(type) switch
+                OpCode opcode = type.GetSize() switch
                 {
                     // Use the faster op codes for sizes <= 8
                     1 when type == typeof(bool) || type == typeof(byte) || type == typeof(sbyte) => OpCodes.Stind_I1,
