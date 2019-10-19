@@ -94,10 +94,16 @@ namespace BinaryPack.Serialization
                 il.EmitLoadArgument(Arguments.Write.Stream);
                 il.EmitCall(OpCodes.Call, SerializationProcessor<T>._Serializer.MethodInfo, null);
 
+                // i++;
+                il.EmitLoadLocal(2);
+                il.EmitLoadInt32(1);
+                il.Emit(OpCodes.Add);
+                il.EmitStoreLocal(2);
+
                 // Loop check
                 il.MarkLabel(check);
                 il.EmitLoadLocal(2);
-                il.EmitLoadLocal(1);
+                il.EmitLoadLocal(Locals.Write.Int);
                 il.Emit(OpCodes.Blt_S, loop);
                 il.Emit(OpCodes.Ret);
             });
