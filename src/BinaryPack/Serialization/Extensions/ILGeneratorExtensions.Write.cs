@@ -25,7 +25,7 @@ namespace BinaryPack.Serialization.Extensions
 
             // Unsafe.Write<TProperty>(p, obj.Property);
             il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.EmitStoreToAddress(property.PropertyType);
 
@@ -48,7 +48,7 @@ namespace BinaryPack.Serialization.Extensions
             Label
                 notNull = il.DefineLabel(),
                 serialize = il.DefineLabel();
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Brtrue_S, notNull);
 
@@ -65,7 +65,7 @@ namespace BinaryPack.Serialization.Extensions
             // if (obj.Property.Length == 0) { } else { }
             Label notEmpty = il.DefineLabel();
             il.MarkLabel(notNull);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.EmitReadMember(KnownMembers.String.Length);
             il.Emit(OpCodes.Brtrue_S, notEmpty);
@@ -83,7 +83,7 @@ namespace BinaryPack.Serialization.Extensions
             // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
             il.MarkLabel(notEmpty);
             il.EmitReadMember(KnownMembers.Encoding.UTF8);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetByteCount, null);
@@ -101,7 +101,7 @@ namespace BinaryPack.Serialization.Extensions
 
             // _ = Encoding.UTF8.GetBytes(obj.Property.AsSpan(), new Span<byte>(p + 4, size);
             il.EmitReadMember(KnownMembers.Encoding.UTF8);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
             il.EmitLoadLocal(Locals.Write.BytePtr);
@@ -135,13 +135,13 @@ namespace BinaryPack.Serialization.Extensions
                 lengthLoaded = il.DefineLabel();
             il.EmitStackalloc(typeof(int));
             il.EmitStoreLocal(Locals.Write.BytePtr);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Brtrue_S, notNull);
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Br_S, lengthLoaded);
             il.MarkLabel(notNull);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.EmitReadMember(KnownMembers.Array.Length);
             il.MarkLabel(lengthLoaded);
@@ -170,7 +170,7 @@ namespace BinaryPack.Serialization.Extensions
 
             // stream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan(obj.Property)));
             il.EmitLoadArgument(Arguments.Write.Stream);
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(property);
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(property.PropertyType));
             il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteReadOnlySpan(property.PropertyType.GetElementType()), null);
@@ -194,7 +194,7 @@ namespace BinaryPack.Serialization.Extensions
             Label
                 notNull = il.DefineLabel(),
                 serialize = il.DefineLabel();
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Brtrue_S, notNull);
             il.EmitLoadInt32(0);
             il.Emit(OpCodes.Br_S, serialize);
@@ -218,7 +218,7 @@ namespace BinaryPack.Serialization.Extensions
         public static void EmitReturnIfNull(this ILGenerator il)
         {
             Label end = il.DefineLabel();
-            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Brtrue_S, end);
             il.Emit(OpCodes.Ret);
             il.MarkLabel(end);

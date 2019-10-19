@@ -22,9 +22,9 @@
         public static class Write
         {
             /// <summary>
-            /// The index of the input instance
+            /// The index of the input instance of a given type
             /// </summary>
-            public const int Obj = 0;
+            public const int T = 0;
 
             /// <summary>
             /// The index of the input <see cref="System.IO.Stream"/> instance

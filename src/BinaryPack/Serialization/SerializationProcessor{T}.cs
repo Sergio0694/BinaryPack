@@ -16,7 +16,7 @@ namespace BinaryPack.Serialization
     /// <summary>
     /// A <see langword="class"/> responsible for creating the serializers and deserializers
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of items to handle during serialization and deserialization</typeparam>
     internal static class SerializationProcessor<T> where T : new()
     {
         /// <summary>
@@ -74,12 +74,12 @@ namespace BinaryPack.Serialization
                         Label
                             notNull = il.DefineLabel(),
                             call = il.DefineLabel();
-                        il.EmitLoadArgument(Arguments.Write.Obj);
+                        il.EmitLoadArgument(Arguments.Write.T);
                         il.Emit(OpCodes.Brtrue_S, notNull);
                         il.Emit(OpCodes.Ldnull);
                         il.Emit(OpCodes.Br_S, call);
                         il.MarkLabel(notNull);
-                        il.EmitLoadArgument(Arguments.Write.Obj);
+                        il.EmitLoadArgument(Arguments.Write.T);
                         il.EmitReadMember(property);
                         il.MarkLabel(call);
                         il.EmitLoadArgument(Arguments.Write.Stream);
