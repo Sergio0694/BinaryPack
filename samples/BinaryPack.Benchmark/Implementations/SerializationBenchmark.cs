@@ -1,10 +1,8 @@
 ﻿using System.IO;
-using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BinaryPack.Models.Interfaces;
-using Newtonsoft.Json;
-using BinaryFormatter = System.Runtime.Serialization.Formatters.Binary.BinaryFormatter;
-using JsonSerializer = Newtonsoft.Json.JsonSerializer;
+using JsonTextWriter = Newtonsoft.Json.JsonTextWriter;
+using Utf8JsonWriter = System.Text.Json.Utf8JsonWriter;
 
 namespace BinaryPack.Benchmark.Implementations
 {
@@ -24,10 +22,65 @@ namespace BinaryPack.Benchmark.Implementations
         /// Initial setup for a benchmarking session
         /// </summary>
         [GlobalSetup]
-        public void Setup() => Model.Initialize();
+        public void Setup()
+        {
+            Model.Initialize();
+
+            // Newtonsoft
+            using (Stream stream = new MemoryStream())
+            {
+                using StreamWriter textWriter = new StreamWriter(stream);
+                using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
+
+                var serializer = new Newtonsoft.Json.JsonSerializer();
+                serializer.Serialize(jsonWriter, Model);
+                jsonWriter.Flush();
+            }
+
+            // Binary formatter
+            using (Stream stream = new MemoryStream())
+            {
+                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                formatter.Serialize(stream, Model);
+            }
+
+            // .NETCore JSON
+            using (Stream stream = new MemoryStream())
+            {
+                using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(stream);
+
+                System.Text.Json.JsonSerializer.Serialize(jsonWriter, Model);
+            }
+
+            // DataContractJson
+            using (Stream stream = new MemoryStream())
+            {
+                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
+                serializer.WriteObject(stream, Model);
+            }
+
+            // XML serializer
+            using (Stream stream = new MemoryStream())
+            {
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                serializer.Serialize(stream, Model);
+            }
+
+            // Portable Xaml
+            using (Stream stream = new MemoryStream())
+            {
+                Portable.Xaml.XamlServices.Save(stream, Model);
+            }
+
+            // BinaryPack
+            using (Stream stream = new MemoryStream())
+            {
+                BinaryConverter.Serialize(Model, stream);
+            }
+        }
 
         /// <summary>
-        /// Benchmark run powered by <see cref="JsonSerializer"/>
+        /// Benchmark run powered by <see cref="Newtonsoft.Json.JsonSerializer"/>
         /// </summary>
         [Benchmark(Baseline = true)]
         public void NewtonsoftJson()
@@ -38,7 +91,7 @@ namespace BinaryPack.Benchmark.Implementations
                 using StreamWriter textWriter = new StreamWriter(stream);
                 using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
 
-                JsonSerializer serializer = new JsonSerializer();
+                var serializer = new Newtonsoft.Json.JsonSerializer();
                 serializer.Serialize(jsonWriter, Model);
                 jsonWriter.Flush();
             }
@@ -54,13 +107,13 @@ namespace BinaryPack.Benchmark.Implementations
             {
                 using Stream stream = new MemoryStream();
 
-                BinaryFormatter formatter = new BinaryFormatter();
+                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                 formatter.Serialize(stream, Model);
             }
         }
 
         /// <summary>
-        /// Benchmark run powered by <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>
+        /// Benchmark run powered by <see cref="System.Text.Json.JsonSerializer"/>
         /// </summary>
         [Benchmark]
         public void NetCoreJson()
@@ -75,6 +128,50 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
+        /// Benchmark run powered by <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
+        /// </summary>
+        [Benchmark]
+        public void DataContractJsonSerializer()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+
+                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
+                serializer.WriteObject(stream, Model);
+            }
+        }
+
+        /// <summary>
+        /// Benchmark run powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// </summary>
+        [Benchmark]
+        public void XmlSerializer()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                serializer.Serialize(stream, Model);
+            }
+        }
+
+        /// <summary>
+        /// Benchmark run powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// </summary>
+        [Benchmark]
+        public void PortableXaml()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+
+                Portable.Xaml.XamlServices.Save(stream, Model);
+            }
+        }
+
+        /// <summary>
         /// Benchmark run powered by <see cref="BinaryConverter"/>
         /// </summary>
         [Benchmark]
@@ -82,8 +179,7 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                using Stream stream = new MemoryStream();
-                BinaryConverter.Serialize(Model, stream);
+                
             }
         }
     }

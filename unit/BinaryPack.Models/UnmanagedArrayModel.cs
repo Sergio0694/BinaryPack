@@ -7,6 +7,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A very simple model that simply contains a <see cref="DateTime"/> array property
     /// </summary>
+    [Serializable]
     public sealed class UnmanagedArrayModel : IInitializable, IEquatable<UnmanagedArrayModel>
     {
         public DateTime[] Items { get; set; }
