@@ -1,7 +1,10 @@
 ﻿using System.IO;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BinaryPack.Models.Interfaces;
 using Newtonsoft.Json;
+using BinaryFormatter = System.Runtime.Serialization.Formatters.Binary.BinaryFormatter;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace BinaryPack.Benchmark.Implementations
 {
@@ -21,13 +24,7 @@ namespace BinaryPack.Benchmark.Implementations
         /// Initial setup for a benchmarking session
         /// </summary>
         [GlobalSetup]
-        public void Setup()
-        {
-            Model.Initialize();
-
-            JsonConvert.SerializeObject(Model);
-            BinaryConverter.Serialize(Model);
-        }
+        public void Setup() => Model.Initialize();
 
         /// <summary>
         /// Benchmark run powered by <see cref="JsonSerializer"/>
@@ -44,6 +41,36 @@ namespace BinaryPack.Benchmark.Implementations
                 JsonSerializer serializer = new JsonSerializer();
                 serializer.Serialize(jsonWriter, Model);
                 jsonWriter.Flush();
+            }
+        }
+
+        /// <summary>
+        /// Benchmark run powered by <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>
+        /// </summary>
+        [Benchmark]
+        public void BinaryFormatter()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, Model);
+            }
+        }
+
+        /// <summary>
+        /// Benchmark run powered by <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>
+        /// </summary>
+        [Benchmark]
+        public void NetCoreJson()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+                using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(stream);
+
+                System.Text.Json.JsonSerializer.Serialize(jsonWriter, Model);
             }
         }
 
