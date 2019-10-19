@@ -48,6 +48,9 @@ namespace BinaryPack.Unit
         }
 
         [TestMethod]
+        public void NestedHierarchyNullSample() => TestRunner.Test(new NestedHierarchySimpleModel());
+
+        [TestMethod]
         public void NestedHierarchySample1() => TestRunner.Test<NestedHierarchySimpleModel>();
     }
 }

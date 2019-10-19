@@ -71,7 +71,17 @@ namespace BinaryPack.Serialization
                     else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
                     else if (!property.PropertyType.IsValueType)
                     {
+                        Label
+                            notNull = il.DefineLabel(),
+                            call = il.DefineLabel();
                         il.EmitLoadArgument(Arguments.Write.Obj);
+                        il.Emit(OpCodes.Brtrue_S, notNull);
+                        il.Emit(OpCodes.Ldnull);
+                        il.Emit(OpCodes.Br_S, call);
+                        il.MarkLabel(notNull);
+                        il.EmitLoadArgument(Arguments.Write.Obj);
+                        il.EmitReadMember(property);
+                        il.MarkLabel(call);
                         il.EmitLoadArgument(Arguments.Write.Stream);
                         il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.SerializerInfo(property.PropertyType), null);
                     }
