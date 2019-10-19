@@ -7,5 +7,5 @@ namespace BinaryPack.Delegates
     /// </summary>
     /// <typeparam name="T">The type of instances to deserialize</typeparam>
     /// <param name="stream">The input <see cref="Stream"/> to read data from</param>
-    internal delegate T BinaryDeserializer<out T>(Stream stream) where T : new();
+    internal delegate T BinaryDeserializer<out T>(Stream stream);
 }

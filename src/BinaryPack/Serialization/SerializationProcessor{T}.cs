@@ -64,6 +64,12 @@ namespace BinaryPack.Serialization
                     if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
                     else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
+                    else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType)
+                    {
+                        il.EmitLoadArgument(Arguments.Write.T);
+                        il.EmitLoadArgument(Arguments.Write.Stream);
+                        il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
+                    }
                     else if (!property.PropertyType.IsValueType)
                     {
                         Label
@@ -116,6 +122,7 @@ namespace BinaryPack.Serialization
                     if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
                     else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
+                    else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType) { } // TODO
                     else if (!property.PropertyType.IsValueType)
                     {
                         il.EmitLoadLocal(Locals.Read.T);

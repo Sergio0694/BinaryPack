@@ -8,5 +8,5 @@ namespace BinaryPack.Delegates
     /// <typeparam name="T">The type of instances to serialize</typeparam>
     /// <param name="obj">The input <typeparamref name="T"/> instance to serialize</param>
     /// <param name="stream">The target <see cref="Stream"/> to write data to</param>
-    internal delegate void BinarySerializer<in T>(T obj, Stream stream) where T : new();
+    internal delegate void BinarySerializer<in T>(T obj, Stream stream);
 }
