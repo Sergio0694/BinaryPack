@@ -180,32 +180,48 @@ namespace BinaryPack.Serialization.Extensions
         }
 
         /// <summary>
-        /// Emits the necessary instructions to serialize a <see langword="null"/> instance to a target <see cref="System.IO.Stream"/> instance
+        /// Emits the necessary instructions to load a flag to indicate whether the input instance is <see langword="null"/> to a target <see cref="System.IO.Stream"/> instance
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        public static void EmitSerializeFlagIfNull(this ILGenerator il)
+        public static void EmitSerializeIsNullFlag(this ILGenerator il)
         {
-            // if (obj == null) { } else { }
-            Label notNull = il.DefineLabel();
-            il.EmitLoadArgument(Arguments.Write.Obj);
-            il.Emit(OpCodes.Brtrue_S, notNull);
-
-            // void* p = stackalloc byte[4]; *p = -1;
-            il.EmitStackalloc(typeof(int));
+            // byte* p = stackalloc byte[1];
+            il.EmitStackalloc(typeof(byte));
             il.EmitStoreLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadInt32(-1);
-            il.EmitStoreToAddress(typeof(int));
 
-            // stream.Write(new ReadOnlySpan<byte>(p, 4)); return;
+            // *p = obj == null ? 0 : 1;
+            Label
+                notNull = il.DefineLabel(),
+                serialize = il.DefineLabel();
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.Emit(OpCodes.Brtrue_S, notNull);
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Br_S, serialize);
+            il.MarkLabel(notNull);
+            il.EmitLoadInt32(1);
+            il.MarkLabel(serialize);
+            il.EmitStoreToAddress(typeof(byte));
+
+            // stream.Write(new ReadOnlySpan<byte>(p, 1)); return;
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadInt32(sizeof(int));
+            il.EmitLoadInt32(sizeof(byte));
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
-            il.Emit(OpCodes.Ret);
+        }
 
-            il.MarkLabel(notNull);
+        /// <summary>
+        /// Emits the necessary instructions to return if the input instance is <see langword="null"/>
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        public static void EmitReturnIfNull(this ILGenerator il)
+        {
+            Label end = il.DefineLabel();
+            il.EmitLoadArgument(Arguments.Write.Obj);
+            il.Emit(OpCodes.Brtrue_S, end);
+            il.Emit(OpCodes.Ret);
+            il.MarkLabel(end);
         }
     }
 }

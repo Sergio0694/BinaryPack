@@ -54,7 +54,11 @@ namespace BinaryPack.Serialization
                 }
 
                 // Null check if needed
-                if (!typeof(T).IsValueType) il.EmitSerializeFlagIfNull();
+                if (!typeof(T).IsValueType)
+                {
+                    il.EmitSerializeIsNullFlag();
+                    il.EmitReturnIfNull();
+                }
 
                 // Properties serialization
                 foreach (PropertyInfo property in
@@ -93,10 +97,15 @@ namespace BinaryPack.Serialization
                     il.DeclareLocal(type);
                 }
 
-                // T obj = new T();
-                il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
-                il.EmitStoreLocal(Locals.Read.T);
+                // Initialize T obj to either new T() or null
+                il.EmitDeserializeEmptyInstanceOrNull<T>();
 
+                // Skip the deserialization if the instance in null
+                Label end = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Read.T);
+                il.Emit(OpCodes.Brfalse_S, end);
+
+                // Deserialize all the contained properties
                 foreach (PropertyInfo property in
                     from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     where prop.CanRead && prop.CanWrite
@@ -115,6 +124,8 @@ namespace BinaryPack.Serialization
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
+                // return obj;
+                il.MarkLabel(end);
                 il.EmitLoadLocal(Locals.Read.T);
                 il.Emit(OpCodes.Ret);
             });

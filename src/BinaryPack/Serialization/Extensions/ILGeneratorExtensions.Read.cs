@@ -169,5 +169,43 @@ namespace BinaryPack.Serialization.Extensions
             il.EmitWriteMember(property);
             il.MarkLabel(end);
         }
+
+        /// <summary>
+        /// Emits the necessary instructions to load the default instance of the target type
+        /// </summary>
+        /// <typeparam name="T">The type of instance being deserialized</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        public static void EmitDeserializeEmptyInstanceOrNull<T>(this ILGenerator il) where T : new()
+        {
+            // Span<byte> span = stackalloc byte[1];
+            il.EmitStackalloc(typeof(byte));
+            il.EmitLoadInt32(sizeof(byte));
+            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.EmitStoreLocal(Locals.Read.SpanByte);
+
+            // _ = stream.Read(span);
+            il.EmitLoadArgument(Arguments.Read.Stream);
+            il.EmitLoadLocal(Locals.Read.SpanByte);
+            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+            il.Emit(OpCodes.Pop);
+
+            // byte isNotNull = span.GetPinnableReference();
+            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+            il.EmitLoadFromAddress(typeof(byte));
+
+            // T obj = isNotNull ? new T() : null;
+            Label
+                isNotNull = il.DefineLabel(),
+                store = il.DefineLabel();
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
+            il.EmitLoadLocalAddress(Locals.Read.T);
+            il.Emit(OpCodes.Initobj, typeof(T));
+            il.Emit(OpCodes.Br_S, store);
+            il.MarkLabel(isNotNull);
+            il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
+            il.MarkLabel(store);
+            il.EmitStoreLocal(Locals.Read.T);
+        }
     }
 }
