@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{019B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack.Benchmark", "samples\BinaryPack.Benchmark\BinaryPack.Benchmark.csproj", "{DAA147B5-FC6C-4E96-A068-797EF15EF702}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack.Unit.Internals", "unit\BinaryPack.Unit.Internals\BinaryPack.Unit.Internals.csproj", "{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		unit\BinaryPack.Models\BinaryPack.Models.projitems*{44d0250e-ac2d-48af-a426-847ef917d151}*SharedItemsImports = 13
@@ -43,6 +45,10 @@ Global
 		{DAA147B5-FC6C-4E96-A068-797EF15EF702}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAA147B5-FC6C-4E96-A068-797EF15EF702}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAA147B5-FC6C-4E96-A068-797EF15EF702}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +57,7 @@ Global
 		{4D7B806F-68F3-4493-98CA-E78760D4F94F} = {80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}
 		{44D0250E-AC2D-48AF-A426-847EF917D151} = {80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}
 		{DAA147B5-FC6C-4E96-A068-797EF15EF702} = {019B7191-19E1-4900-83D7-28B7E573D242}
+		{5BE9164D-2E4D-4CA3-A673-E9120A8EC597} = {80C7BEF2-EF0A-4C5F-864B-6113C2DE04CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A51744AB-1AE0-4935-B984-CE81201E3CF6}
