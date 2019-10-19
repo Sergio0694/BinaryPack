@@ -1,12 +1,7 @@
-﻿using System;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Reflection;
+﻿using System.Diagnostics.Contracts;
 using System.Reflection.Emit;
 using BinaryPack.Delegates;
-using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
-using BinaryPack.Serialization.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
 using BinaryPack.Serialization.Reflection;
@@ -17,7 +12,7 @@ namespace BinaryPack.Serialization
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    internal static class ArrayProcessor<T> where T : class, new()
+    internal static partial class ArrayProcessor<T> where T : class, new()
     {
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for arrays of type <typeparamref name="T"/>
@@ -48,9 +43,8 @@ namespace BinaryPack.Serialization
             return _Serializer.Build(il =>
             {
                 il.DeclareLocalsFromType<Locals.Write>();
-                il.DeclareLocal(typeof(int)); // Index 2: int i;
 
-                // int size = obj?.Length ?? -1;
+                // int length = obj?.Length ?? -1;
                 Label
                     notNull = il.DefineLabel(),
                     lengthLoaded = il.DefineLabel();
@@ -63,13 +57,13 @@ namespace BinaryPack.Serialization
                 il.Emit(OpCodes.Ldlen);
                 il.Emit(OpCodes.Conv_I4);
                 il.MarkLabel(lengthLoaded);
-                il.EmitStoreLocal(Locals.Write.Int);
+                il.EmitStoreLocal(Locals.Write.Length);
 
-                // byte* p = stackalloc byte[4]; *(int*)p = size;
+                // byte* p = stackalloc byte[sizeof(int)]; *(int*)p = length;
                 il.EmitStackalloc(typeof(int));
                 il.EmitStoreLocal(Locals.Write.BytePtr);
                 il.EmitLoadLocal(Locals.Write.BytePtr);
-                il.EmitLoadLocal(Locals.Write.Int);
+                il.EmitLoadLocal(Locals.Write.Length);
                 il.EmitStoreToAddress(typeof(int));
 
                 // stream.Write(new ReadOnlySpan<byte>(p, 4));
@@ -79,7 +73,7 @@ namespace BinaryPack.Serialization
                 il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
                 il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
 
-                // for (int i = 0; i < size; i++) { }
+                // for (int i = 0; i < length; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
                 il.EmitStoreLocal(2);
@@ -103,7 +97,7 @@ namespace BinaryPack.Serialization
                 // Loop check
                 il.MarkLabel(check);
                 il.EmitLoadLocal(2);
-                il.EmitLoadLocal(Locals.Write.Int);
+                il.EmitLoadLocal(Locals.Write.I);
                 il.Emit(OpCodes.Blt_S, loop);
                 il.Emit(OpCodes.Ret);
             });
@@ -117,43 +111,75 @@ namespace BinaryPack.Serialization
         {
             return _Deserializer.Build(il =>
             {
-                // T obj; ...;
-                il.DeclareLocal(typeof(T));
-                foreach (Type type in typeof(Locals.Read).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
-                {
-                    il.DeclareLocal(type);
-                }
+                // T[] array; ...;
+                il.DeclareLocal(typeof(T).MakeArrayType());
+                il.DeclareLocalsFromType<Locals.Read>();
 
-                // Initialize T obj to either new T() or null
-                il.EmitDeserializeEmptyInstanceOrNull<T>();
+                // Span<byte> span = stackalloc byte[sizeof(int)];
+                il.EmitStackalloc(typeof(int));
+                il.EmitLoadInt32(sizeof(int));
+                il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+                il.EmitStoreLocal(Locals.Read.SpanByte);
 
-                // Skip the deserialization if the instance in null
-                Label end = il.DefineLabel();
-                il.EmitLoadLocal(Locals.Read.T);
-                il.Emit(OpCodes.Brfalse_S, end);
+                // _ = stream.Read(span);
+                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitLoadLocal(Locals.Read.SpanByte);
+                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.Emit(OpCodes.Pop);
 
-                // Deserialize all the contained properties
-                foreach (PropertyInfo property in
-                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    where prop.CanRead && prop.CanWrite
-                    select prop)
-                {
-                    if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
-                    else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
-                    else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
-                    else if (!property.PropertyType.IsValueType)
-                    {
-                        il.EmitLoadLocal(Locals.Read.T);
-                        il.EmitLoadArgument(Arguments.Read.Stream);
-                        il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
-                        il.EmitWriteMember(property);
-                    }
-                    else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
-                }
+                // int length = span.GetPinnableReference();
+                il.EmitLoadLocalAddress(Locals.Read.SpanByte);
+                il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+                il.EmitLoadFromAddress(typeof(int));
+                il.EmitStoreLocal(Locals.Read.Length);
+
+                // if (length == -1) return array = null;
+                Label
+                    isNotNull = il.DefineLabel(),
+                    end = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Read.Length);
+                il.EmitLoadInt32(-1);
+                il.Emit(OpCodes.Ceq);
+                il.Emit(OpCodes.Brfalse_S, isNotNull);
+                il.Emit(OpCodes.Ldnull);
+                il.EmitStoreLocal(Locals.Read.Array);
+                il.Emit(OpCodes.Br_S, end);
+
+                // else array = new T[length];
+                il.MarkLabel(isNotNull);
+                il.EmitLoadLocal(Locals.Read.Length);
+                il.Emit(OpCodes.Newarr, typeof(T));
+
+                // for (int i = 0; i < length; i++) { }
+                Label check = il.DefineLabel();
+                il.EmitLoadInt32(0);
+                il.EmitStoreLocal(Locals.Read.I);
+                il.Emit(OpCodes.Br_S, check);
+                Label loop = il.DefineLabel();
+                il.MarkLabel(loop);
+
+                // array[i] = SerializationProcessor<T>.Deserializer(stream);
+                il.EmitLoadLocal(Locals.Read.Array);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitCall(OpCodes.Call, SerializationProcessor<T>._Deserializer.MethodInfo, null);
+                il.Emit(OpCodes.Stelem_Ref);
+
+                // i++;
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadInt32(1);
+                il.Emit(OpCodes.Add);
+                il.EmitStoreLocal(Locals.Read.I);
+
+                // Loop check
+                il.MarkLabel(check);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadLocal(Locals.Write.Length);
+                il.Emit(OpCodes.Blt_S, loop);
 
                 // return obj;
                 il.MarkLabel(end);
-                il.EmitLoadLocal(Locals.Read.T);
+                il.EmitLoadLocal(Locals.Read.Array);
                 il.Emit(OpCodes.Ret);
             });
         }
