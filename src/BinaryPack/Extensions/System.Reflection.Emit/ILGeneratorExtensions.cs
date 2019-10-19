@@ -129,10 +129,10 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         {
             switch (member)
             {
-                case FieldInfo field:
+                case FieldInfo field when !field.IsInitOnly:
                     il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
                     break;
-                case PropertyInfo property when property.CanRead:
+                case PropertyInfo property when property.CanWrite:
                     il.EmitCall(property.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, property.SetMethod, null);
                     break;
                 default: throw new ArgumentException($"The input {member.GetType()} instance can't be written");

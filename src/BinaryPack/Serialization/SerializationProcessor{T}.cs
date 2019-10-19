@@ -110,7 +110,7 @@ namespace BinaryPack.Serialization
                         il.EmitLoadLocal(Locals.Read.T);
                         il.EmitLoadArgument(Arguments.Read.Stream);
                         il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
-                        il.EmitWriteMember(property.PropertyType);
+                        il.EmitWriteMember(property);
                     }
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
