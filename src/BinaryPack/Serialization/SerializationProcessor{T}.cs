@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
@@ -21,9 +20,19 @@ namespace BinaryPack.Serialization
     internal static class SerializationProcessor<T> where T : new()
     {
         /// <summary>
+        /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for type <typeparamref name="T"/>
+        /// </summary>
+        public static readonly DynamicMethod<BinarySerializer<T>> _Serializer = DynamicMethod<BinarySerializer<T>>.New();
+
+        /// <summary>
         /// Gets the <see cref="BinarySerializer{T}"/> instance for the current type <typeparamref name="T"/>
         /// </summary>
         public static BinarySerializer<T> Serializer { get; } = BuildSerializer();
+
+        /// <summary>
+        /// The <see cref="DynamicMethod{T}"/> instance holding the deserializer being built for type <typeparamref name="T"/>
+        /// </summary>
+        public static readonly DynamicMethod<BinaryDeserializer<T>> _Deserializer = DynamicMethod<BinaryDeserializer<T>>.New();
 
         /// <summary>
         /// Gets the <see cref="BinaryDeserializer{T}"/> instance for the current type <typeparamref name="T"/>
@@ -36,20 +45,22 @@ namespace BinaryPack.Serialization
         [Pure]
         private static BinarySerializer<T> BuildSerializer()
         {
-            return DynamicMethod<BinarySerializer<T>>.New(il =>
+            return _Serializer.Build(il =>
             {
-                IEnumerable<PropertyInfo> properties =
-                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    where prop.CanRead && prop.CanWrite
-                    select prop;
-
                 // Local serialization variables
                 foreach (Type type in typeof(Locals.Write).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
                 {
                     il.DeclareLocal(type);
                 }
 
-                foreach (PropertyInfo property in properties)
+                // Null check
+                il.EmitSerializeFlagIfNull();
+
+                // Properties serialization
+                foreach (PropertyInfo property in
+                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    where prop.CanRead && prop.CanWrite
+                    select prop)
                 {
                     if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
@@ -67,13 +78,8 @@ namespace BinaryPack.Serialization
         [Pure]
         private static BinaryDeserializer<T> BuildDeserializer()
         {
-            return DynamicMethod<BinaryDeserializer<T>>.New(il =>
+            return _Deserializer.Build(il =>
             {
-                IEnumerable<PropertyInfo> properties =
-                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    where prop.CanRead && prop.CanWrite
-                    select prop;
-
                 // T obj; ...;
                 il.DeclareLocal(typeof(T));
                 foreach (Type type in typeof(Locals.Read).GetAttributes<LocalTypeAttribute>().Select(a => a.Type))
@@ -85,7 +91,10 @@ namespace BinaryPack.Serialization
                 il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
                 il.EmitStoreLocal(Locals.Read.T);
 
-                foreach (PropertyInfo property in properties)
+                foreach (PropertyInfo property in
+                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    where prop.CanRead && prop.CanWrite
+                    select prop)
                 {
                     if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
