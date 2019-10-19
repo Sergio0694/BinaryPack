@@ -22,28 +22,28 @@ namespace BinaryPack.Serialization
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for arrays of type <typeparamref name="T"/>
         /// </summary>
-        public static readonly DynamicMethod<BinarySerializer<T[]>> _Serializer = DynamicMethod<BinarySerializer<T[]>>.New();
+        public static readonly DynamicMethod<BinarySerializer<T[]?>> _Serializer = DynamicMethod<BinarySerializer<T[]?>>.New();
 
         /// <summary>
         /// Gets the <see cref="BinarySerializer{T}"/> instance for arrays of the current type <typeparamref name="T"/>
         /// </summary>
-        public static BinarySerializer<T[]> Serializer { get; } = BuildSerializer();
+        public static BinarySerializer<T[]?> Serializer { get; } = BuildSerializer();
 
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the deserializer being built for arrays of type <typeparamref name="T"/>
         /// </summary>
-        public static readonly DynamicMethod<BinaryDeserializer<T[]>> _Deserializer = DynamicMethod<BinaryDeserializer<T[]>>.New();
+        public static readonly DynamicMethod<BinaryDeserializer<T[]?>> _Deserializer = DynamicMethod<BinaryDeserializer<T[]?>>.New();
 
         /// <summary>
         /// Gets the <see cref="BinaryDeserializer{T}"/> instance for arrays of the current type <typeparamref name="T"/>
         /// </summary>
-        public static BinaryDeserializer<T[]> Deserializer { get; } = BuildDeserializer();
+        public static BinaryDeserializer<T[]?> Deserializer { get; } = BuildDeserializer();
 
         /// <summary>
         /// Builds a new <see cref="BinarySerializer{T}"/> instance for the type <typeparamref name="T"/>
         /// </summary>
         [Pure]
-        private static BinarySerializer<T[]> BuildSerializer()
+        private static BinarySerializer<T[]?> BuildSerializer()
         {
             return _Serializer.Build(il =>
             {
@@ -113,7 +113,7 @@ namespace BinaryPack.Serialization
         /// Builds a new <see cref="BinaryDeserializer{T}"/> instance for the type <typeparamref name="T"/>
         /// </summary>
         [Pure]
-        private static BinaryDeserializer<T[]> BuildDeserializer()
+        private static BinaryDeserializer<T[]?> BuildDeserializer()
         {
             return _Deserializer.Build(il =>
             {

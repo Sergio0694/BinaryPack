@@ -1,6 +1,6 @@
-using System.IO;
+using System;
+using System.Linq;
 using BinaryPack.Models;
-using BinaryPack.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BinaryPack.Unit.Internals
@@ -9,22 +9,23 @@ namespace BinaryPack.Unit.Internals
     public class SerializationTest
     {
         [TestMethod]
-        public void ReferenceTypesArraySerializationTest()
-        {
-            var array = new[] { new MessagePackSampleModel() };
-            array[0].Initialize();
+        public void ReferenceTypesNullArraySerializationTest() => TestRunner.Test(default(MessagePackSampleModel[]));
 
-            // Serialize
-            using MemoryStream stream = new MemoryStream();
-            ArrayProcessor<MessagePackSampleModel>.Serializer(array, stream);
+        [TestMethod]
+        public void ReferenceTypesEmptyArraySerializationTest() => TestRunner.Test(Array.Empty<MessagePackSampleModel>());
 
-            // Deserialize
-            stream.Seek(0, SeekOrigin.Begin);
-            var result = ArrayProcessor<MessagePackSampleModel>.Deserializer(stream);
+        [TestMethod]
+        public void ReferenceTypesArraySerializationTest1() => TestRunner.Test((
+            from i in Enumerable.Range(0, 10)
+            let compact = i % 2 == 0
+            let model = new MessagePackSampleModel {Compact = compact, Schema = i}
+            select model).ToArray());
 
-            Assert.IsNotNull(result);
-            Assert.IsTrue(array.Length == result.Length);
-            Assert.IsTrue(array[0].Equals(result[0]));
-        }
+        [TestMethod]
+        public void ReferenceTypesArraySerializationTest2() => TestRunner.Test((
+            from i in Enumerable.Range(0, 10)
+            let compact = i % 2 == 0
+            let model = compact ? null : new MessagePackSampleModel { Compact = compact, Schema = i }
+            select model).ToArray());
     }
 }
