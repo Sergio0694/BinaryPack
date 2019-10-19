@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
-using BinaryPack.Extensions;
 using BinaryPack.Serialization.Attributes;
 
 namespace BinaryPack.Serialization.Extensions
@@ -18,13 +18,14 @@ namespace BinaryPack.Serialization.Extensions
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         public static void DeclareLocalsFromType<T>(this ILGenerator il)
         {
-            LocalTypeAttribute[] attributes = typeof(T).GetAttributes<LocalTypeAttribute>().ToArray();
-            if (attributes.Length == 0) throw new InvalidOperationException($"Type [{typeof(T)}] doesn't contain valid members");
-
-            // Automatically declare the locals from the extracted attributes
-            foreach (LocalTypeAttribute attribute in attributes)
+            foreach (Type type in
+                from field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+                where field.IsLiteral && !field.IsInitOnly
+                let attribute = field.GetCustomAttributes().OfType<LocalTypeAttribute>().FirstOrDefault()
+                where attribute != null
+                select attribute.Type)
             {
-                il.DeclareLocal(attribute.Type);
+                il.DeclareLocal(type);
             }
         }
     }
