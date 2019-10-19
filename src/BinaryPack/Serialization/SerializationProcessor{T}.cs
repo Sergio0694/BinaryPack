@@ -42,93 +42,87 @@ namespace BinaryPack.Serialization
         /// Builds a new <see cref="BinarySerializer{T}"/> instance for the type <typeparamref name="T"/>
         /// </summary>
         [Pure]
-        private static BinarySerializer<T> BuildSerializer()
+        private static BinarySerializer<T> BuildSerializer() => _Serializer.Build(il =>
         {
-            return _Serializer.Build(il =>
+            il.DeclareLocalsFromType<Locals.Write>();
+
+            // Null check if needed
+            if (!typeof(T).IsValueType)
             {
-                il.DeclareLocalsFromType<Locals.Write>();
+                il.EmitSerializeIsNullFlag();
+                il.EmitReturnIfNull();
+            }
 
-                // Null check if needed
-                if (!typeof(T).IsValueType)
+            // Properties serialization
+            foreach (PropertyInfo property in
+                from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                where prop.CanRead && prop.CanWrite
+                select prop)
+            {
+                if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
+                else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
+                else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
+                else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType)
                 {
-                    il.EmitSerializeIsNullFlag();
-                    il.EmitReturnIfNull();
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
                 }
-
-                // Properties serialization
-                foreach (PropertyInfo property in
-                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    where prop.CanRead && prop.CanWrite
-                    select prop)
+                else if (!property.PropertyType.IsValueType)
                 {
-                    if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
-                    else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
-                    else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
-                    else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType)
-                    {
-                        il.EmitLoadArgument(Arguments.Write.T);
-                        il.EmitLoadArgument(Arguments.Write.Stream);
-                        il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
-                    }
-                    else if (!property.PropertyType.IsValueType)
-                    {
-                        il.EmitLoadArgument(Arguments.Write.T);
-                        il.EmitReadMember(property);
-                        il.EmitLoadArgument(Arguments.Write.Stream);
-                        il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.SerializerInfo(property.PropertyType), null);
-                    }
-                    else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.SerializerInfo(property.PropertyType), null);
                 }
+                else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
+            }
 
-                il.Emit(OpCodes.Ret);
-            });
-        }
+            il.Emit(OpCodes.Ret);
+        });
 
         /// <summary>
         /// Builds a new <see cref="BinaryDeserializer{T}"/> instance for the type <typeparamref name="T"/>
         /// </summary>
         [Pure]
-        private static BinaryDeserializer<T> BuildDeserializer()
+        private static BinaryDeserializer<T> BuildDeserializer() => _Deserializer.Build(il =>
         {
-            return _Deserializer.Build(il =>
+            // T obj; ...;
+            il.DeclareLocal(typeof(T));
+            il.DeclareLocalsFromType<Locals.Read>();
+
+            // Initialize T obj to either new T() or null
+            il.EmitDeserializeEmptyInstanceOrNull<T>();
+
+            // Skip the deserialization if the instance in null
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.T);
+            il.Emit(OpCodes.Brfalse_S, end);
+
+            // Deserialize all the contained properties
+            foreach (PropertyInfo property in
+                from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                where prop.CanRead && prop.CanWrite
+                select prop)
             {
-                // T obj; ...;
-                il.DeclareLocal(typeof(T));
-                il.DeclareLocalsFromType<Locals.Read>();
-
-                // Initialize T obj to either new T() or null
-                il.EmitDeserializeEmptyInstanceOrNull<T>();
-
-                // Skip the deserialization if the instance in null
-                Label end = il.DefineLabel();
-                il.EmitLoadLocal(Locals.Read.T);
-                il.Emit(OpCodes.Brfalse_S, end);
-
-                // Deserialize all the contained properties
-                foreach (PropertyInfo property in
-                    from prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    where prop.CanRead && prop.CanWrite
-                    select prop)
+                if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
+                else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
+                else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
+                else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType) { } // TODO
+                else if (!property.PropertyType.IsValueType)
                 {
-                    if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
-                    else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
-                    else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
-                    else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType) { } // TODO
-                    else if (!property.PropertyType.IsValueType)
-                    {
-                        il.EmitLoadLocal(Locals.Read.T);
-                        il.EmitLoadArgument(Arguments.Read.Stream);
-                        il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
-                        il.EmitWriteMember(property);
-                    }
-                    else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
+                    il.EmitWriteMember(property);
                 }
+                else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
+            }
 
-                // return obj;
-                il.MarkLabel(end);
-                il.EmitLoadLocal(Locals.Read.T);
-                il.Emit(OpCodes.Ret);
-            });
-        }
+            // return obj;
+            il.MarkLabel(end);
+            il.EmitLoadLocal(Locals.Read.T);
+            il.Emit(OpCodes.Ret);
+        });
     }
 }
