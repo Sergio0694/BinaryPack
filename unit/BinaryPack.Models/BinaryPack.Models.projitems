@@ -10,7 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)HelloWorldModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\RandomProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IInitializable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)JsonResponseModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MessagePackSampleModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NestedHierarchySimpleModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UnmanagedArrayModel.cs" />

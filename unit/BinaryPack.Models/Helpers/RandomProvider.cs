@@ -29,13 +29,8 @@ namespace BinaryPack.Models.Helpers
         /// <summary>
         /// Creates a new random <see cref="DateTime"/> value
         /// </summary>
-        /// <returns></returns>
         [Pure]
-        public static DateTime NextDateTime()
-        {
-            int max = (DateTime.MaxValue - DateTime.MinValue).Milliseconds - 1000;
-            return DateTime.MinValue.AddMilliseconds(Random.Next(500, max));
-        }
+        public static DateTime NextDateTime() => DateTime.Today.AddSeconds(Random.Next(0, 31536000));
 
         private const string Characters = " !\"#$&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]_abcdefghijklmnopqrstuvwxyz{}'";
 
