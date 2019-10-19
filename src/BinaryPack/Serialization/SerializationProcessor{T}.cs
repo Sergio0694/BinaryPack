@@ -53,8 +53,8 @@ namespace BinaryPack.Serialization
                     il.DeclareLocal(type);
                 }
 
-                // Null check
-                il.EmitSerializeFlagIfNull();
+                // Null check if needed
+                if (!typeof(T).IsValueType) il.EmitSerializeFlagIfNull();
 
                 // Properties serialization
                 foreach (PropertyInfo property in
@@ -65,6 +65,12 @@ namespace BinaryPack.Serialization
                     if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
                     else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
+                    else if (!property.PropertyType.IsValueType)
+                    {
+                        il.EmitLoadArgument(Arguments.Write.Obj);
+                        il.EmitLoadArgument(Arguments.Write.Stream);
+                        il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.SerializerInfo(property.PropertyType), null);
+                    }
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
@@ -99,6 +105,13 @@ namespace BinaryPack.Serialization
                     if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
                     else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
                     else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
+                    else if (!property.PropertyType.IsValueType)
+                    {
+                        il.EmitLoadLocal(Locals.Read.T);
+                        il.EmitLoadArgument(Arguments.Read.Stream);
+                        il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
+                        il.EmitWriteMember(property.PropertyType);
+                    }
                     else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
                 }
 
