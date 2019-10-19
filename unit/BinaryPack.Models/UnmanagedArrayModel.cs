@@ -17,7 +17,7 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Items = new[] { DateTime.Now, DateTime.MaxValue, DateTime.MinValue, DateTime.Now, DateTime.Today, DateTime.UtcNow };
+            Items = new[] { DateTime.Now, DateTime.Now.AddDays(4345), DateTime.Now.Subtract(TimeSpan.FromDays(335)), DateTime.Now.AddHours(2432), DateTime.Today.AddMilliseconds(342), DateTime.UtcNow };
             Value = 13;
         }
 
