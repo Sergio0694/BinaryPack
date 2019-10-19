@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using BinaryPack.Models.Interfaces;
 using JsonTextWriter = Newtonsoft.Json.JsonTextWriter;
 using Utf8JsonWriter = System.Text.Json.Utf8JsonWriter;
+using Utf8JsonSerializer = Utf8Json.JsonSerializer;
 
 namespace BinaryPack.Benchmark.Implementations
 {
@@ -70,6 +71,12 @@ namespace BinaryPack.Benchmark.Implementations
             using (Stream stream = new MemoryStream())
             {
                 Portable.Xaml.XamlServices.Save(stream, Model);
+            }
+
+            // Utf8Json
+            using (Stream stream = new MemoryStream())
+            {
+                Utf8JsonSerializer.Serialize(stream, Model);
             }
 
             // BinaryPack
@@ -172,6 +179,20 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
+        /// Benchmark run powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// </summary>
+        [Benchmark]
+        public void Utf8Json()
+        {
+            for (int i = 0; i < N; i++)
+            {
+                using Stream stream = new MemoryStream();
+
+                Utf8JsonSerializer.Serialize(stream, Model);
+            }
+        }
+
+        /// <summary>
         /// Benchmark run powered by <see cref="BinaryConverter"/>
         /// </summary>
         [Benchmark]
@@ -179,7 +200,9 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                
+                using Stream stream = new MemoryStream();
+
+                BinaryConverter.Serialize(Model, stream);
             }
         }
     }
