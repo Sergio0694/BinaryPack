@@ -1,4 +1,5 @@
 ![BinaryPackIcon](https://user-images.githubusercontent.com/10199417/67103112-d8852800-f1c4-11e9-9679-8cb344e988dc.png)
+[![AppVeyor](https://img.shields.io/appveyor/ci/Sergio0694/binarypack/master.svg)](https://ci.appveyor.com/project/Sergio0694/binarypack/master) [![AppVeyor tests](https://img.shields.io/appveyor/tests/Sergio0694/binarypack/master.svg)](https://ci.appveyor.com/project/Sergio0694/binarypack/master)
 
 # What is it?
 
