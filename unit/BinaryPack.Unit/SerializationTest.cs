@@ -8,6 +8,9 @@ namespace BinaryPack.Unit
     public class SerializationTest
     {
         [TestMethod]
+        public void MessagePackNullSample() => TestRunner.TestNull<MessagePackSampleModel>();
+
+        [TestMethod]
         public void MessagePackSample() => TestRunner.Test<MessagePackSampleModel>();
 
         [TestMethod]

@@ -38,5 +38,22 @@ namespace BinaryPack.Unit
 
             Assert.IsTrue(obj.Equals(result));
         }
+
+        /// <summary>
+        /// Runs a test for a <see langword="null"/> instance of a given type
+        /// </summary>
+        /// <typeparam name="T">The type of model to test</typeparam>
+        public static void TestNull<T>() where T : class, new()
+        {
+            // Serialize
+            using MemoryStream stream = new MemoryStream();
+            BinaryConverter.Serialize(default(T), stream);
+
+            // Deserialize
+            stream.Seek(0, SeekOrigin.Begin);
+            T result = BinaryConverter.Deserialize<T>(stream);
+
+            Assert.IsNull(result);
+        }
     }
 }
