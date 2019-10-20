@@ -5,7 +5,6 @@ namespace BinaryPack.Serialization.Reflection
 {
     internal static partial class KnownMembers
     {
-
         /// <summary>
         /// A <see langword="class"/> containing methods from the <see cref="Unsafe"/> type
         /// </summary>

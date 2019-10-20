@@ -14,14 +14,9 @@ namespace BinaryPack.Serialization.Reflection
         public static class Array
         {
             /// <summary>
-            /// Gets the <see cref="PropertyInfo"/> instance mapping the <see cref="System.Array.Length"/> property
+            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Array.Empty{T}"/> method
             /// </summary>
-            public static PropertyInfo Length { get; } = typeof(System.Array).GetProperty(nameof(System.Array.Length));
-
-            /// <summary>
-            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Array.Empty{T}"/> method
-            /// </summary>
-            private static MethodInfo _Empty { get; } = typeof(System.Array).GetMethod(nameof(System.Array.Empty), BindingFlags.Public | BindingFlags.Static);
+            private static readonly MethodInfo _Empty  = typeof(System.Array).GetMethod(nameof(System.Array.Empty), BindingFlags.Public | BindingFlags.Static);
 
             /// <summary>
             /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method

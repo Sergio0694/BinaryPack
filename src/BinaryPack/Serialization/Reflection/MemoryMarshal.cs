@@ -12,9 +12,9 @@ namespace BinaryPack.Serialization.Reflection
         public static class MemoryMarshal
         {
             /// <summary>
-            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
+            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
             /// </summary>
-            private static MethodInfo _AsByteSpan { get; } = (
+            private static readonly MethodInfo _AsByteSpan = (
                 from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
                       method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.Span<>)
@@ -26,9 +26,9 @@ namespace BinaryPack.Serialization.Reflection
             public static MethodInfo AsByteSpan(Type type) => _AsByteSpan.MakeGenericMethod(type);
 
             /// <summary>
-            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
+            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
             /// </summary>
-            private static MethodInfo _AsByteReadOnlySpan { get; } = (
+            private static readonly MethodInfo _AsByteReadOnlySpan = (
                 from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
                       method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.ReadOnlySpan<>)
