@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Extensions;
@@ -29,7 +28,7 @@ namespace BinaryPack.Serialization.Processors
 
             /* Perform a null check only if the type is a reference type.
              * In this case, a single byte will be written to the target stream,
-             * with a value of -1 if the input item is null, and 1 otherwise. */
+             * with a value of 0 if the input item is null, and 1 otherwise. */
             if (!typeof(T).IsValueType)
             {
                 // byte* p = stackalloc byte[1];
@@ -37,13 +36,13 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitStoreLocal(Locals.Write.BytePtr);
                 il.EmitLoadLocal(Locals.Write.BytePtr);
 
-                // *p = obj == null ? -1 : 1;
+                // *p = obj == null ? 0 : 1;
                 Label
                     notNull = il.DefineLabel(),
                     flag = il.DefineLabel();
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.Emit(OpCodes.Brtrue_S, notNull);
-                il.EmitLoadInt32(-1);
+                il.EmitLoadInt32(0);
                 il.Emit(OpCodes.Br_S, flag);
                 il.MarkLabel(notNull);
                 il.EmitLoadInt32(1);
@@ -135,13 +134,42 @@ namespace BinaryPack.Serialization.Processors
             il.DeclareLocal(typeof(T));
             il.DeclareLocals<Locals.Read>();
 
-            // Initialize T obj to either new T() or null
-            il.EmitDeserializeEmptyInstanceOrNull<T>();
+            /* Initial null reference check for reference types.
+             * If the first byte in the stream is 0, just return null. */
+            if (!typeof(T).IsValueType)
+            {
+                // Span<byte> span = stackalloc byte[1];
+                il.EmitStackalloc(typeof(byte));
+                il.EmitLoadInt32(sizeof(byte));
+                il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+                il.EmitStoreLocal(Locals.Read.SpanByte);
 
-            // Skip the deserialization if the instance in null
-            Label end = il.DefineLabel();
-            il.EmitLoadLocal(Locals.Read.T);
-            il.Emit(OpCodes.Brfalse_S, end);
+                // _ = stream.Read(span);
+                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitLoadLocal(Locals.Read.SpanByte);
+                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.Emit(OpCodes.Pop);
+
+                // if (span[0] == 0) return null;
+                Label skip = il.DefineLabel();
+                il.EmitLoadLocalAddress(Locals.Read.SpanByte);
+                il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+                il.EmitLoadFromAddress(typeof(byte));
+                il.Emit(OpCodes.Brfalse_S, skip);
+                il.Emit(OpCodes.Ldnull);
+                il.Emit(OpCodes.Ret);
+                il.MarkLabel(skip);
+
+                // T obj = new T();
+                il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
+                il.EmitStoreLocal(Locals.Read.T);
+            }
+            else
+            {
+                // T obj = default;
+                il.EmitLoadLocalAddress(Locals.Read.T);
+                il.Emit(OpCodes.Initobj, typeof(T));
+            }
 
             // Deserialize all the contained properties
             foreach (PropertyInfo property in
@@ -149,22 +177,57 @@ namespace BinaryPack.Serialization.Processors
                 where prop.CanRead && prop.CanWrite
                 select prop)
             {
-                if (property.PropertyType.IsUnmanaged()) il.EmitDeserializeUnmanagedProperty(property);
-                else if (property.PropertyType == typeof(string)) il.EmitDeserializeStringProperty(property);
-                else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitDeserializeUnmanagedArrayProperty(property);
-                else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType) { } // TODO
-                else if (!property.PropertyType.IsValueType)
+                /* Just like with the serialization pass, handle each case separately.
+                 * If the property is of an unmanaged type, just read the bytes from the
+                 * stream and assign the target property by reinterpreting them to the right type. */
+                if (property.PropertyType.IsUnmanaged())
                 {
+                    // Span<byte> span = stackalloc byte[Unsafe.SizeOf<TProperty>()];
+                    il.EmitStackalloc(property.PropertyType);
+                    il.EmitLoadInt32(property.PropertyType.GetSize());
+                    il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+                    il.EmitStoreLocal(Locals.Read.SpanByte);
+
+                    // _ = stream.Read(span);
+                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadLocal(Locals.Read.SpanByte);
+                    il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                    il.Emit(OpCodes.Pop);
+
+                    // obj.Property = Unsafe.As<byte, TProperty>(ref span.GetPinnableReference());
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalAddress(Locals.Read.SpanByte);
+                    il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+                    il.EmitLoadFromAddress(property.PropertyType);
+                    il.EmitWriteMember(property);
+                }
+                else if (property.PropertyType == typeof(string))
+                {
+                    // Invoke StringProcessor to read the string property
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, StringProcessor.Instance.DeserializerInfo.MethodInfo, null);
+                    il.EmitWriteMember(property);
+                }
+                else if (property.PropertyType.IsArray)
+                {
+                    // Invoke ArrayProcessor<T> to read the TItem[] array
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.DeserializerInfo(property.PropertyType.GetElementType()), null);
+                    il.EmitWriteMember(property);
+                }
+                else
+                {
+                    // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
                     il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
                     il.EmitWriteMember(property);
                 }
-                else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
             }
 
             // return obj;
-            il.MarkLabel(end);
             il.EmitLoadLocal(Locals.Read.T);
             il.Emit(OpCodes.Ret);
         }

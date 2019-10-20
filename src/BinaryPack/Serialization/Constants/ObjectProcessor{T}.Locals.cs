@@ -18,13 +18,7 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="byte"/>* local variable
                 /// </summary>
                 [LocalType(typeof(byte*))]
-                BytePtr,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable
-                /// </summary>
-                [LocalType(typeof(int))]
-                Int
+                BytePtr
             }
 
             /// <summary>
@@ -41,13 +35,7 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
                 /// </summary>
                 [LocalType(typeof(System.Span<byte>))]
-                SpanByte,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable
-                /// </summary>
-                [LocalType(typeof(int))]
-                Int
+                SpanByte
             }
         }
     }
