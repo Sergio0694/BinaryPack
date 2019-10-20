@@ -34,12 +34,12 @@ namespace BinaryPack.Serialization.Processors
                 // byte* p = stackalloc byte[1];
                 il.EmitStackalloc(typeof(byte));
                 il.EmitStoreLocal(Locals.Write.BytePtr);
-                il.EmitLoadLocal(Locals.Write.BytePtr);
 
                 // *p = obj == null ? 0 : 1;
                 Label
                     notNull = il.DefineLabel(),
                     flag = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Write.BytePtr);
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.Emit(OpCodes.Brtrue_S, notNull);
                 il.EmitLoadInt32(0);
@@ -155,7 +155,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocalAddress(Locals.Read.SpanByte);
                 il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
                 il.EmitLoadFromAddress(typeof(byte));
-                il.Emit(OpCodes.Brfalse_S, skip);
+                il.Emit(OpCodes.Brtrue_S, skip);
                 il.Emit(OpCodes.Ldnull);
                 il.Emit(OpCodes.Ret);
                 il.MarkLabel(skip);
