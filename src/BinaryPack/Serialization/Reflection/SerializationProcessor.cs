@@ -34,14 +34,14 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             /// <param name="type">The type of object to look up the serializer for</param>
             [Pure]
-            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Serializer));
+            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>.SerializerInfo));
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic deserializer of a given type
             /// </summary>
             /// <param name="type">The type of object to look up the deserializer for</param>
             [Pure]
-            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Deserializer));
+            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>.DeserializerInfo));
         }
     }
 }

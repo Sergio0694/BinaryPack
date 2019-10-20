@@ -57,7 +57,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Write.Length);
             il.Emit(OpCodes.Br_S, serialize);
 
-            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.Property.AsSpan()) + 4];
+            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.AsSpan()) + 4];
             il.MarkLabel(notEmpty);
             il.EmitReadMember(KnownMembers.Encoding.UTF8);
             il.EmitLoadArgument(Arguments.Write.T);
@@ -95,6 +95,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Add);
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+            il.Emit(OpCodes.Ret);
         }
 
         /// <inheritdoc/>

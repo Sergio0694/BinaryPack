@@ -13,20 +13,20 @@ namespace BinaryPack.Serialization.Processors.Abstract
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for items of type <typeparamref name="T"/>
         /// </summary>
-        protected static readonly DynamicMethod<BinarySerializer<T>> _Serializer = DynamicMethod<BinarySerializer<T>>.New();
+        public static readonly DynamicMethod<BinarySerializer<T>> SerializerInfo = DynamicMethod<BinarySerializer<T>>.New();
 
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the deserializer being built for items of type <typeparamref name="T"/>
         /// </summary>
-        protected static readonly DynamicMethod<BinaryDeserializer<T>> _Deserializer = DynamicMethod<BinaryDeserializer<T>>.New();
+        public static readonly DynamicMethod<BinaryDeserializer<T>> DeserializerInfo = DynamicMethod<BinaryDeserializer<T>>.New();
 
         /// <summary>
         /// Creates a new <see cref="TypeProcessor{T}"/> instance with the default serializers
         /// </summary>
         protected TypeProcessor()
         {
-            Serializer = _Serializer.Build(EmitSerializer);
-            Deserializer = _Deserializer.Build(EmitDeserializer);
+            Serializer = SerializerInfo.Build(EmitSerializer);
+            Deserializer = DeserializerInfo.Build(EmitDeserializer);
         }
 
         /// <summary>

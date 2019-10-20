@@ -36,13 +36,13 @@ namespace BinaryPack.Serialization.Processors
                 /// The index of the <see cref="byte"/> <see cref="System.Span{T}"/> local variable
                 /// </summary>
                 [LocalType(typeof(System.Span<byte>))]
-                public const int SpanByte = 1;
+                public const int SpanByte = 0;
 
                 /// <summary>
                 /// The index of the <see cref="int"/> local variable to track the length of the target <see cref="string"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                public const int Length = 2;
+                public const int Length = 1;
             }
         }
     }
