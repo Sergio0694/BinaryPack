@@ -51,7 +51,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadArgument(Arguments.Write.Stream);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
 
             /* The generic type parameter T doesn't have constraints, and there are three
@@ -125,7 +125,7 @@ namespace BinaryPack.Serialization.Processors
             // Span<byte> span = stackalloc byte[sizeof(int)];
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
@@ -136,7 +136,7 @@ namespace BinaryPack.Serialization.Processors
 
             // int length = span.GetPinnableReference();
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
             il.EmitLoadFromAddress(typeof(int));
             il.EmitStoreLocal(Locals.Read.Length);
 

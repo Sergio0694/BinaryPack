@@ -81,7 +81,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitAddOffset(sizeof(int));
             il.EmitLoadLocal(Locals.Write.Length);
-            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetBytes, null);
             il.Emit(OpCodes.Pop);
 
@@ -92,7 +92,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
             il.Emit(OpCodes.Ret);
         }
@@ -105,7 +105,7 @@ namespace BinaryPack.Serialization.Processors
             // Span<byte> span = stackalloc byte[4];
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
@@ -116,7 +116,7 @@ namespace BinaryPack.Serialization.Processors
 
             // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
             il.Emit(OpCodes.Ldind_I4);
             il.EmitStoreLocal(Locals.Read.Length);
 
@@ -141,7 +141,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitStackalloc();
             il.EmitLoadLocal(Locals.Read.Length);
-            il.Emit(OpCodes.Newobj, KnownMembers.Span<byte>.UnsafeConstructor);
+            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
@@ -153,7 +153,7 @@ namespace BinaryPack.Serialization.Processors
             // return Encoding.UTF8.GetString(&span.GetPinnableReference(), size);
             il.EmitReadMember(KnownMembers.Encoding.UTF8);
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span<byte>.GetPinnableReference, null);
+            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetString, null);
             il.Emit(OpCodes.Ret);

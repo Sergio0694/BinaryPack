@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
@@ -21,6 +22,7 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
             /// </summary>
+            [Pure]
             public static MethodInfo Empty(Type type) => _Empty.MakeGenericMethod(type);
         }
     }
