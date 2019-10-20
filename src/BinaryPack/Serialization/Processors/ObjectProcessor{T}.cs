@@ -71,23 +71,58 @@ namespace BinaryPack.Serialization.Processors
                 where prop.CanRead && prop.CanWrite
                 select prop)
             {
-                if (property.PropertyType.IsUnmanaged()) il.EmitSerializeUnmanagedProperty(property);
-                else if (property.PropertyType == typeof(string)) il.EmitSerializeStringProperty(property);
-                else if (property.PropertyType.IsArray && property.PropertyType.GetElementType().IsUnmanaged()) il.EmitSerializeUnmanagedArrayProperty(property);
-                else if (property.PropertyType.IsArray && !property.PropertyType.GetElementType().IsValueType)
+                /* First special case, for unmanaged value types.
+                 * Here we can just copy the property value directly to a
+                 * local buffer of the right size, then cast it to a ReadOnlySpan<byte>
+                 * span and write it to the target stream. No particular care is required. */
+                if (property.PropertyType.IsUnmanaged())
                 {
+                    // byte* p = stackalloc byte[Unsafe.SizeOf<TProperty>()];
+                    il.EmitStackalloc(property.PropertyType);
+                    il.EmitStoreLocal(Locals.Write.BytePtr);
+
+                    // Unsafe.Write<TProperty>(p, obj.Property);
+                    il.EmitLoadLocal(Locals.Write.BytePtr);
                     il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitStoreToAddress(property.PropertyType);
+
+                    // stream.Write(new ReadOnlySpan<byte>(p, Unsafe.SizeOf<TProperty>()));
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
+                    il.EmitLoadLocal(Locals.Write.BytePtr);
+                    il.EmitLoadInt32(property.PropertyType.GetSize());
+                    il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+                    il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
                 }
-                else if (!property.PropertyType.IsValueType)
+                else if (property.PropertyType == typeof(string))
                 {
+                    /* Second special case, for string values. Here we just need to
+                     * load the string property and then invoke the string processor, which
+                     * will handle all the possible cases like null values, empty strings, etc. */
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.SerializerInfo(property.PropertyType), null);
+                    il.EmitCall(OpCodes.Call, StringProcessor.Instance.SerializerInfo.MethodInfo, null);
                 }
-                else throw new InvalidOperationException($"Property of type {property.PropertyType} not supported");
+                else if (property.PropertyType.IsArray)
+                {
+                    /* Third special case, for array types. Like with strings, we only need
+                     * to load the property valaue and then delegate the rest of the
+                     * serialization to the appropriate ArrayProcessor<T> instance, which
+                     * is retrieved through reflection from the type of elements in the current property. */
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
+                }
+                else
+                {
+                    // Just use another ObjectProcessor<T> instance for all other property types
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(OpCodes.Call, KnownMembers.ObjectProcessor.SerializerInfo(property.PropertyType), null);
+                }
             }
 
             il.Emit(OpCodes.Ret);
