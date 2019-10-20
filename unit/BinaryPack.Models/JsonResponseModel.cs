@@ -10,6 +10,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A model that represents a container for a fake REST API response in JSON format
     /// </summary>
+    [Serializable]
     public sealed class JsonResponseModel : IInitializable, IEquatable<JsonResponseModel>
     {
         public string? Id { get; set; }
@@ -31,6 +32,7 @@ namespace BinaryPack.Models
         /// <summary>
         /// A model that represents a container for a fake API response
         /// </summary>
+        [Serializable]
         public sealed class ApiModelContainer : IInitializable, IEquatable<ApiModelContainer>
         {
             public string? Id { get; set; }
@@ -103,6 +105,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A model that represents a REST API response for a single item
     /// </summary>
+    [Serializable]
     public sealed class RestApiModel : IInitializable, IEquatable<RestApiModel>
     {
         public string? Id { get; set; }
@@ -160,6 +163,7 @@ namespace BinaryPack.Models
         /// <summary>
         /// A model that represents a collection of fake images
         /// </summary>
+        [Serializable]
         public sealed class MediaInfoModel : IInitializable, IEquatable<MediaInfoModel>
         {
             public string? Id { get; set; }
@@ -171,6 +175,7 @@ namespace BinaryPack.Models
             /// <summary>
             /// A simple model that contains a fake URL to an image and some metadata
             /// </summary>
+            [Serializable]
             public sealed class ImageModel : IInitializable, IEquatable<ImageModel>
             {
                 public string? Url { get; set; }

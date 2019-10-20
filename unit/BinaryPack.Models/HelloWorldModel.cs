@@ -8,6 +8,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A very simple model that simply contains a <see cref="string"/> property
     /// </summary>
+    [Serializable]
     public sealed class HelloWorldModel : IInitializable, IEquatable<HelloWorldModel>
     {
         public string? Property { get; set; }

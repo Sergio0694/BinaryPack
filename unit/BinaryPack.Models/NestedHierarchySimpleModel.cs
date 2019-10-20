@@ -8,6 +8,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A very simple model with a linear hierarchy of instances
     /// </summary>
+    [Serializable]
     public sealed class NestedHierarchySimpleModel : IInitializable, IEquatable<NestedHierarchySimpleModel>
     {
         public B? Child { get; set; }
