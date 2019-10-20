@@ -24,7 +24,7 @@ namespace BinaryPack.Serialization.Reflection
                 Type processorType = typeof(ArrayProcessor<>).MakeGenericType(type);
                 PropertyInfo instanceInfo = processorType.GetProperty(nameof(ArrayProcessor<object>.Instance), BindingFlags.Public | BindingFlags.Static);
                 object processorInstance = instanceInfo.GetValue(null);
-                FieldInfo fieldInfo = processorType.GetField(name, BindingFlags.Public | BindingFlags.Static);
+                FieldInfo fieldInfo = processorType.GetField(name);
                 object genericMethod = fieldInfo.GetValue(processorInstance);
                 PropertyInfo propertyInfo = genericMethod.GetType().GetProperty(nameof(DynamicMethod<Action>.MethodInfo));
 

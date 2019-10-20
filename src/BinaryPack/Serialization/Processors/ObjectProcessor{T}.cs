@@ -222,7 +222,7 @@ namespace BinaryPack.Serialization.Processors
                     // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.SerializationProcessor.DeserializerInfo(property.PropertyType), null);
+                    il.EmitCall(OpCodes.Call, KnownMembers.ObjectProcessor.DeserializerInfo(property.PropertyType), null);
                     il.EmitWriteMember(property);
                 }
             }
