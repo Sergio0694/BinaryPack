@@ -16,10 +16,11 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                NewtonsoftStream.Seek(0, SeekOrigin.Begin);
-                using StreamReader textReader = new StreamReader(NewtonsoftStream);
+                using Stream stream = new MemoryStream(NewtonsoftJsonData);
+                using StreamReader textReader = new StreamReader(stream);
                 using JsonTextReader jsonReader = new JsonTextReader(textReader);
                 var serializer = new Newtonsoft.Json.JsonSerializer();
+
                 _ = serializer.Deserialize<T>(jsonReader);
             }
         }
@@ -33,9 +34,10 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                BinaryFormatterStream.Seek(0, SeekOrigin.Begin);
+                using Stream stream = new MemoryStream(BinaryFormatterData);
+
                 var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                _ = formatter.Deserialize(BinaryFormatterStream);
+                _ = formatter.Deserialize(stream);
             }
         }
 
@@ -48,8 +50,9 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                DotNetCoreJsonStream.Seek(0, SeekOrigin.Begin);
-                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(DotNetCoreJsonStream).Result;
+                using Stream stream = new MemoryStream(DotNetCoreJsonData);
+
+                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
             }
         }
 
@@ -62,9 +65,10 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                DataContractJsonStream.Seek(0, SeekOrigin.Begin);
+                using Stream stream = new MemoryStream(DataContractJsonData);
+
                 var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
-                _ = serializer.ReadObject(DataContractJsonStream);
+                _ = serializer.ReadObject(stream);
             }
         }
 
@@ -77,9 +81,10 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                XmlSerializerStream.Seek(0, SeekOrigin.Begin);
+                using Stream stream = new MemoryStream(XmlSerializerData);
+
                 var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                _ = serializer.Deserialize(XmlSerializerStream);
+                _ = serializer.Deserialize(stream);
             }
         }
 
@@ -92,8 +97,9 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                Utf8JsonStream.Seek(0, SeekOrigin.Begin);
-                _ = Utf8JsonSerializer.Deserialize<T>(Utf8JsonStream);
+                using Stream stream = new MemoryStream(Utf8JsonData);
+
+                _ = Utf8JsonSerializer.Deserialize<T>(stream);
             }
         }
 
@@ -106,8 +112,9 @@ namespace BinaryPack.Benchmark.Implementations
         {
             for (int i = 0; i < N; i++)
             {
-                BinaryPackStream.Seek(0, SeekOrigin.Begin);
-                _ = BinaryConverter.Deserialize<T>(BinaryPackStream);
+                using Stream stream = new MemoryStream(BinaryPackData);
+
+                _ = BinaryConverter.Deserialize<T>(stream);
             }
         }
     }

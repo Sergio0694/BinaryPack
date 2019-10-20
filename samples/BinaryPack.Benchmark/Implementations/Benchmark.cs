@@ -23,25 +23,25 @@ namespace BinaryPack.Benchmark.Implementations
         private const string DESERIALIZATION = "Deserialization";
 
         // Number of iterations to run
-        private const int N = 1000;
+        private const int N = 100;
 
         private readonly T Model = new T();
 
-        private readonly Stream NewtonsoftStream = new MemoryStream();
+        private byte[] NewtonsoftJsonData;
 
-        private readonly Stream BinaryFormatterStream = new MemoryStream();
+        private byte[] BinaryFormatterData;
 
-        private readonly Stream DotNetCoreJsonStream = new MemoryStream();
+        private byte[] DotNetCoreJsonData;
 
-        private readonly Stream DataContractJsonStream = new MemoryStream();
+        private byte[] DataContractJsonData;
 
-        private readonly Stream XmlSerializerStream = new MemoryStream();
+        private byte[] XmlSerializerData;
 
-        private readonly Stream PortableXamlStream = new MemoryStream();
+        private byte[] PortableXamlData;
 
-        private readonly Stream Utf8JsonStream = new MemoryStream();
+        private byte[] Utf8JsonData;
 
-        private readonly Stream BinaryPackStream = new MemoryStream();
+        private byte[] BinaryPackData;
 
         /// <summary>
         /// Initial setup for a benchmarking session
@@ -52,79 +52,100 @@ namespace BinaryPack.Benchmark.Implementations
             Model.Initialize();
 
             // Newtonsoft
+            using (MemoryStream stream = new MemoryStream())
             {
-                using StreamWriter textWriter = new StreamWriter(NewtonsoftStream);
+                using StreamWriter textWriter = new StreamWriter(stream);
                 using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
 
                 var serializer = new Newtonsoft.Json.JsonSerializer();
                 serializer.Serialize(jsonWriter, Model);
                 jsonWriter.Flush();
 
-                NewtonsoftStream.Seek(0, SeekOrigin.Begin);
-                using StreamReader textReader = new StreamReader(NewtonsoftStream);
+                NewtonsoftJsonData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                using StreamReader textReader = new StreamReader(stream);
                 using JsonTextReader jsonReader = new JsonTextReader(textReader);
                 _ = serializer.Deserialize<T>(jsonReader);
             }
 
             // Binary formatter
+            using (MemoryStream stream = new MemoryStream())
             {
                 var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                formatter.Serialize(BinaryFormatterStream, Model);
+                formatter.Serialize(stream, Model);
 
-                BinaryFormatterStream.Seek(0, SeekOrigin.Begin);
-                _ = formatter.Deserialize(BinaryFormatterStream);
+                BinaryFormatterData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = formatter.Deserialize(stream);
             }
 
             // .NETCore JSON
+            using (MemoryStream stream = new MemoryStream())
             {
-                using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(DotNetCoreJsonStream);
+                using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(stream);
 
                 System.Text.Json.JsonSerializer.Serialize(jsonWriter, Model);
 
-                DotNetCoreJsonStream.Seek(0, SeekOrigin.Begin);
-                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(DotNetCoreJsonStream).Result;
+                DotNetCoreJsonData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
             }
 
             // DataContractJson
+            using (MemoryStream stream = new MemoryStream())
             {
                 var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
-                serializer.WriteObject(DataContractJsonStream, Model);
+                serializer.WriteObject(stream, Model);
 
-                DataContractJsonStream.Seek(0, SeekOrigin.Begin);
-                _ = serializer.ReadObject(DataContractJsonStream);
+                DataContractJsonData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = serializer.ReadObject(stream);
             }
 
             // XML serializer
+            using (MemoryStream stream = new MemoryStream())
             {
                 var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                serializer.Serialize(XmlSerializerStream, Model);
+                serializer.Serialize(stream, Model);
 
-                XmlSerializerStream.Seek(0, SeekOrigin.Begin);
-                _ = serializer.Deserialize(XmlSerializerStream);
+                XmlSerializerData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = serializer.Deserialize(stream);
             }
 
             // Portable Xaml
+            using (MemoryStream stream = new MemoryStream())
             {
-                Portable.Xaml.XamlServices.Save(PortableXamlStream, Model);
+                Portable.Xaml.XamlServices.Save(stream, Model);
 
-                PortableXamlStream.Seek(0, SeekOrigin.Begin);
-                _ = Portable.Xaml.XamlServices.Load(PortableXamlStream);
+                PortableXamlData = stream.GetBuffer();
             }
 
             // Utf8Json
+            using (MemoryStream stream = new MemoryStream())
             {
-                Utf8JsonSerializer.Serialize(Utf8JsonStream, Model);
+                Utf8JsonSerializer.Serialize(stream, Model);
 
-                Utf8JsonStream.Seek(0, SeekOrigin.Begin);
-                _ = Utf8JsonSerializer.Deserialize<T>(Utf8JsonStream);
+                Utf8JsonData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = Utf8JsonSerializer.Deserialize<T>(stream);
             }
 
             // BinaryPack
+            using (MemoryStream stream = new MemoryStream())
             {
-                BinaryConverter.Serialize(Model, BinaryPackStream);
+                BinaryConverter.Serialize(Model, stream);
 
-                BinaryPackStream.Seek(0, SeekOrigin.Begin);
-                _ = BinaryConverter.Deserialize<T>(BinaryPackStream);
+                BinaryPackData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = BinaryConverter.Deserialize<T>(stream);
             }
         }
     }
