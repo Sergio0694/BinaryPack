@@ -2,7 +2,7 @@
 using System.Buffers;
 using System.Diagnostics.Contracts;
 using System.IO;
-using BinaryPack.Serialization;
+using BinaryPack.Serialization.Processors;
 
 namespace BinaryPack
 {
@@ -34,7 +34,7 @@ namespace BinaryPack
         /// <param name="stream">The <see cref="Stream"/> instance to use to write the data</param>
         public static void Serialize<T>(T obj, Stream stream) where T : new()
         {
-            TypeProcessor<T>.Serializer(obj, stream);
+            ObjectProcessor<T>.Instance.Serializer(obj, stream);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace BinaryPack
         [Pure]
         public static T Deserialize<T>(Stream stream) where T : new()
         {
-            return TypeProcessor<T>.Deserializer(stream);
+            return ObjectProcessor<T>.Instance.Deserializer(stream);
         }
     }
 }

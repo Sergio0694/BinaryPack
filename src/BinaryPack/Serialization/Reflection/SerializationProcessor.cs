@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using BinaryPack.Extensions.System.Reflection.Emit;
+using BinaryPack.Serialization.Processors.Abstract;
 
 namespace BinaryPack.Serialization.Reflection
 {
