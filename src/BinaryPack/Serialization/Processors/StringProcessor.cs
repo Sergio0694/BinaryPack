@@ -10,7 +10,6 @@ namespace BinaryPack.Serialization.Processors
     /// <summary>
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
-    /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
     internal sealed partial class StringProcessor : TypeProcessor<string?>
     {
         /// <summary>

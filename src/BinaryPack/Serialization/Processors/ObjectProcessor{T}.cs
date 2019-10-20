@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for generic models
     /// </summary>
     /// <typeparam name="T">The type of items to handle during serialization and deserialization</typeparam>
-    internal sealed class ObjectProcessor<T> : TypeProcessor<T> where T : new()
+    internal sealed partial class ObjectProcessor<T> : TypeProcessor<T> where T : new()
     {
         /// <summary>
         /// Gets the singleton <see cref="ObjectProcessor{T}"/> instance to use
@@ -25,9 +25,8 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            il.DeclareLocalsFromType<Locals.Write>();
+            il.DeclareLocals<Locals.Write>();
 
-            // Null check if needed
             if (!typeof(T).IsValueType)
             {
                 il.EmitSerializeIsNullFlag();
@@ -67,7 +66,7 @@ namespace BinaryPack.Serialization.Processors
         {
             // T obj; ...;
             il.DeclareLocal(typeof(T));
-            il.DeclareLocalsFromType<Locals.Read>();
+            il.DeclareLocals<Locals.Read>();
 
             // Initialize T obj to either new T() or null
             il.EmitDeserializeEmptyInstanceOrNull<T>();
