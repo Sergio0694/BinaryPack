@@ -18,7 +18,7 @@ namespace BinaryPack.Serialization.Reflection
                 from ctor in typeof(System.ReadOnlySpan<>).MakeGenericType(type).GetConstructors()
                 let args = ctor.GetParameters()
                 where args.Length == 1 &&
-                      args[0].ParameterType == type.MakeGenericType()
+                      args[0].ParameterType == type.MakeArrayType()
                 select ctor).First();
         }
     }

@@ -27,6 +27,12 @@ namespace BinaryPack.Models.Helpers
         public static int NextInt() => Random.Next();
 
         /// <summary>
+        /// Creates a new random <see cref="double"/> value
+        /// </summary>
+        [Pure]
+        public static double NextDouble() => Random.NextDouble();
+
+        /// <summary>
         /// Creates a new random <see cref="DateTime"/> value
         /// </summary>
         [Pure]

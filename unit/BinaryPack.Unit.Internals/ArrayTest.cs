@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Processors;
@@ -77,5 +78,38 @@ namespace BinaryPack.Unit.Internals
             let isNull = i % 2 == 0
             let text = isNull ? null : RandomProvider.NextString(60)
             select text).ToArray());
+
+        // Test method for arrays of an unmanaged type
+        public static void Test(double[]? array)
+        {
+            // Serialization
+            using MemoryStream stream = new MemoryStream();
+            ArrayProcessor<double>.Instance.Serializer(array, stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            var result = ArrayProcessor<double>.Instance.Deserializer(stream);
+
+            // Equality check
+            if (array == null) Assert.IsNull(result);
+            else
+            {
+                Assert.IsNotNull(result);
+                Assert.AreEqual(array.Length, result!.Length);
+                Assert.IsTrue(MemoryMarshal.AsBytes(array.AsSpan()).SequenceEqual(MemoryMarshal.AsBytes(result.AsSpan())));
+            }
+        }
+
+        [TestMethod]
+        public void UnmanagedTypeNullArraySerializationTest() => Test(default);
+
+        [TestMethod]
+        public void UnmanagedTypeEmptyArraySerializationTest() => Test(Array.Empty<double>());
+
+        [TestMethod]
+        public void UnmanagedTypeArraySerializationTest1() => Test(new[] { 3.14 });
+
+        [TestMethod]
+        public void UnmanagedTypeArraySerializationTest2() => Test((
+            from i in Enumerable.Range(0, 10)
+            select RandomProvider.NextDouble()).ToArray());
     }
 }
