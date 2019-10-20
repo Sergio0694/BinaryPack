@@ -23,7 +23,7 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            il.DeclareLocalsFromType<Locals.Write>();
+            il.DeclareLocals<Locals.Write>();
 
             // int length = obj?.Length ?? -1;
             Label
@@ -120,7 +120,7 @@ namespace BinaryPack.Serialization.Processors
         {
             // T[] array; ...;
             il.DeclareLocal(typeof(T).MakeArrayType());
-            il.DeclareLocalsFromType<Locals.Read>();
+            il.DeclareLocals<Locals.Read>();
 
             // Span<byte> span = stackalloc byte[sizeof(int)];
             il.EmitStackalloc(typeof(int));
