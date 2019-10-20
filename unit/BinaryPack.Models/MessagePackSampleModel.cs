@@ -6,6 +6,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A very simple model that replicates the sample from <a href="https://msgpack.org/index.html">MessagePack</a>
     /// </summary>
+    [Serializable]
     public sealed class MessagePackSampleModel : IInitializable, IEquatable<MessagePackSampleModel>
     {
         public bool Compact { get; set; }

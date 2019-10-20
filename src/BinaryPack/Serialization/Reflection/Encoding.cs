@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
@@ -18,6 +19,7 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Text.Encoding.GetByteCount(System.ReadOnlySpan{char})"/> method
             /// </summary>
+            [Pure]
             public static MethodInfo GetByteCount { get; } = (
                 from method in typeof(System.Text.Encoding).GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 where method.Name.Equals(nameof(System.Text.Encoding.GetByteCount))
@@ -29,6 +31,7 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Text.Encoding.GetBytes(System.ReadOnlySpan{char},System.Span{byte})"/> method
             /// </summary>
+            [Pure]
             public static MethodInfo GetBytes { get; } = (
                 from method in typeof(System.Text.Encoding).GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 where method.Name.Equals(nameof(System.Text.Encoding.GetBytes))
@@ -41,6 +44,7 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="System.Text.Encoding.GetString(byte*,int)"/> method
             /// </summary>
+            [Pure]
             public static MethodInfo GetString { get; } = (
                 from method in typeof(System.Text.Encoding).GetMethods(BindingFlags.Public | BindingFlags.Instance)
                 where method.Name.Equals(nameof(System.Text.Encoding.GetString))

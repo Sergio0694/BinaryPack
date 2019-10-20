@@ -2,15 +2,15 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using BinaryPack.Extensions.System.Reflection.Emit;
-
+using BinaryPack.Serialization.Processors;
 namespace BinaryPack.Serialization.Reflection
 {
     internal static partial class KnownMembers
     {
         /// <summary>
-        /// A <see langword="class"/> containing methods from the <see cref="TypeProcessor{T}"/> type
+        /// A <see langword="class"/> containing methods from the <see cref="ObjectProcessor{T}"/> type
         /// </summary>
-        public static class SerializationProcessor
+        public static class ObjectProcessor
         {
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for a dynamic serialization method for a given type
@@ -20,9 +20,11 @@ namespace BinaryPack.Serialization.Reflection
             [Pure]
             private static MethodInfo GetMethodInfo(Type type, string name)
             {
-                Type ownerType = typeof(TypeProcessor<>).MakeGenericType(type);
-                FieldInfo fieldInfo = ownerType.GetField(name, BindingFlags.Public | BindingFlags.Static);
-                object genericMethod = fieldInfo.GetValue(null);
+                Type processorType = typeof(ObjectProcessor<>).MakeGenericType(type);
+                PropertyInfo instanceProperty = processorType.GetProperty(nameof(ObjectProcessor<object>.Instance), BindingFlags.Public | BindingFlags.Static);
+                object processorInstance = instanceProperty.GetValue(null);
+                FieldInfo fieldInfo = processorType.GetField(name);
+                object genericMethod = fieldInfo.GetValue(processorInstance);
                 PropertyInfo propertyInfo = genericMethod.GetType().GetProperty(nameof(DynamicMethod<Action>.MethodInfo));
 
                 return (MethodInfo)propertyInfo.GetValue(genericMethod);
@@ -33,14 +35,15 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             /// <param name="type">The type of object to look up the serializer for</param>
             [Pure]
-            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Serializer));
+            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(ObjectProcessor<object>.SerializerInfo));
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic deserializer of a given type
             /// </summary>
             /// <param name="type">The type of object to look up the deserializer for</param>
             [Pure]
-            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Deserializer));
+            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(ObjectProcessor<object>.DeserializerInfo));
         }
     }
 }
+

@@ -52,5 +52,8 @@ namespace BinaryPack.Unit
 
         [TestMethod]
         public void NestedHierarchySample1() => TestRunner.Test<NestedHierarchySimpleModel>();
+
+        [TestMethod]
+        public void JsonResponseSample() => TestRunner.Test<JsonResponseModel>();
     }
 }

@@ -2,10 +2,10 @@
 
 namespace BinaryPack.Serialization.Processors
 {
-    internal sealed partial class ArrayProcessor<T>
+    internal sealed partial class StringProcessor
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ArrayProcessor{T}"/>
+        /// A <see langword="class"/> that exposes local variables for <see cref="StringProcessor"/>
         /// </summary>
         private static class Locals
         {
@@ -21,16 +21,10 @@ namespace BinaryPack.Serialization.Processors
                 BytePtr,
 
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the source <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the length of the source <see cref="string"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable for the loop counter
-                /// </summary>
-                [LocalType(typeof(int))]
-                I
+                Length
             }
 
             /// <summary>
@@ -39,27 +33,16 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <typeparamref name="T"/> array
-                /// </summary>
-                Array,
-
-                /// <summary>
                 /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
                 /// </summary>
                 [LocalType(typeof(System.Span<byte>))]
                 SpanByte,
 
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the length of the target <see cref="string"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable for the loop counter
-                /// </summary>
-                [LocalType(typeof(int))]
-                I
+                Length
             }
         }
     }

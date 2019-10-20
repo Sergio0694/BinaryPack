@@ -6,30 +6,30 @@
     internal static class Arguments
     {
         /// <summary>
-        /// A <see langword="class"/> with a collection of indices for arguments used during deserialization
+        /// An <see langword="enum"/> with a collection of indices for arguments used during deserialization
         /// </summary>
-        public static class Read
+        public enum Read
         {
             /// <summary>
-            /// The index of the target <see cref="System.IO.Stream"/> instance
+            /// The the target <see cref="System.IO.Stream"/> instance
             /// </summary>
-            public const int Stream = 0;
+            Stream
         }
 
         /// <summary>
-        /// A <see langword="class"/> with a collection of indices for arguments used during serialization
+        /// An <see langword="enum"/> with a collection of indices for arguments used during serialization
         /// </summary>
-        public static class Write
+        public enum Write
         {
             /// <summary>
-            /// The index of the input instance of a given type
+            /// The input instance of a given type
             /// </summary>
-            public const int T = 0;
+            T,
 
             /// <summary>
-            /// The index of the input <see cref="System.IO.Stream"/> instance
+            /// The input <see cref="System.IO.Stream"/> instance
             /// </summary>
-            public const int Stream = 1;
+            Stream
         }
     }
 }

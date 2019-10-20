@@ -23,6 +23,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         /// <summary>
         /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
         /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load</param>
+        public static void EmitLoadArgument<T>(this ILGenerator il, T index) where T : Enum => il.EmitLoadArgument((int)(object)index);
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
+        /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="index">The index of the argument to load</param>
         public static void EmitLoadArgument(this ILGenerator il, int index)
@@ -42,6 +50,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
             else if (index <= 65534) il.Emit(OpCodes.Ldarg, (short)index);
             else throw new ArgumentOutOfRangeException($"Invalid argument index {index}");
         }
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldloc"/> instruction to read a local variable onto the stream of instructions
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to load</param>
+        public static void EmitLoadLocal<T>(this ILGenerator il, T index) where T : Enum => il.EmitLoadLocal((int)(object)index);
 
         /// <summary>
         /// Puts the appropriate <see langword="ldloc"/> instruction to read a local variable onto the stream of instructions
@@ -69,6 +85,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         /// <summary>
         /// Puts the appropriate <see langword="ldloca"/> instruction to read a local variable address onto the stream of instructions
         /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to load the address for</param>
+        public static void EmitLoadLocalAddress<T>(this ILGenerator il, T index) where T : Enum => il.EmitLoadLocalAddress((int)(object)index);
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldloca"/> instruction to read a local variable address onto the stream of instructions
+        /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="index">The index of the local variable to load the address for</param>
         public static void EmitLoadLocalAddress(this ILGenerator il, int index)
@@ -77,6 +101,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
             else if (index <= 65534) il.Emit(OpCodes.Ldloca, (short)index);
             else throw new ArgumentOutOfRangeException($"Invalid local index {index}");
         }
+
+        /// <summary>
+        /// Puts the appropriate <see langword="stloc"/> instruction to write a local variable onto the stream of instructions
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to store</param>
+        public static void EmitStoreLocal<T>(this ILGenerator il, T index) where T : Enum => il.EmitStoreLocal((int)(object)index);
 
         /// <summary>
         /// Puts the appropriate <see langword="stloc"/> instruction to write a local variable onto the stream of instructions
