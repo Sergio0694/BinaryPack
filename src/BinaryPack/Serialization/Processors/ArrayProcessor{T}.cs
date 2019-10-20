@@ -1,44 +1,24 @@
-﻿using System.Diagnostics.Contracts;
-using System.Reflection.Emit;
-using BinaryPack.Delegates;
+﻿using System.Reflection.Emit;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
 using BinaryPack.Serialization.Reflection;
 
-namespace BinaryPack.Serialization
+namespace BinaryPack.Serialization.Processors
 {
     /// <summary>
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    internal static partial class ArrayProcessor<T> where T : class, new()
+    internal sealed partial class ArrayProcessor<T> : Abstract.TypeProcessor<T[]?> where T : class, new()
     {
         /// <summary>
-        /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for arrays of type <typeparamref name="T"/>
+        /// Gets the singleton <see cref="ArrayProcessor{T}"/> instance to use
         /// </summary>
-        public static readonly DynamicMethod<BinarySerializer<T[]?>> _Serializer = DynamicMethod<BinarySerializer<T[]?>>.New();
+        public static ArrayProcessor<T> Instance { get; } = new ArrayProcessor<T>();
 
-        /// <summary>
-        /// Gets the <see cref="BinarySerializer{T}"/> instance for arrays of the current type <typeparamref name="T"/>
-        /// </summary>
-        public static BinarySerializer<T[]?> Serializer { get; } = BuildSerializer();
-
-        /// <summary>
-        /// The <see cref="DynamicMethod{T}"/> instance holding the deserializer being built for arrays of type <typeparamref name="T"/>
-        /// </summary>
-        public static readonly DynamicMethod<BinaryDeserializer<T[]?>> _Deserializer = DynamicMethod<BinaryDeserializer<T[]?>>.New();
-
-        /// <summary>
-        /// Gets the <see cref="BinaryDeserializer{T}"/> instance for arrays of the current type <typeparamref name="T"/>
-        /// </summary>
-        public static BinaryDeserializer<T[]?> Deserializer { get; } = BuildDeserializer();
-
-        /// <summary>
-        /// Builds a new <see cref="BinarySerializer{T}"/> instance for the type <typeparamref name="T"/>
-        /// </summary>
-        [Pure]
-        private static BinarySerializer<T[]?> BuildSerializer() => _Serializer.Build(il =>
+        /// <inheritdoc/>
+        protected override void EmitSerializer(ILGenerator il)
         {
             il.DeclareLocalsFromType<Locals.Write>();
 
@@ -98,13 +78,10 @@ namespace BinaryPack.Serialization
             il.EmitLoadLocal(Locals.Write.Length);
             il.Emit(OpCodes.Blt_S, loop);
             il.Emit(OpCodes.Ret);
-        });
+        }
 
-        /// <summary>
-        /// Builds a new <see cref="BinaryDeserializer{T}"/> instance for the type <typeparamref name="T"/>
-        /// </summary>
-        [Pure]
-        private static BinaryDeserializer<T[]?> BuildDeserializer() => _Deserializer.Build(il =>
+        /// <inheritdoc/>
+        protected override void EmitDeserializer(ILGenerator il)
         {
             // T[] array; ...;
             il.DeclareLocal(typeof(T).MakeArrayType());
@@ -177,6 +154,6 @@ namespace BinaryPack.Serialization
             il.MarkLabel(end);
             il.EmitLoadLocal(Locals.Read.Array);
             il.Emit(OpCodes.Ret);
-        });
+        }
     }
 }

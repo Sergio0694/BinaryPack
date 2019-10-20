@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using BinaryPack.Models.Interfaces;
-using BinaryPack.Serialization;
+using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BinaryPack.Unit.Internals
@@ -20,11 +20,11 @@ namespace BinaryPack.Unit.Internals
         {
             // Serialize
             using MemoryStream stream = new MemoryStream();
-            ArrayProcessor<T>.Serializer(array, stream);
+            ArrayProcessor<T>.Instance.Serializer(array, stream);
 
             // Deserialize
             stream.Seek(0, SeekOrigin.Begin);
-            var result = ArrayProcessor<T>.Deserializer(stream);
+            var result = ArrayProcessor<T>.Instance.Deserializer(stream);
 
             // Equality check
             if (array == null) Assert.IsNull(result);

@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using BinaryPack.Extensions.System.Reflection.Emit;
+using BinaryPack.Serialization.Processors;
 
 namespace BinaryPack.Serialization.Reflection
 {
@@ -20,9 +21,11 @@ namespace BinaryPack.Serialization.Reflection
             [Pure]
             private static MethodInfo GetMethodInfo(Type type, string name)
             {
-                Type ownerType = typeof(ArrayProcessor<>).MakeGenericType(type);
-                FieldInfo fieldInfo = ownerType.GetField(name, BindingFlags.Public | BindingFlags.Static);
-                object genericMethod = fieldInfo.GetValue(null);
+                Type processorType = typeof(ArrayProcessor<>).MakeGenericType(type);
+                PropertyInfo instanceInfo = processorType.GetProperty(nameof(ArrayProcessor<object>.Instance), BindingFlags.Public | BindingFlags.Static);
+                object processorInstance = instanceInfo.GetValue(null);
+                FieldInfo fieldInfo = processorType.GetField(name, BindingFlags.Public | BindingFlags.Static);
+                object genericMethod = fieldInfo.GetValue(processorInstance);
                 PropertyInfo propertyInfo = genericMethod.GetType().GetProperty(nameof(DynamicMethod<Action>.MethodInfo));
 
                 return (MethodInfo)propertyInfo.GetValue(genericMethod);

@@ -1,8 +1,8 @@
 ﻿using BinaryPack.Serialization.Attributes;
 
-namespace BinaryPack.Serialization
+namespace BinaryPack.Serialization.Processors
 {
-    internal static partial class ArrayProcessor<T>
+    internal sealed partial class ArrayProcessor<T>
     {
         /// <summary>
         /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ArrayProcessor{T}"/>
