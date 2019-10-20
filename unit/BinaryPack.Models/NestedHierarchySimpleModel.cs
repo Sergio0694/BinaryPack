@@ -1,6 +1,8 @@
 ﻿using System;
 using BinaryPack.Models.Interfaces;
 
+#nullable enable
+
 namespace BinaryPack.Models
 {
     /// <summary>
@@ -8,7 +10,7 @@ namespace BinaryPack.Models
     /// </summary>
     public sealed class NestedHierarchySimpleModel : IInitializable, IEquatable<NestedHierarchySimpleModel>
     {
-        public B Child { get; set; }
+        public B? Child { get; set; }
 
         /// <inheritdoc/>
         public void Initialize()
@@ -17,7 +19,7 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(NestedHierarchySimpleModel other)
+        public bool Equals(NestedHierarchySimpleModel? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -32,7 +34,7 @@ namespace BinaryPack.Models
         public int Number { get; set; }
 
         /// <inheritdoc/>
-        public bool Equals(B other)
+        public bool Equals(B? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;

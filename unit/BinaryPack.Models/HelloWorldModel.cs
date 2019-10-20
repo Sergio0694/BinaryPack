@@ -1,6 +1,8 @@
 ﻿using System;
 using BinaryPack.Models.Interfaces;
 
+#nullable enable
+
 namespace BinaryPack.Models
 {
     /// <summary>
@@ -8,7 +10,7 @@ namespace BinaryPack.Models
     /// </summary>
     public sealed class HelloWorldModel : IInitializable, IEquatable<HelloWorldModel>
     {
-        public string Property { get; set; }
+        public string? Property { get; set; }
 
         public int Value { get; set; }
 

@@ -2,6 +2,8 @@
 using System.Linq;
 using BinaryPack.Models.Interfaces;
 
+#nullable enable
+
 namespace BinaryPack.Models
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace BinaryPack.Models
     [Serializable]
     public sealed class UnmanagedArrayModel : IInitializable, IEquatable<UnmanagedArrayModel>
     {
-        public DateTime[] Items { get; set; }
+        public DateTime[]? Items { get; set; }
 
         public int Value { get; set; }
 
@@ -22,7 +24,7 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(UnmanagedArrayModel other)
+        public bool Equals(UnmanagedArrayModel? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;

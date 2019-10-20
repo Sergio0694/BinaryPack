@@ -3,6 +3,8 @@ using System.Linq;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Models.Interfaces;
 
+#nullable enable
+
 namespace BinaryPack.Models
 {
     /// <summary>
