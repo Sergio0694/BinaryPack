@@ -27,10 +27,42 @@ namespace BinaryPack.Serialization.Processors
         {
             il.DeclareLocals<Locals.Write>();
 
+            /* Perform a null check only if the type is a reference type.
+             * In this case, a single byte will be written to the target stream,
+             * with a value of -1 if the input item is null, and 1 otherwise. */
             if (!typeof(T).IsValueType)
             {
-                il.EmitSerializeIsNullFlag();
-                il.EmitReturnIfNull();
+                // byte* p = stackalloc byte[1];
+                il.EmitStackalloc(typeof(byte));
+                il.EmitStoreLocal(Locals.Write.BytePtr);
+                il.EmitLoadLocal(Locals.Write.BytePtr);
+
+                // *p = obj == null ? -1 : 1;
+                Label
+                    notNull = il.DefineLabel(),
+                    flag = il.DefineLabel();
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.Emit(OpCodes.Brtrue_S, notNull);
+                il.EmitLoadInt32(-1);
+                il.Emit(OpCodes.Br_S, flag);
+                il.MarkLabel(notNull);
+                il.EmitLoadInt32(1);
+                il.MarkLabel(flag);
+                il.EmitStoreToAddress(typeof(byte));
+
+                // stream.Write(new ReadOnlySpan<byte>(p, 1));
+                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadLocal(Locals.Write.BytePtr);
+                il.EmitLoadInt32(sizeof(byte));
+                il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
+                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+
+                // if (obj == null) return;
+                Label skip = il.DefineLabel();
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.Emit(OpCodes.Brtrue_S, skip);
+                il.Emit(OpCodes.Ret);
+                il.MarkLabel(skip);
             }
 
             // Properties serialization
