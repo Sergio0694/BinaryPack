@@ -170,7 +170,7 @@ namespace BinaryPack.Serialization
             // Loop check
             il.MarkLabel(check);
             il.EmitLoadLocal(Locals.Read.I);
-            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Blt_S, loop);
 
             // return obj;
