@@ -15,10 +15,10 @@ namespace BinaryPack.Serialization.Reflection
             /// Gets the <see cref="System.ReadOnlySpan{T}"/> constructor that takes a generic array
             /// </summary>
             public static ConstructorInfo ArrayConstructor(Type type) => (
-                from ctor in typeof(System.ReadOnlySpan<>).MakeGenericType(type.GetElementType()).GetConstructors()
+                from ctor in typeof(System.ReadOnlySpan<>).MakeGenericType(type).GetConstructors()
                 let args = ctor.GetParameters()
                 where args.Length == 1 &&
-                      args[0].ParameterType == type
+                      args[0].ParameterType == type.MakeGenericType()
                 select ctor).First();
         }
     }

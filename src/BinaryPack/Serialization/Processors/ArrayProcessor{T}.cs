@@ -1,4 +1,6 @@
-﻿using System.Reflection.Emit;
+﻿using System.Reflection;
+using System.Reflection.Emit;
+using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Extensions;
@@ -52,33 +54,65 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan<byte>.UnsafeConstructor);
             il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
 
-            // for (int i = 0; i < length; i++) { }
-            Label check = il.DefineLabel();
-            il.EmitLoadInt32(0);
-            il.EmitStoreLocal(Locals.Write.I);
-            il.Emit(OpCodes.Br_S, check);
-            Label loop = il.DefineLabel();
-            il.MarkLabel(loop);
+            /* The generic type parameter T doesn't have constraints, and there are three
+             * main cases that need to be handled. This is all done while building the
+             * method, so there are no actual checks being performed during serialization.
+             * If T is unmanaged, the whole array is written directly to the stream
+             * after being broadcast as a byte span. If T is a string, the dedicated
+             * serializer is invoked. For all other cases, the standard object serializer is used. */
+            if (typeof(T).IsUnmanaged())
+            {
+                // if (size == 0) return;
+                Label copy = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Write.Length);
+                il.EmitLoadInt32(0);
+                il.Emit(OpCodes.Bne_Un_S, copy);
+                il.Emit(OpCodes.Ret);
 
-            // SerializationProcessor<T>.Serializer(obj[i], stream);
-            il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitLoadLocal(Locals.Write.I);
-            il.Emit(OpCodes.Ldelem_Ref);
-            il.EmitLoadArgument(Arguments.Write.Stream);
-            il.EmitCall(OpCodes.Call, ObjectProcessor<T>.Instance.SerializerInfo.MethodInfo, null);
+                // stream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan(obj)));
+                il.MarkLabel(copy);
+                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(typeof(T)));
+                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)), null);
+                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+                il.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                // for (int i = 0; i < length; i++) { }
+                Label check = il.DefineLabel();
+                il.EmitLoadInt32(0);
+                il.EmitStoreLocal(Locals.Write.I);
+                il.Emit(OpCodes.Br_S, check);
+                Label loop = il.DefineLabel();
+                il.MarkLabel(loop);
 
-            // i++;
-            il.EmitLoadLocal(Locals.Write.I);
-            il.EmitLoadInt32(1);
-            il.Emit(OpCodes.Add);
-            il.EmitStoreLocal(Locals.Write.I);
+                // ...(obj[i], stream);
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitLoadLocal(Locals.Write.I);
+                il.Emit(OpCodes.Ldelem_Ref);
+                il.EmitLoadArgument(Arguments.Write.Stream);
 
-            // Loop check
-            il.MarkLabel(check);
-            il.EmitLoadLocal(Locals.Write.I);
-            il.EmitLoadLocal(Locals.Write.Length);
-            il.Emit(OpCodes.Blt_S, loop);
-            il.Emit(OpCodes.Ret);
+                // StringProcessor/ObjectProcessor<T>.Serialize(...);
+                MethodInfo methodInfo = typeof(T) == typeof(string)
+                    ? StringProcessor.Instance.SerializerInfo.MethodInfo
+                    : KnownMembers.ObjectProcessor.SerializerInfo(typeof(T));
+                il.EmitCall(OpCodes.Call, methodInfo, null);
+
+                // i++;
+                il.EmitLoadLocal(Locals.Write.I);
+                il.EmitLoadInt32(1);
+                il.Emit(OpCodes.Add);
+                il.EmitStoreLocal(Locals.Write.I);
+
+                // Loop check
+                il.MarkLabel(check);
+                il.EmitLoadLocal(Locals.Write.I);
+                il.EmitLoadLocal(Locals.Write.Length);
+                il.Emit(OpCodes.Blt_S, loop);
+                il.Emit(OpCodes.Ret);
+            }
         }
 
         /// <inheritdoc/>
