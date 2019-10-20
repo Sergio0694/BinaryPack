@@ -19,7 +19,7 @@ namespace BinaryPack.Unit.Internals
             using MemoryStream stream = new MemoryStream();
             ArrayProcessor<T>.Instance.Serializer(array, stream);
             stream.Seek(0, SeekOrigin.Begin);
-            var result = ArrayProcessor<T>.Instance.Deserializer(stream);
+            T[]? result = ArrayProcessor<T>.Instance.Deserializer(stream);
 
             // Equality check
             if (array == null) Assert.IsNull(result);
@@ -80,13 +80,13 @@ namespace BinaryPack.Unit.Internals
             select text).ToArray());
 
         // Test method for arrays of an unmanaged type
-        public static void Test(double[]? array)
+        public static void Test(DateTime[]? array)
         {
             // Serialization
             using MemoryStream stream = new MemoryStream();
-            ArrayProcessor<double>.Instance.Serializer(array, stream);
+            ArrayProcessor<DateTime>.Instance.Serializer(array, stream);
             stream.Seek(0, SeekOrigin.Begin);
-            var result = ArrayProcessor<double>.Instance.Deserializer(stream);
+            DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(stream);
 
             // Equality check
             if (array == null) Assert.IsNull(result);
@@ -102,14 +102,14 @@ namespace BinaryPack.Unit.Internals
         public void UnmanagedTypeNullArraySerializationTest() => Test(default);
 
         [TestMethod]
-        public void UnmanagedTypeEmptyArraySerializationTest() => Test(Array.Empty<double>());
+        public void UnmanagedTypeEmptyArraySerializationTest() => Test(Array.Empty<DateTime>());
 
         [TestMethod]
-        public void UnmanagedTypeArraySerializationTest1() => Test(new[] { 3.14 });
+        public void UnmanagedTypeArraySerializationTest1() => Test(new[] { RandomProvider.NextDateTime() });
 
         [TestMethod]
         public void UnmanagedTypeArraySerializationTest2() => Test((
             from i in Enumerable.Range(0, 10)
-            select RandomProvider.NextDouble()).ToArray());
+            select RandomProvider.NextDateTime()).ToArray());
     }
 }

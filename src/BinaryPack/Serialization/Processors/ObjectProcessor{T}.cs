@@ -205,7 +205,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // Invoke StringProcessor to read the string property
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitLoadArgument(Arguments.Read.Stream);
                     il.EmitCall(OpCodes.Call, StringProcessor.Instance.DeserializerInfo.MethodInfo, null);
                     il.EmitWriteMember(property);
                 }
@@ -213,7 +213,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // Invoke ArrayProcessor<T> to read the TItem[] array
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitLoadArgument(Arguments.Read.Stream);
                     il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.DeserializerInfo(property.PropertyType.GetElementType()), null);
                     il.EmitWriteMember(property);
                 }
