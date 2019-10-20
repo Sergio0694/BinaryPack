@@ -21,7 +21,7 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            il.DeclareLocalsFromType<Locals.Write>();
+            il.DeclareLocals<Locals.Write>();
 
             // if (obj == null) { } else { }
             Label
@@ -101,7 +101,7 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            il.DeclareLocalsFromType<Locals.Read>();
+            il.DeclareLocals<Locals.Read>();
 
             // Span<byte> span = stackalloc byte[4];
             il.EmitStackalloc(typeof(int));
