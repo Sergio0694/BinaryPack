@@ -23,6 +23,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         /// <summary>
         /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
         /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load</param>
+        public static void EmitLoadArgument<T>(this ILGenerator il, T index) where T : Enum => il.EmitLoadArgument((int)(object)index);
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
+        /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="index">The index of the argument to load</param>
         public static void EmitLoadArgument(this ILGenerator il, int index)
