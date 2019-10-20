@@ -81,16 +81,16 @@ namespace BinaryPack.Serialization
 
             // SerializationProcessor<T>.Serializer(obj[i], stream);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitLoadLocal(2);
+            il.EmitLoadLocal(Locals.Write.I);
             il.Emit(OpCodes.Ldelem_Ref);
             il.EmitLoadArgument(Arguments.Write.Stream);
-            il.EmitCall(OpCodes.Call, SerializationProcessor<T>._Serializer.MethodInfo, null);
+            il.EmitCall(OpCodes.Call, TypeProcessor<T>._Serializer.MethodInfo, null);
 
             // i++;
             il.EmitLoadLocal(Locals.Write.I);
             il.EmitLoadInt32(1);
             il.Emit(OpCodes.Add);
-            il.EmitStoreLocal(2);
+            il.EmitStoreLocal(Locals.Write.I);
 
             // Loop check
             il.MarkLabel(check);
@@ -158,7 +158,7 @@ namespace BinaryPack.Serialization
             il.EmitLoadLocal(Locals.Read.Array);
             il.EmitLoadLocal(Locals.Read.I);
             il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitCall(OpCodes.Call, SerializationProcessor<T>._Deserializer.MethodInfo, null);
+            il.EmitCall(OpCodes.Call, TypeProcessor<T>._Deserializer.MethodInfo, null);
             il.Emit(OpCodes.Stelem_Ref);
 
             // i++;

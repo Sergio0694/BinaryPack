@@ -8,7 +8,7 @@ namespace BinaryPack.Serialization.Reflection
     internal static partial class KnownMembers
     {
         /// <summary>
-        /// A <see langword="class"/> containing methods from the <see cref="SerializationProcessor{T}"/> type
+        /// A <see langword="class"/> containing methods from the <see cref="TypeProcessor{T}"/> type
         /// </summary>
         public static class SerializationProcessor
         {
@@ -20,7 +20,7 @@ namespace BinaryPack.Serialization.Reflection
             [Pure]
             private static MethodInfo GetMethodInfo(Type type, string name)
             {
-                Type ownerType = typeof(SerializationProcessor<>).MakeGenericType(type);
+                Type ownerType = typeof(TypeProcessor<>).MakeGenericType(type);
                 FieldInfo fieldInfo = ownerType.GetField(name, BindingFlags.Public | BindingFlags.Static);
                 object genericMethod = fieldInfo.GetValue(null);
                 PropertyInfo propertyInfo = genericMethod.GetType().GetProperty(nameof(DynamicMethod<Action>.MethodInfo));
@@ -33,14 +33,14 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             /// <param name="type">The type of object to look up the serializer for</param>
             [Pure]
-            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(SerializationProcessor<object>._Serializer));
+            public static MethodInfo SerializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Serializer));
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic deserializer of a given type
             /// </summary>
             /// <param name="type">The type of object to look up the deserializer for</param>
             [Pure]
-            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(SerializationProcessor<object>._Deserializer));
+            public static MethodInfo DeserializerInfo(Type type) => GetMethodInfo(type, nameof(TypeProcessor<object>._Deserializer));
         }
     }
 }

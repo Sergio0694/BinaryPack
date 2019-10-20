@@ -16,7 +16,7 @@ namespace BinaryPack.Serialization
     /// A <see langword="class"/> responsible for creating the serializers and deserializers
     /// </summary>
     /// <typeparam name="T">The type of items to handle during serialization and deserialization</typeparam>
-    internal static class SerializationProcessor<T> where T : new()
+    internal static class TypeProcessor<T> where T : new()
     {
         /// <summary>
         /// The <see cref="DynamicMethod{T}"/> instance holding the serializer being built for type <typeparamref name="T"/>
