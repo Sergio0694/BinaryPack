@@ -7,7 +7,7 @@ namespace BinaryPack.Serialization.Processors
         /// <summary>
         /// A <see langword="class"/> that exposes hardcoded indices for local variables
         /// </summary>
-        internal static class Locals
+        private static class Locals
         {
             /// <summary>
             /// An <see langword="enum"/> with a collection of local variables used during serialization
