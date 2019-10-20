@@ -13,7 +13,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?> where T : class, new()
+    internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
     {
         /// <summary>
         /// Gets the singleton <see cref="ArrayProcessor{T}"/> instance to use
