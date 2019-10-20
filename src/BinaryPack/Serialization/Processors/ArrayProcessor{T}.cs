@@ -141,52 +141,73 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Read.Length);
 
             // if (length == -1) return array = null;
-            Label
-                isNotNull = il.DefineLabel(),
-                end = il.DefineLabel();
+            Label isNotNull = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitLoadInt32(-1);
-            il.Emit(OpCodes.Ceq);
-            il.Emit(OpCodes.Brfalse_S, isNotNull);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
-            il.EmitStoreLocal(Locals.Read.Array);
-            il.Emit(OpCodes.Br_S, end);
+            il.Emit(OpCodes.Ret);
+
+            // if (length == 0) return Array.Empty<T>();
+            Label isNotEmpty = il.DefineLabel();
+            il.MarkLabel(isNotNull);
+            il.EmitLoadLocal(Locals.Read.Length);
+            il.Emit(OpCodes.Brtrue_S, isNotEmpty);
+            il.EmitCall(OpCodes.Call, KnownMembers.Array.Empty(typeof(T)), null);
+            il.Emit(OpCodes.Ret);
 
             // else array = new T[length];
-            il.MarkLabel(isNotNull);
+            il.MarkLabel(isNotEmpty);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Newarr, typeof(T));
             il.EmitStoreLocal(Locals.Read.Array);
 
-            // for (int i = 0; i < length; i++) { }
-            Label check = il.DefineLabel();
-            il.EmitLoadInt32(0);
-            il.EmitStoreLocal(Locals.Read.I);
-            il.Emit(OpCodes.Br_S, check);
-            Label loop = il.DefineLabel();
-            il.MarkLabel(loop);
+            if (typeof(T).IsUnmanaged())
+            {
+                // _ = stream.Read(MemoryMarshal.AsBytes(new Span<T>(array)));
+                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitLoadLocal(Locals.Read.Array);
+                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(T)));
+                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)), null);
+                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.Emit(OpCodes.Pop);
+            }
+            else
+            {
+                // for (int i = 0; i < length; i++) { }
+                Label check = il.DefineLabel();
+                il.EmitLoadInt32(0);
+                il.EmitStoreLocal(Locals.Read.I);
+                il.Emit(OpCodes.Br_S, check);
+                Label loop = il.DefineLabel();
+                il.MarkLabel(loop);
 
-            // array[i] = SerializationProcessor<T>.Deserializer(stream);
-            il.EmitLoadLocal(Locals.Read.Array);
-            il.EmitLoadLocal(Locals.Read.I);
-            il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitCall(OpCodes.Call, ObjectProcessor<T>.Instance.DeserializerInfo.MethodInfo, null);
-            il.Emit(OpCodes.Stelem_Ref);
+                // StringProcessor/ObjectProcessor<T>.Deserialize
+                MethodInfo methodInfo = typeof(T) == typeof(string)
+                    ? StringProcessor.Instance.DeserializerInfo.MethodInfo
+                    : KnownMembers.ObjectProcessor.DeserializerInfo(typeof(T));
 
-            // i++;
-            il.EmitLoadLocal(Locals.Read.I);
-            il.EmitLoadInt32(1);
-            il.Emit(OpCodes.Add);
-            il.EmitStoreLocal(Locals.Read.I);
+                // array[i] = ...(stream);
+                il.EmitLoadLocal(Locals.Read.Array);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitCall(OpCodes.Call, methodInfo, null);
+                il.Emit(OpCodes.Stelem_Ref);
 
-            // Loop check
-            il.MarkLabel(check);
-            il.EmitLoadLocal(Locals.Read.I);
-            il.EmitLoadLocal(Locals.Read.Length);
-            il.Emit(OpCodes.Blt_S, loop);
+                // i++;
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadInt32(1);
+                il.Emit(OpCodes.Add);
+                il.EmitStoreLocal(Locals.Read.I);
 
-            // return obj;
-            il.MarkLabel(end);
+                // Loop check
+                il.MarkLabel(check);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadLocal(Locals.Read.Length);
+                il.Emit(OpCodes.Blt_S, loop);
+            }
+
+            // return array;
             il.EmitLoadLocal(Locals.Read.Array);
             il.Emit(OpCodes.Ret);
         }
