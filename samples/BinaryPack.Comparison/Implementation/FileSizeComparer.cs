@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Xml.Serialization;
 using BinaryPack.Models.Interfaces;
 using Newtonsoft.Json;
 
@@ -24,13 +25,19 @@ namespace BinaryPack.Comparison.Implementation
             new JsonSerializer().Serialize(jsonWriter, model);
             jsonWriter.Flush();
 
+            // XML serialization
+            using Stream xmlStream = new MemoryStream();
+            var serializer = new XmlSerializer(typeof(T));
+            serializer.Serialize(xmlStream, model);
+
             // BinaryPack serialization
             using MemoryStream binaryStream = new MemoryStream();
             BinaryConverter.Serialize(model, binaryStream);
 
             Console.WriteLine($">> Newtonsoft.Json:\t{jsonStream.Position} bytes");
+            Console.WriteLine($">> XML serializer:\t{xmlStream.Position} bytes");
             Console.WriteLine($">> BinaryPack:\t\t{binaryStream.Position} bytes");
-            Console.WriteLine("Compressing with GZip...");
+            Console.WriteLine($"{Environment.NewLine}Compressing with GZip...{Environment.NewLine}");
 
             // Newtonsoft.Json compression
             using (MemoryStream output = new MemoryStream())
@@ -41,6 +48,17 @@ namespace BinaryPack.Comparison.Implementation
                 jsonStream.CopyTo(gzip);
 
                 Console.WriteLine($">> Newtonsoft.Json:\t{output.Position} bytes");
+            }
+
+            // XML serializer compression
+            using (MemoryStream output = new MemoryStream())
+            {
+                using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+
+                xmlStream.Seek(0, SeekOrigin.Begin);
+                xmlStream.CopyTo(gzip);
+
+                Console.WriteLine($">> XML serializer:\t{output.Position} bytes");
             }
 
             // BinaryPack compression
