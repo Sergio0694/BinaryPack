@@ -22,9 +22,6 @@ namespace BinaryPack.Benchmark.Implementations
 
         private const string DESERIALIZATION = "Deserialization";
 
-        // Number of iterations to run
-        private const int N = 100;
-
         private readonly T Model = new T();
 
         private byte[] NewtonsoftJsonData;

@@ -14,15 +14,12 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void NewtonsoftJson2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(NewtonsoftJsonData);
-                using StreamReader textReader = new StreamReader(stream);
-                using JsonTextReader jsonReader = new JsonTextReader(textReader);
-                var serializer = new Newtonsoft.Json.JsonSerializer();
+            using Stream stream = new MemoryStream(NewtonsoftJsonData);
+            using StreamReader textReader = new StreamReader(stream);
+            using JsonTextReader jsonReader = new JsonTextReader(textReader);
+            var serializer = new Newtonsoft.Json.JsonSerializer();
 
-                _ = serializer.Deserialize<T>(jsonReader);
-            }
+            _ = serializer.Deserialize<T>(jsonReader);
         }
 
         /// <summary>
@@ -32,13 +29,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void BinaryFormatter2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(BinaryFormatterData);
+            using Stream stream = new MemoryStream(BinaryFormatterData);
 
-                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                _ = formatter.Deserialize(stream);
-            }
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            _ = formatter.Deserialize(stream);
         }
 
         /// <summary>
@@ -48,12 +42,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void NetCoreJson2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(DotNetCoreJsonData);
+            using Stream stream = new MemoryStream(DotNetCoreJsonData);
 
-                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
-            }
+            _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
         }
 
         /// <summary>
@@ -63,13 +54,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void DataContractJsonSerializer2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(DataContractJsonData);
+            using Stream stream = new MemoryStream(DataContractJsonData);
 
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
-                _ = serializer.ReadObject(stream);
-            }
+            var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
+            _ = serializer.ReadObject(stream);
         }
 
         /// <summary>
@@ -79,13 +67,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void XmlSerializer2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(XmlSerializerData);
+            using Stream stream = new MemoryStream(XmlSerializerData);
 
-                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                _ = serializer.Deserialize(stream);
-            }
+            var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+            _ = serializer.Deserialize(stream);
         }
 
         /// <summary>
@@ -95,12 +80,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void Utf8Json2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(Utf8JsonData);
+            using Stream stream = new MemoryStream(Utf8JsonData);
 
-                _ = Utf8JsonSerializer.Deserialize<T>(stream);
-            }
+            _ = Utf8JsonSerializer.Deserialize<T>(stream);
         }
 
         /// <summary>
@@ -110,12 +92,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(DESERIALIZATION)]
         public void BinaryPack2()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream(BinaryPackData);
+            using Stream stream = new MemoryStream(BinaryPackData);
 
-                _ = BinaryConverter.Deserialize<T>(stream);
-            }
+            _ = BinaryConverter.Deserialize<T>(stream);
         }
     }
 }

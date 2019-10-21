@@ -15,16 +15,13 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void NewtonsoftJson1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
-                using StreamWriter textWriter = new StreamWriter(stream);
-                using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
+            using Stream stream = new MemoryStream();
+            using StreamWriter textWriter = new StreamWriter(stream);
+            using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
 
-                var serializer = new Newtonsoft.Json.JsonSerializer();
-                serializer.Serialize(jsonWriter, Model);
-                jsonWriter.Flush();
-            }
+            var serializer = new Newtonsoft.Json.JsonSerializer();
+            serializer.Serialize(jsonWriter, Model);
+            jsonWriter.Flush();
         }
 
         /// <summary>
@@ -34,13 +31,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void BinaryFormatter1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                formatter.Serialize(stream, Model);
-            }
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            formatter.Serialize(stream, Model);
         }
 
         /// <summary>
@@ -50,13 +44,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void NetCoreJson1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
-                using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(stream);
+            using Stream stream = new MemoryStream();
+            using Utf8JsonWriter jsonWriter = new Utf8JsonWriter(stream);
 
-                System.Text.Json.JsonSerializer.Serialize(jsonWriter, Model);
-            }
+            System.Text.Json.JsonSerializer.Serialize(jsonWriter, Model);
         }
 
         /// <summary>
@@ -66,13 +57,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void DataContractJsonSerializer1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
-                serializer.WriteObject(stream, Model);
-            }
+            var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(T));
+            serializer.WriteObject(stream, Model);
         }
 
         /// <summary>
@@ -82,13 +70,10 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void XmlSerializer1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                serializer.Serialize(stream, Model);
-            }
+            var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+            serializer.Serialize(stream, Model);
         }
 
         /// <summary>
@@ -98,12 +83,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void PortableXaml1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                Portable.Xaml.XamlServices.Save(stream, Model);
-            }
+            Portable.Xaml.XamlServices.Save(stream, Model);
         }
 
         /// <summary>
@@ -113,12 +95,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void Utf8Json1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                Utf8JsonSerializer.Serialize(stream, Model);
-            }
+            Utf8JsonSerializer.Serialize(stream, Model);
         }
 
         /// <summary>
@@ -128,12 +107,9 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void BinaryPack1()
         {
-            for (int i = 0; i < N; i++)
-            {
-                using Stream stream = new MemoryStream();
+            using Stream stream = new MemoryStream();
 
-                BinaryConverter.Serialize(Model, stream);
-            }
+            BinaryConverter.Serialize(Model, stream);
         }
     }
 }
