@@ -44,9 +44,14 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <typeparamref name="T"/> array
+                /// The target <see cref="System.Collections.Generic.List{T}"/> instance
                 /// </summary>
-                Array,
+                ListT,
+
+                /// <summary>
+                /// The target array of type <typeparamref name="T"/> to load and inject
+                /// </summary>
+                ArrayT,
 
                 /// <summary>
                 /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
@@ -55,10 +60,10 @@ namespace BinaryPack.Serialization.Processors
                 SpanByte,
 
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the count of the target <see cref="System.Collections.Generic.List{T}"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length,
+                Count,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable for the loop counter

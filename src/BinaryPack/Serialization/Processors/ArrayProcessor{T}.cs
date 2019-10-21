@@ -140,7 +140,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadFromAddress(typeof(int));
             il.EmitStoreLocal(Locals.Read.Length);
 
-            // if (length == -1) return array = null;
+            // if (length == -1) return null;
             Label isNotNull = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitLoadInt32(-1);

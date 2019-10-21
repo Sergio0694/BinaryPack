@@ -24,6 +24,20 @@ namespace BinaryPack.Serialization.Reflection
                 select ctor).First();
 
             /// <summary>
+            /// Gets the <see cref="Span{T}"/> constructor that takes a generic array, a start index and the length
+            /// </summary>
+            /// <param name="type">The type parameter to use for the target <see cref="Span{T}"/> type to use</param>
+            [Pure]
+            public static ConstructorInfo ArrayWithOffsetAndLengthConstructor(Type type) => (
+                from ctor in typeof(Span<>).MakeGenericType(type).GetConstructors()
+                let args = ctor.GetParameters()
+                where args.Length == 3 &&
+                      args[0].ParameterType == type.MakeArrayType() &&
+                      args[1].ParameterType == typeof(int) &&
+                      args[2].ParameterType == typeof(int)
+                select ctor).First();
+
+            /// <summary>
             /// Gets the <see cref="Span{T}"/> constructor that takes a <see langword="void"/> pointer and a size
             /// </summary>
             [Pure]
