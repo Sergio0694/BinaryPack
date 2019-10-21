@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Extensions;
@@ -175,23 +174,9 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Read.Count);
             il.EmitWriteMember(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
 
-            // Local function to calculate the 2^x size of the target T[] array
-            static int CalculateCapacityFromCount(int n)
-            {
-                int log = 0;
-
-                if (n > 0xFFFF) { n >>= 16; log = 16; }
-                if (n > 0xff) { n >>= 8; log |= 8; }
-                if (n > 0xf) { n >>= 4; log |= 4; }
-                if (n > 0x3) { n >>= 2; log |= 2; }
-                if (n > 0x1) { log |= 1; }
-
-                return 1 << (log + 1);
-            }
-
             // T[] array = new T[CalculateCapacityFromCount(count)];
             il.EmitLoadLocal(Locals.Read.Count);
-            il.EmitCall(typeof(ListProcessor<T>).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(m => m.Name.Contains(nameof(CalculateCapacityFromCount))));
+            il.EmitCall(typeof(NumericExtensions).GetMethod(nameof(NumericExtensions.UpperBoundLog2)));
             il.Emit(OpCodes.Newarr, typeof(T));
             il.EmitStoreLocal(Locals.Read.ArrayT);
 
