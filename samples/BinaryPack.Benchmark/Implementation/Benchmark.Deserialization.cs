@@ -98,6 +98,18 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
+        /// Deserialization powered by <see cref="MessagePack.MessagePackSerializer"/>
+        /// </summary>
+        [Benchmark]
+        [BenchmarkCategory(SERIALIZATION)]
+        public void MessagePack2()
+        {
+            using Stream stream = new MemoryStream(Utf8JsonData);
+
+            _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+        }
+
+        /// <summary>
         /// Deserialization powered by <see cref="BinaryConverter"/>
         /// </summary>
         [Benchmark]

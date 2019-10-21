@@ -38,6 +38,8 @@ namespace BinaryPack.Benchmark.Implementations
 
         private byte[] Utf8JsonData;
 
+        private byte[] MessagePackData;
+
         private byte[] BinaryPackData;
 
         /// <summary>
@@ -135,6 +137,17 @@ namespace BinaryPack.Benchmark.Implementations
 
                 stream.Seek(0, SeekOrigin.Begin);
                 _ = Utf8JsonSerializer.Deserialize<T>(stream);
+            }
+
+            // MessagePack
+            using (MemoryStream stream = new MemoryStream())
+            {
+                MessagePack.MessagePackSerializer.Serialize(stream, Model, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+
+                MessagePackData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
             }
 
             // BinaryPack

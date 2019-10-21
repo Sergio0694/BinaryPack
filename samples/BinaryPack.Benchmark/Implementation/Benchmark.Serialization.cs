@@ -101,6 +101,18 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
+        /// Serialization powered by <see cref="MessagePack.MessagePackSerializer"/>
+        /// </summary>
+        [Benchmark]
+        [BenchmarkCategory(SERIALIZATION)]
+        public void MessagePack1()
+        {
+            using Stream stream = new MemoryStream();
+
+            MessagePack.MessagePackSerializer.Serialize(stream, Model, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+        }
+
+        /// <summary>
         /// Serialization powered by <see cref="BinaryConverter"/>
         /// </summary>
         [Benchmark]
