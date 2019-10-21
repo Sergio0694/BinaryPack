@@ -28,40 +28,7 @@ namespace BinaryPack.Models
 
         public string? PreviousPageId { get; set; }
 
-        public string? FollowingPageId { get; set; }
-
-        /// <summary>
-        /// A model that represents a container for a fake API response
-        /// </summary>
-        [Serializable]
-        public sealed class ApiModelContainer : IInitializable, IEquatable<ApiModelContainer>
-        {
-            public string? Id { get; set; }
-
-            public string? Type { get; set; }
-
-            public RestApiModel? Model { get; set; }
-
-            /// <inheritdoc/>
-            public void Initialize()
-            {
-                Id = RandomProvider.NextString(40);
-                Type = nameof(JsonResponseModel);
-                Model = new RestApiModel();
-                Model.Initialize();
-            }
-
-            /// <inheritdoc/>
-            public bool Equals(ApiModelContainer? other)
-            {
-                if (other is null) return false;
-                if (ReferenceEquals(this, other)) throw new InvalidOperationException();
-                return
-                    Id?.Equals(other.Id) == true &&
-                    Type?.Equals(other.Type) == true &&
-                    Model?.Equals(other.Model) == true;
-            }
-        }
+        public string? FollowingPageId { get; set; }        
 
         public List<ApiModelContainer>? ModelContainers { get; set; }
 
@@ -101,6 +68,39 @@ namespace BinaryPack.Models
                 FollowingPageId == other.FollowingPageId &&
                 ModelContainers?.Count == other.ModelContainers?.Count &&
                 ModelContainers.Zip(other.ModelContainers).All(p => p.First.Equals(p.Second));
+        }
+    }
+
+    /// <summary>
+    /// A model that represents a container for a fake API response
+    /// </summary>
+    [Serializable]
+    public sealed class ApiModelContainer : IInitializable, IEquatable<ApiModelContainer>
+    {
+        public string? Id { get; set; }
+
+        public string? Type { get; set; }
+
+        public RestApiModel? Model { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Id = RandomProvider.NextString(40);
+            Type = nameof(JsonResponseModel);
+            Model = new RestApiModel();
+            Model.Initialize();
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ApiModelContainer? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            return
+                Id?.Equals(other.Id) == true &&
+                Type?.Equals(other.Type) == true &&
+                Model?.Equals(other.Model) == true;
         }
     }
 
@@ -160,87 +160,7 @@ namespace BinaryPack.Models
 
         public string? Optional2 { get; set; }
 
-        public string? Optional3 { get; set; }
-
-        /// <summary>
-        /// A model that represents a collection of fake images
-        /// </summary>
-        [Serializable]
-        public sealed class MediaInfoModel : IInitializable, IEquatable<MediaInfoModel>
-        {
-            public string? Id { get; set; }
-
-            public string? AlbumUrl { get; set; }
-
-            public bool Property { get; set; }
-
-            /// <summary>
-            /// A simple model that contains a fake URL to an image and some metadata
-            /// </summary>
-            [Serializable]
-            public sealed class ImageModel : IInitializable, IEquatable<ImageModel>
-            {
-                public string? Url { get; set; }
-
-                public int Width { get; set; }
-
-                public int Height { get; set; }
-
-                public float AspectRatio { get; set; }
-
-                /// <inheritdoc/>
-                public void Initialize()
-                {
-                    Url = RandomProvider.NextString(200);
-                    Width = RandomProvider.NextInt();
-                    Height = RandomProvider.NextInt();
-                    AspectRatio = Width / (float)Height;
-                }
-
-                /// <inheritdoc/>
-                public bool Equals(ImageModel? other)
-                {
-                    if (other is null) return false;
-                    if (ReferenceEquals(this, other)) throw new InvalidOperationException();
-                    return
-                        Url?.Equals(other.Url) == true &&
-                        Width == other.Width &&
-                        Height == other.Height &&
-                        MathF.Abs(AspectRatio - other.AspectRatio) < 0.001f;
-                }
-            }
-
-            public List<ImageModel>? Images { get; set; }
-
-            /// <inheritdoc/>
-            public void Initialize()
-            {
-                Id = RandomProvider.NextString(40);
-                AlbumUrl = RandomProvider.NextString(100);
-                Property = RandomProvider.NextBool();
-                Images = new List<ImageModel>();
-                int count = RandomProvider.NextInt() % 50 + 1;
-                for (int i = 0; i < count; i++)
-                {
-                    var model = new ImageModel();
-                    model.Initialize();
-                    Images.Add(model);
-                }
-            }
-
-            /// <inheritdoc/>
-            public bool Equals(MediaInfoModel? other)
-            {
-                if (other is null) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return
-                    Id?.Equals(other.Id) == true &&
-                    AlbumUrl?.Equals(other.AlbumUrl) == true &&
-                    Property == other.Property &&
-                    Images?.Count == other.Images?.Count &&
-                    Images.Zip(other.Images).All(p => p.First.Equals(p.Second));
-            }
-        }
+        public string? Optional3 { get; set; }        
 
         public MediaInfoModel? Info { get; set; }
 
@@ -313,6 +233,86 @@ namespace BinaryPack.Models
                 Optional2 == other.Optional2 &&
                 Optional3 == other.Optional3 &&
                 Info?.Equals(other.Info) == true;
+        }
+    }
+
+    /// <summary>
+    /// A model that represents a collection of fake images
+    /// </summary>
+    [Serializable]
+    public sealed class MediaInfoModel : IInitializable, IEquatable<MediaInfoModel>
+    {
+        public string? Id { get; set; }
+
+        public string? AlbumUrl { get; set; }
+
+        public bool Property { get; set; }
+
+        public List<ImageModel>? Images { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Id = RandomProvider.NextString(40);
+            AlbumUrl = RandomProvider.NextString(100);
+            Property = RandomProvider.NextBool();
+            Images = new List<ImageModel>();
+            int count = RandomProvider.NextInt() % 50 + 1;
+            for (int i = 0; i < count; i++)
+            {
+                var model = new ImageModel();
+                model.Initialize();
+                Images.Add(model);
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(MediaInfoModel? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return
+                Id?.Equals(other.Id) == true &&
+                AlbumUrl?.Equals(other.AlbumUrl) == true &&
+                Property == other.Property &&
+                Images?.Count == other.Images?.Count &&
+                Images.Zip(other.Images).All(p => p.First.Equals(p.Second));
+        }
+    }
+
+    /// <summary>
+    /// A simple model that contains a fake URL to an image and some metadata
+    /// </summary>
+    [Serializable]
+    public sealed class ImageModel : IInitializable, IEquatable<ImageModel>
+    {
+        public string? Url { get; set; }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public float AspectRatio { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Url = RandomProvider.NextString(200);
+            Width = RandomProvider.NextInt();
+            Height = RandomProvider.NextInt();
+            AspectRatio = Width / (float)Height;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ImageModel? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            return
+                Url?.Equals(other.Url) == true &&
+                Width == other.Width &&
+                Height == other.Height &&
+                MathF.Abs(AspectRatio - other.AspectRatio) < 0.001f;
         }
     }
 }

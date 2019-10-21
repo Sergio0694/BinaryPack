@@ -104,7 +104,7 @@ namespace BinaryPack.Benchmark.Implementations
         [BenchmarkCategory(SERIALIZATION)]
         public void MessagePack2()
         {
-            using Stream stream = new MemoryStream(Utf8JsonData);
+            using Stream stream = new MemoryStream(MessagePackData);
 
             _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
         }
