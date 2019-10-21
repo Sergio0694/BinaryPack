@@ -76,11 +76,12 @@ namespace BinaryPack.Models
             ExpirationTime = RandomProvider.NextDateTime();
             PreviousPageId = RandomProvider.NextString(40);
             FollowingPageId = RandomProvider.NextString(40);
-            ModelContainers = new List<ApiModelContainer>(2000);
-            for (int i = 0; i < ModelContainers.Count; i++)
+            ModelContainers = new List<ApiModelContainer>();
+            for (int i = 0; i < 2000; i++)
             {
-                ModelContainers[i] = new ApiModelContainer();
-                ModelContainers[i].Initialize();
+                var model = new ApiModelContainer();
+                model.Initialize();
+                ModelContainers.Add(model);
             }
         }
 
@@ -217,11 +218,13 @@ namespace BinaryPack.Models
                 Id = RandomProvider.NextString(40);
                 AlbumUrl = RandomProvider.NextString(100);
                 Property = RandomProvider.NextBool();
-                Images = new List<ImageModel>(RandomProvider.NextInt() % 50 + 1);
-                for (int i = 0; i < Images.Count; i++)
+                Images = new List<ImageModel>();
+                int count = RandomProvider.NextInt() % 50 + 1;
+                for (int i = 0; i < count; i++)
                 {
-                    Images[i] = new ImageModel();
-                    Images[i].Initialize();
+                    var model = new ImageModel();
+                    model.Initialize();
+                    Images.Add(model);
                 }
             }
 
