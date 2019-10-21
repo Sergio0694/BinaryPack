@@ -129,7 +129,8 @@ namespace BinaryPack.Serialization.Processors
                      * All other values fallback to the IEnumerableProcessor<T> type. */
                     Label
                         isNotList = il.DefineLabel(),
-                        fallback = il.DefineLabel();
+                        fallback = il.DefineLabel(),
+                        end = il.DefineLabel();
 
                     // if (obj.Property is List<T> list) ListProcessor<T>.Instance.Serializer(list, stream);
                     il.EmitLoadArgument(Arguments.Write.T);
@@ -138,9 +139,9 @@ namespace BinaryPack.Serialization.Processors
                     il.Emit(OpCodes.Brfalse_S, isNotList);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
-                    il.Emit(OpCodes.Castclass, typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitLoadArgument(Arguments.Write.Stream);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
-                    il.Emit(OpCodes.Ret);
+                    il.Emit(OpCodes.Br_S, end);
 
                     // else if (obj.Property is T[] array) ArrayProcessor<T>.Instance.Serializer(array, stream);
                     il.MarkLabel(isNotList);
@@ -150,14 +151,16 @@ namespace BinaryPack.Serialization.Processors
                     il.Emit(OpCodes.Brfalse_S, fallback);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
-                    il.Emit(OpCodes.Castclass, property.PropertyType.GenericTypeArguments[0].MakeArrayType());
+                    il.EmitLoadArgument(Arguments.Write.Stream);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GenericTypeArguments[0]));
-                    il.Emit(OpCodes.Ret);
+                    il.Emit(OpCodes.Br_S, end);
 
                     // else IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
                     il.MarkLabel(fallback);
                     il.Emit(OpCodes.Ldnull);
                     il.Emit(OpCodes.Throw); // TODO
+
+                    il.MarkLabel(end);
                 }
                 else
                 {
