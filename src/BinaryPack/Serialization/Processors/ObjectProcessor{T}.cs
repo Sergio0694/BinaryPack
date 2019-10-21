@@ -115,6 +115,16 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.Stream);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
                 }
+                else if (property.PropertyType.IsGenericType &&
+                         property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    /* Fourth special case, for List<T> types. In this case we just need to get
+                     * the property value and leave the rest of the work to ListProcessor<T>. */
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitLoadArgument(Arguments.Write.Stream);
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                }
                 else if (property.PropertyType.IsInterface &&
                          property.PropertyType.IsGenericType &&
                          (property.PropertyType.GetGenericTypeDefinition() == typeof(IList<>) ||
@@ -122,7 +132,7 @@ namespace BinaryPack.Serialization.Processors
                           property.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>) ||
                           property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
                 {
-                    /* Fourth special case, for generic interface types. This case only applies to properties
+                    /* Fifth special case, for generic interface types. This case only applies to properties
                      * of one of the generic interfaces mentioned above, and it includes two fast paths and a
                      * fallback path. The fast paths are for List<T> values, which are serialized with the
                      * ListProcessor<T> type, and for T[] values, which just use the ArrayProcessor<T> type.
@@ -263,6 +273,15 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
+                    il.EmitWriteMember(property);
+                }
+                else if (property.PropertyType.IsGenericType &&
+                         property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    // Invoke ListProcessor<T> to read the List<T> list
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType.IsInterface &&
