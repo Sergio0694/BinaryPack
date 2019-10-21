@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Models.Interfaces;
@@ -62,7 +63,7 @@ namespace BinaryPack.Models
             }
         }
 
-        public ApiModelContainer[]? ModelContainers { get; set; }
+        public List<ApiModelContainer>? ModelContainers { get; set; }
 
         /// <inheritdoc/>
         public void Initialize()
@@ -75,8 +76,8 @@ namespace BinaryPack.Models
             ExpirationTime = RandomProvider.NextDateTime();
             PreviousPageId = RandomProvider.NextString(40);
             FollowingPageId = RandomProvider.NextString(40);
-            ModelContainers = new ApiModelContainer[2000];
-            for (int i = 0; i < ModelContainers.Length; i++)
+            ModelContainers = new List<ApiModelContainer>(2000);
+            for (int i = 0; i < ModelContainers.Count; i++)
             {
                 ModelContainers[i] = new ApiModelContainer();
                 ModelContainers[i].Initialize();
@@ -97,7 +98,7 @@ namespace BinaryPack.Models
                 ExpirationTime.Equals(other.ExpirationTime) &&
                 PreviousPageId == other.PreviousPageId &&
                 FollowingPageId == other.FollowingPageId &&
-                ModelContainers?.Length == other.ModelContainers?.Length &&
+                ModelContainers?.Count == other.ModelContainers?.Count &&
                 ModelContainers.Zip(other.ModelContainers).All(p => p.First.Equals(p.Second));
         }
     }
@@ -208,7 +209,7 @@ namespace BinaryPack.Models
                 }
             }
 
-            public ImageModel[]? Images { get; set; }
+            public List<ImageModel>? Images { get; set; }
 
             /// <inheritdoc/>
             public void Initialize()
@@ -216,8 +217,8 @@ namespace BinaryPack.Models
                 Id = RandomProvider.NextString(40);
                 AlbumUrl = RandomProvider.NextString(100);
                 Property = RandomProvider.NextBool();
-                Images = new ImageModel[RandomProvider.NextInt() % 50 + 1];
-                for (int i = 0; i < Images.Length; i++)
+                Images = new List<ImageModel>(RandomProvider.NextInt() % 50 + 1);
+                for (int i = 0; i < Images.Count; i++)
                 {
                     Images[i] = new ImageModel();
                     Images[i].Initialize();
@@ -233,7 +234,7 @@ namespace BinaryPack.Models
                     Id?.Equals(other.Id) == true &&
                     AlbumUrl?.Equals(other.AlbumUrl) == true &&
                     Property == other.Property &&
-                    Images?.Length == other.Images?.Length &&
+                    Images?.Count == other.Images?.Count &&
                     Images.Zip(other.Images).All(p => p.First.Equals(p.Second));
             }
         }

@@ -16,7 +16,7 @@ namespace BinaryPack.Models
     {
         public string? Id { get; set; }
 
-        public IList<HelloWorldModel?>? HelloWorlds { get; set; }
+        public IList<HelloWorldModel>? HelloWorlds { get; set; }
 
         public IList<DateTime>? Times { get; set; }
 

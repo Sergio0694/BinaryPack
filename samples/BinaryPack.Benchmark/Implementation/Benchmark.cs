@@ -121,6 +121,9 @@ namespace BinaryPack.Benchmark.Implementations
                 Portable.Xaml.XamlServices.Save(stream, Model);
 
                 PortableXamlData = stream.GetBuffer();
+
+                stream.Seek(0, SeekOrigin.Begin);
+                _ = Portable.Xaml.XamlServices.Load(stream);
             }
 
             // Utf8Json

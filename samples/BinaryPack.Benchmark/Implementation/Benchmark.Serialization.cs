@@ -77,7 +77,7 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
-        /// Serialization powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// Serialization powered by <see cref="Portable.Xaml.XamlServices"/>
         /// </summary>
         [Benchmark]
         [BenchmarkCategory(SERIALIZATION)]
@@ -89,7 +89,7 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
-        /// Serialization powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// Serialization powered by <see cref="Utf8JsonSerializer"/>
         /// </summary>
         [Benchmark]
         [BenchmarkCategory(SERIALIZATION)]
