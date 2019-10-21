@@ -77,7 +77,7 @@ namespace BinaryPack.Benchmark.Implementations
         /// Deserialization powered by <see cref="Portable.Xaml.XamlServices"/>
         /// </summary>
         [Benchmark]
-        [BenchmarkCategory(SERIALIZATION)]
+        [BenchmarkCategory(DESERIALIZATION)]
         public void PortableXaml2()
         {
             using Stream stream = new MemoryStream(PortableXamlData);
@@ -101,7 +101,7 @@ namespace BinaryPack.Benchmark.Implementations
         /// Deserialization powered by <see cref="MessagePack.MessagePackSerializer"/>
         /// </summary>
         [Benchmark]
-        [BenchmarkCategory(SERIALIZATION)]
+        [BenchmarkCategory(DESERIALIZATION)]
         public void MessagePack2()
         {
             using Stream stream = new MemoryStream(MessagePackData);
