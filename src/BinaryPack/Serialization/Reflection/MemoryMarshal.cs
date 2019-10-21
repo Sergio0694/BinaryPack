@@ -13,31 +13,31 @@ namespace BinaryPack.Serialization.Reflection
         public static class MemoryMarshal
         {
             /// <summary>
-            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
+            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(Span{T})"/> method
             /// </summary>
             private static readonly MethodInfo _AsByteSpan = (
                 from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
-                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.Span<>)
+                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Span<>)
                 select method).First();
 
             /// <summary>
-            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.Span{T})"/> method
+            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(Span{T})"/> method
             /// </summary>
             [Pure]
             public static MethodInfo AsByteSpan(Type type) => _AsByteSpan.MakeGenericMethod(type);
 
             /// <summary>
-            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
+            /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/> method
             /// </summary>
             private static readonly MethodInfo _AsByteReadOnlySpan = (
                 from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
-                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(System.ReadOnlySpan<>)
+                      method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(ReadOnlySpan<>)
                 select method).First();
 
             /// <summary>
-            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(System.ReadOnlySpan{T})"/> method
+            /// Gets a generic <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/> method
             /// </summary>
             [Pure]
             public static MethodInfo AsByteReadOnlySpan(Type type) => _AsByteReadOnlySpan.MakeGenericMethod(type);
