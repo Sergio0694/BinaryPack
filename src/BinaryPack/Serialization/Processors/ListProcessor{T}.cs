@@ -66,12 +66,12 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(copy);
 
             // ReadOnlySpan<T> span = new ReadOnlySpan<T>(obj._items, 0, count);
-            il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
             il.EmitLoadInt32(0);
             il.EmitLoadLocal(Locals.Write.Count);
-            il.EmitInitValueType(KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
+            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
+            il.EmitStoreLocal(Locals.Write.ReadOnlySpanT);
 
             /* Just like in ArrayProcessor<T>, handle unmanaged types as a special case.
              * If T is unmanaged, the whole buffer is written directly to the stream
@@ -99,7 +99,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitCall(KnownMembers.ReadOnlySpan.GetterAt(typeof(T)));
-                il.Emit(typeof(T).IsValueType ? OpCodes.Ldobj : OpCodes.Ldelem_Ref);
+                il.Emit(typeof(T).IsValueType ? OpCodes.Ldobj : OpCodes.Ldind_Ref);
                 il.EmitLoadArgument(Arguments.Write.Stream);
 
                 // StringProcessor/ObjectProcessor<T>.Serialize(...);
@@ -133,10 +133,10 @@ namespace BinaryPack.Serialization.Processors
             il.DeclareLocals<Locals.Read>();
 
             // Span<byte> span = stackalloc byte[sizeof(int)];
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
-            il.EmitInitValueType(KnownMembers.Span.UnsafeConstructor(typeof(byte)));
+            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
+            il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
@@ -168,6 +168,7 @@ namespace BinaryPack.Serialization.Processors
 
             // else list = new List<T>();
             il.MarkLabel(isNotEmpty);
+            il.EmitStoreLocal(Locals.Read.ListT);
 
             // list._size = count;
             il.EmitLoadLocal(Locals.Read.ListT);
