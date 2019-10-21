@@ -35,6 +35,9 @@ namespace BinaryPack.Unit.Internals
         public void JsonResponse() => Test<JsonResponseModel>();
 
         [TestMethod]
+        public void ListContainer() => Test<ListContainerModel>();
+
+        [TestMethod]
         public void MessagePackSample() => Test<MessagePackSampleModel>();
 
         [TestMethod]
