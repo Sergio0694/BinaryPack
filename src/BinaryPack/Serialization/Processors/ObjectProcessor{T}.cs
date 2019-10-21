@@ -113,7 +113,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
                 }
                 else if (property.PropertyType.IsInterface &&
                          property.PropertyType.IsGenericType &&
@@ -141,7 +141,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Castclass, typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]));
                     il.EmitReadMember(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
-                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GenericTypeArguments[0]));
                     il.Emit(OpCodes.Br_S, end);
 
                     // else if (obj.Property is T[] array) ArrayProcessor<T>.Instance.Serializer(array, stream);
@@ -153,7 +153,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Castclass, property.PropertyType.GenericTypeArguments[0].MakeArrayType());
-                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GenericTypeArguments[0]));
                     il.Emit(OpCodes.Br_S, end);
 
                     // else IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
@@ -168,7 +168,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(KnownMembers.ObjectProcessor.SerializerInfo(property.PropertyType));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), property.PropertyType));
                 }
             }
 
@@ -262,7 +262,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke ArrayProcessor<T> to read the TItem[] array
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(KnownMembers.ArrayProcessor.DeserializerInfo(property.PropertyType.GetElementType()));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
                     il.EmitWriteMember(property);
                 }
                 else
@@ -270,7 +270,7 @@ namespace BinaryPack.Serialization.Processors
                     // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(KnownMembers.ObjectProcessor.DeserializerInfo(property.PropertyType));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), property.PropertyType));
                     il.EmitWriteMember(property);
                 }
             }

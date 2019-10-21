@@ -105,7 +105,7 @@ namespace BinaryPack.Serialization.Processors
                 // StringProcessor/ObjectProcessor<T>.Serialize(...);
                 MethodInfo methodInfo = typeof(T) == typeof(string)
                     ? StringProcessor.Instance.SerializerInfo.MethodInfo
-                    : KnownMembers.ObjectProcessor.SerializerInfo(typeof(T));
+                    : KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(T));
                 il.EmitCall(methodInfo);
 
                 // i++;
@@ -220,7 +220,7 @@ namespace BinaryPack.Serialization.Processors
                 // StringProcessor/ObjectProcessor<T>.Deserialize
                 MethodInfo methodInfo = typeof(T) == typeof(string)
                     ? StringProcessor.Instance.DeserializerInfo.MethodInfo
-                    : KnownMembers.ObjectProcessor.DeserializerInfo(typeof(T));
+                    : KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), typeof(T));
 
                 // array[i] = ...(stream);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
