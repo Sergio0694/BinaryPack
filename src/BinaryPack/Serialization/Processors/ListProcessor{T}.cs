@@ -55,7 +55,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+            il.EmitCallvirt(KnownMembers.Stream.Write);
 
             // ReadOnlySpan<T> span = new ReadOnlySpan<T>(obj._items, 0, count);
             il.EmitLoadArgument(Arguments.Write.T);
@@ -82,8 +82,8 @@ namespace BinaryPack.Serialization.Processors
                 il.MarkLabel(copy);
                 il.EmitLoadArgument(Arguments.Write.Stream);
                 il.EmitLoadLocal(Locals.Write.ReadOnlySpanT);
-                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)), null);
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+                il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
+                il.EmitCallvirt(KnownMembers.Stream.Write);
                 il.Emit(OpCodes.Ret);
             }
             else
@@ -99,7 +99,7 @@ namespace BinaryPack.Serialization.Processors
                 // ...(span[i], stream);
                 il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
                 il.EmitLoadLocal(Locals.Write.I);
-                il.EmitCall(OpCodes.Call, KnownMembers.ReadOnlySpan.GetterAt(typeof(T)), null);
+                il.EmitCall(KnownMembers.ReadOnlySpan.GetterAt(typeof(T)));
                 il.Emit(typeof(T).IsValueType ? OpCodes.Ldobj : OpCodes.Ldelem_Ref);
                 il.EmitLoadArgument(Arguments.Write.Stream);
 
@@ -107,7 +107,7 @@ namespace BinaryPack.Serialization.Processors
                 MethodInfo methodInfo = typeof(T) == typeof(string)
                     ? StringProcessor.Instance.SerializerInfo.MethodInfo
                     : KnownMembers.ObjectProcessor.SerializerInfo(typeof(T));
-                il.EmitCall(OpCodes.Call, methodInfo, null);
+                il.EmitCall(methodInfo);
 
                 // i++;
                 il.EmitLoadLocal(Locals.Write.I);
@@ -141,12 +141,12 @@ namespace BinaryPack.Serialization.Processors
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+            il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
 
             // int count = span.GetPinnableReference();
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
             il.EmitLoadFromAddress(typeof(int));
             il.EmitStoreLocal(Locals.Read.Count);
 
@@ -190,7 +190,7 @@ namespace BinaryPack.Serialization.Processors
 
             // T[] array = new T[CalculateCapacityFromCount(count)];
             il.EmitLoadLocal(Locals.Read.Count);
-            il.EmitCall(OpCodes.Call, typeof(ListProcessor<T>).GetMethod(nameof(CalculateCapacityFromCount), BindingFlags.NonPublic | BindingFlags.Static), null);
+            il.EmitCall(typeof(ListProcessor<T>).GetMethod(nameof(CalculateCapacityFromCount), BindingFlags.NonPublic | BindingFlags.Static));
             il.Emit(OpCodes.Newarr, typeof(T));
             il.EmitStoreLocal(Locals.Read.ArrayT);
 
@@ -202,8 +202,8 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadInt32(0);
                 il.EmitLoadLocal(Locals.Read.Count);
                 il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
-                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)), null);
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.EmitCall(KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)));
+                il.EmitCallvirt(KnownMembers.Stream.Read);
                 il.Emit(OpCodes.Pop);
             }
             else
@@ -225,7 +225,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadLocal(Locals.Read.I);
                 il.EmitLoadArgument(Arguments.Read.Stream);
-                il.EmitCall(OpCodes.Call, methodInfo, null);
+                il.EmitCall(methodInfo);
                 il.Emit(OpCodes.Stelem_Ref);
 
                 // i++;

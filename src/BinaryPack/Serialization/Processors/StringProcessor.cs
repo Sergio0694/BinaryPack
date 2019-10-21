@@ -62,8 +62,8 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(notEmpty);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitCall(OpCodes.Call, typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }), null);
-            il.EmitCall(OpCodes.Callvirt, typeof(Encoding).GetMethod(nameof(Encoding.GetByteCount), new[] { typeof(ReadOnlySpan<char>) }), null);
+            il.EmitCall(typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }));
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetByteCount), new[] { typeof(ReadOnlySpan<char>) }));
             il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Write.Length);
             il.EmitLoadInt32(sizeof(int));
@@ -79,12 +79,12 @@ namespace BinaryPack.Serialization.Processors
             // _ = Encoding.UTF8.GetBytes(obj.AsSpan(), new Span<byte>(p + 4, size);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitCall(OpCodes.Call, typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }), null);
+            il.EmitCall(typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }));
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitAddOffset(sizeof(int));
             il.EmitLoadLocal(Locals.Write.Length);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, typeof(Encoding).GetMethod(nameof(Encoding.GetBytes), new[] { typeof(ReadOnlySpan<char>), typeof(Span<byte>) }), null);
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetBytes), new[] { typeof(ReadOnlySpan<char>), typeof(Span<byte>) }));
             il.Emit(OpCodes.Pop);
 
             // stream.Write(new ReadOnlySpan<byte>(p, size + 4));
@@ -95,7 +95,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Add);
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+            il.EmitCallvirt(KnownMembers.Stream.Write);
             il.Emit(OpCodes.Ret);
         }
 
@@ -113,12 +113,12 @@ namespace BinaryPack.Serialization.Processors
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+            il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
 
             // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
             il.Emit(OpCodes.Ldind_I4);
             il.EmitStoreLocal(Locals.Read.Length);
 
@@ -149,15 +149,15 @@ namespace BinaryPack.Serialization.Processors
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+            il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
 
             // return Encoding.UTF8.GetString(&span.GetPinnableReference(), size);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
             il.EmitLoadLocal(Locals.Read.Length);
-            il.EmitCall(OpCodes.Callvirt, typeof(Encoding).GetMethod(nameof(Encoding.GetString), new[] { typeof(byte*), typeof(int) }), null);
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetString), new[] { typeof(byte*), typeof(int) }));
             il.Emit(OpCodes.Ret);
         }
     }

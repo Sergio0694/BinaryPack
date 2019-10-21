@@ -53,7 +53,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+            il.EmitCallvirt(KnownMembers.Stream.Write);
 
             /* The generic type parameter T doesn't have constraints, and there are three
              * main cases that need to be handled. This is all done while building the
@@ -75,8 +75,8 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadArgument(Arguments.Write.Stream);
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(typeof(T)));
-                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)), null);
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+                il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
+                il.EmitCallvirt(KnownMembers.Stream.Write);
                 il.Emit(OpCodes.Ret);
             }
             else
@@ -99,7 +99,7 @@ namespace BinaryPack.Serialization.Processors
                 MethodInfo methodInfo = typeof(T) == typeof(string)
                     ? StringProcessor.Instance.SerializerInfo.MethodInfo
                     : KnownMembers.ObjectProcessor.SerializerInfo(typeof(T));
-                il.EmitCall(OpCodes.Call, methodInfo, null);
+                il.EmitCall(methodInfo);
 
                 // i++;
                 il.EmitLoadLocal(Locals.Write.I);
@@ -132,12 +132,12 @@ namespace BinaryPack.Serialization.Processors
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);
             il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+            il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
 
             // int length = span.GetPinnableReference();
             il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
             il.EmitLoadFromAddress(typeof(int));
             il.EmitStoreLocal(Locals.Read.Length);
 
@@ -154,7 +154,7 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(isNotNull);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Brtrue_S, isNotEmpty);
-            il.EmitCall(OpCodes.Call, typeof(Array).GetMethod(nameof(Array.Empty)).MakeGenericMethod(typeof(T)), null);
+            il.EmitCall(typeof(Array).GetMethod(nameof(Array.Empty)).MakeGenericMethod(typeof(T)));
             il.Emit(OpCodes.Ret);
 
             // else array = new T[length];
@@ -169,8 +169,8 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadArgument(Arguments.Read.Stream);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(T)));
-                il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)), null);
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.EmitCall(KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)));
+                il.EmitCallvirt(KnownMembers.Stream.Read);
                 il.Emit(OpCodes.Pop);
             }
             else
@@ -192,7 +192,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadLocal(Locals.Read.I);
                 il.EmitLoadArgument(Arguments.Read.Stream);
-                il.EmitCall(OpCodes.Call, methodInfo, null);
+                il.EmitCall(methodInfo);
                 il.Emit(OpCodes.Stelem_Ref);
 
                 // i++;

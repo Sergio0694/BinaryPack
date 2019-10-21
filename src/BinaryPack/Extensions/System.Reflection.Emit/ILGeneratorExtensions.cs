@@ -11,14 +11,18 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
     internal static class ILGeneratorExtensions
     {
         /// <summary>
-        /// Puts the appropriate <see langword="unbox"/> or <see langword="castclass"/> instruction to unbox/cast a value onto the stream of instructions
+        /// Emits the necessary instructions to execute a <see langword="call"/> operation onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="type">The type of value to convert</param>
-        public static void EmitCastOrUnbox(this ILGenerator il, Type type)
-        {
-            il.Emit(type.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, type);
-        }
+        /// <param name="methodInfo">The <see cref="MethodInfo"/> instance representing the method to invoke</param>
+        public static void EmitCall(this ILGenerator il, MethodInfo methodInfo) => il.EmitCall(OpCodes.Call, methodInfo, null);
+
+        /// <summary>
+        /// Emits the necessary instructions to execute a <see langword="callvirt"/> operation onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="methodInfo">The <see cref="MethodInfo"/> instance representing the method to invoke</param>
+        public static void EmitCallvirt(this ILGenerator il, MethodInfo methodInfo) => il.EmitCall(OpCodes.Callvirt, methodInfo, null);
 
         /// <summary>
         /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions

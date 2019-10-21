@@ -56,7 +56,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Write.BytePtr);
                 il.EmitLoadInt32(sizeof(byte));
                 il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+                il.EmitCallvirt(KnownMembers.Stream.Write);
 
                 // if (obj == null) return;
                 Label skip = il.DefineLabel();
@@ -93,7 +93,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadLocal(Locals.Write.BytePtr);
                     il.EmitLoadInt32(property.PropertyType.GetSize());
                     il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-                    il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+                    il.EmitCallvirt(KnownMembers.Stream.Write);
                 }
                 else if (property.PropertyType == typeof(string))
                 {
@@ -103,7 +103,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(OpCodes.Call, StringProcessor.Instance.SerializerInfo.MethodInfo, null);
+                    il.EmitCall(StringProcessor.Instance.SerializerInfo.MethodInfo);
                 }
                 else if (property.PropertyType.IsArray)
                 {
@@ -114,7 +114,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()), null);
+                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GetElementType()));
                 }
                 else if (property.PropertyType.IsInterface &&
                          property.PropertyType.IsGenericType &&
@@ -142,7 +142,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Castclass, typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]));
                     il.EmitReadMember(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
-                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]), null);
+                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]));
                     il.Emit(OpCodes.Br_S, end);
 
                     // else if (obj.Property is T[] array) ArrayProcessor<T>.Instance.Serializer(array, stream);
@@ -154,7 +154,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Castclass, property.PropertyType.GenericTypeArguments[0].MakeArrayType());
-                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]), null);
+                    il.EmitCall(KnownMembers.ArrayProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0]));
                     il.Emit(OpCodes.Br_S, end);
 
                     // else IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
@@ -169,7 +169,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.ObjectProcessor.SerializerInfo(property.PropertyType), null);
+                    il.EmitCall(KnownMembers.ObjectProcessor.SerializerInfo(property.PropertyType));
                 }
             }
 
@@ -196,13 +196,13 @@ namespace BinaryPack.Serialization.Processors
                 // _ = stream.Read(span);
                 il.EmitLoadArgument(Arguments.Read.Stream);
                 il.EmitLoadLocal(Locals.Read.SpanByte);
-                il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                il.EmitCallvirt(KnownMembers.Stream.Read);
                 il.Emit(OpCodes.Pop);
 
                 // if (span[0] == 0) return null;
                 Label skip = il.DefineLabel();
                 il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-                il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+                il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
                 il.EmitLoadFromAddress(typeof(byte));
                 il.Emit(OpCodes.Brtrue_S, skip);
                 il.Emit(OpCodes.Ldnull);
@@ -240,13 +240,13 @@ namespace BinaryPack.Serialization.Processors
                     // _ = stream.Read(span);
                     il.EmitLoadArgument(Arguments.Read.Stream);
                     il.EmitLoadLocal(Locals.Read.SpanByte);
-                    il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
+                    il.EmitCallvirt(KnownMembers.Stream.Read);
                     il.Emit(OpCodes.Pop);
 
                     // obj.Property = Unsafe.As<byte, TProperty>(ref span.GetPinnableReference());
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-                    il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+                    il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
                     il.EmitLoadFromAddress(property.PropertyType);
                     il.EmitWriteMember(property);
                 }
@@ -255,7 +255,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke StringProcessor to read the string property
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(OpCodes.Call, StringProcessor.Instance.DeserializerInfo.MethodInfo, null);
+                    il.EmitCall(StringProcessor.Instance.DeserializerInfo.MethodInfo);
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType.IsArray)
@@ -263,7 +263,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke ArrayProcessor<T> to read the TItem[] array
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.ArrayProcessor.DeserializerInfo(property.PropertyType.GetElementType()), null);
+                    il.EmitCall(KnownMembers.ArrayProcessor.DeserializerInfo(property.PropertyType.GetElementType()));
                     il.EmitWriteMember(property);
                 }
                 else
@@ -271,7 +271,7 @@ namespace BinaryPack.Serialization.Processors
                     // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitCall(OpCodes.Call, KnownMembers.ObjectProcessor.DeserializerInfo(property.PropertyType), null);
+                    il.EmitCall(KnownMembers.ObjectProcessor.DeserializerInfo(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
             }
