@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Extensions;
 using BinaryPack.Extensions.System.Reflection.Emit;
@@ -153,7 +154,7 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(isNotNull);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Brtrue_S, isNotEmpty);
-            il.EmitCall(OpCodes.Call, KnownMembers.Array.Empty(typeof(T)), null);
+            il.EmitCall(OpCodes.Call, typeof(Array).GetMethod(nameof(Array.Empty)).MakeGenericMethod(typeof(T)), null);
             il.Emit(OpCodes.Ret);
 
             // else array = new T[length];

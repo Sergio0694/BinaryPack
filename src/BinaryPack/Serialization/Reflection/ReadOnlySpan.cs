@@ -17,39 +17,21 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             /// <param name="type">The type parameter to use for the target <see cref="ReadOnlySpan{T}"/> type to use</param>
             [Pure]
-            public static ConstructorInfo ArrayConstructor(Type type) => (
-                from ctor in typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 1 &&
-                      args[0].ParameterType == type.MakeArrayType()
-                select ctor).First();
+            public static ConstructorInfo ArrayConstructor(Type type) => typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructor(new[] { type.MakeArrayType() });
 
             /// <summary>
             /// Gets the <see cref="ReadOnlySpan{T}"/> constructor that takes a generic array, a start index and the length
             /// </summary>
             /// <param name="type">The type parameter to use for the target <see cref="ReadOnlySpan{T}"/> type to use</param>
             [Pure]
-            public static ConstructorInfo ArrayWithOffsetAndLengthConstructor(Type type) => (
-                from ctor in typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 3 &&
-                      args[0].ParameterType == type.MakeArrayType() &&
-                      args[1].ParameterType == typeof(int) &&
-                      args[2].ParameterType == typeof(int)
-                select ctor).First();
+            public static ConstructorInfo ArrayWithOffsetAndLengthConstructor(Type type) => typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructor(new[] { type.MakeArrayType(), typeof(int), typeof(int) });
 
             /// <summary>
             /// Gets the <see cref="ReadOnlySpan{T}"/> constructor that takes a <see langword="void"/> pointer and a size
             /// </summary>
             /// <param name="type">The type parameter to use for the target <see cref="ReadOnlySpan{T}"/> type to use</param>
             [Pure]
-            public static ConstructorInfo UnsafeConstructor(Type type) => (
-                from ctor in typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 2 &&
-                      args[0].ParameterType == typeof(void*) &&
-                      args[1].ParameterType == typeof(int)
-                select ctor).First();
+            public static ConstructorInfo UnsafeConstructor(Type type) => typeof(ReadOnlySpan<>).MakeGenericType(type).GetConstructor(new[] { typeof(void*), typeof(int) });
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="ReadOnlySpan{T}"/> indexer getter

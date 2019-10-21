@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -209,7 +210,7 @@ namespace BinaryPack.Serialization.Processors
                 il.MarkLabel(skip);
 
                 // T obj = new T();
-                il.Emit(OpCodes.Newobj, KnownMembers.Type<T>.DefaultConstructor);
+                il.Emit(OpCodes.Newobj, typeof(T).GetConstructor(Type.EmptyTypes));
                 il.EmitStoreLocal(Locals.Read.T);
             }
             else

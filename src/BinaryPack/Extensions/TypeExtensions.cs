@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using BinaryPack.Serialization.Reflection;
 
 namespace BinaryPack.Extensions
 {
@@ -27,7 +26,7 @@ namespace BinaryPack.Extensions
         {
             if (!SizeMap.TryGetValue(type, out int size))
             {
-                size = (int)KnownMembers.Unsafe.SizeOf.MakeGenericMethod(type).Invoke(null, null);
+                size = (int)typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf)).MakeGenericMethod(type).Invoke(null, null);
                 SizeMap.Add(type, size);
             }
 

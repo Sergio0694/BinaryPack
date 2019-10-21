@@ -16,7 +16,7 @@ namespace BinaryPack.Serialization.Reflection
             /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(Span{T})"/> method
             /// </summary>
             private static readonly MethodInfo _AsByteSpan = (
-                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods()
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
                       method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(Span<>)
                 select method).First();
@@ -31,7 +31,7 @@ namespace BinaryPack.Serialization.Reflection
             /// The <see cref="MethodInfo"/> instance mapping the <see cref="System.Runtime.InteropServices.MemoryMarshal.AsBytes{T}(ReadOnlySpan{T})"/> method
             /// </summary>
             private static readonly MethodInfo _AsByteReadOnlySpan = (
-                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                from method in typeof(System.Runtime.InteropServices.MemoryMarshal).GetMethods()
                 where method.Name.Equals(nameof(System.Runtime.InteropServices.MemoryMarshal.AsBytes)) &&
                       method.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(ReadOnlySpan<>)
                 select method).First();
