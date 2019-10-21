@@ -43,7 +43,7 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(countLoaded);
             il.EmitStoreLocal(Locals.Write.Count);
 
-            // byte* p = stackalloc byte[sizeof(int)]; *(int*)p = length;
+            // byte* p = stackalloc byte[sizeof(int)]; *(int*)p = count;
             il.EmitStackalloc(typeof(int));
             il.EmitStoreLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.BytePtr);
@@ -57,13 +57,21 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
             il.EmitCallvirt(KnownMembers.Stream.Write);
 
+            // if (count <= 0) return;
+            Label copy = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Write.Count);
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Bgt_S, copy);
+            il.Emit(OpCodes.Ret);
+            il.MarkLabel(copy);
+
             // ReadOnlySpan<T> span = new ReadOnlySpan<T>(obj._items, 0, count);
+            il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
             il.EmitLoadInt32(0);
             il.EmitLoadLocal(Locals.Write.Count);
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
-            il.EmitStoreLocal(Locals.Write.ReadOnlySpanT);
+            il.EmitInitValueType(KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
 
             /* Just like in ArrayProcessor<T>, handle unmanaged types as a special case.
              * If T is unmanaged, the whole buffer is written directly to the stream
@@ -71,20 +79,11 @@ namespace BinaryPack.Serialization.Processors
              * serializer is invoked. For all other cases, the standard object serializer is used. */
             if (typeof(T).IsUnmanaged())
             {
-                // if (size <= 0) return;
-                Label copy = il.DefineLabel();
-                il.EmitLoadLocal(Locals.Write.Count);
-                il.EmitLoadInt32(0);
-                il.Emit(OpCodes.Bge_S, copy);
-                il.Emit(OpCodes.Ret);
-
                 // stream.Write(MemoryMarshal.AsBytes(span));
-                il.MarkLabel(copy);
                 il.EmitLoadArgument(Arguments.Write.Stream);
                 il.EmitLoadLocal(Locals.Write.ReadOnlySpanT);
                 il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
                 il.EmitCallvirt(KnownMembers.Stream.Write);
-                il.Emit(OpCodes.Ret);
             }
             else
             {
@@ -120,8 +119,9 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitLoadLocal(Locals.Write.Count);
                 il.Emit(OpCodes.Blt_S, loop);
-                il.Emit(OpCodes.Ret);
             }
+
+            il.Emit(OpCodes.Ret);
         }
 
         /// <inheritdoc/>
@@ -133,10 +133,10 @@ namespace BinaryPack.Serialization.Processors
             il.DeclareLocals<Locals.Read>();
 
             // Span<byte> span = stackalloc byte[sizeof(int)];
+            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
             il.EmitStackalloc(typeof(int));
             il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
+            il.EmitInitValueType(KnownMembers.Span.UnsafeConstructor(typeof(byte)));
 
             // _ = stream.Read(span);
             il.EmitLoadArgument(Arguments.Read.Stream);

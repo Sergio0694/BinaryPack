@@ -44,6 +44,13 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         public static void EmitCallvirt(this ILGenerator il, MethodInfo methodInfo) => il.EmitCall(OpCodes.Callvirt, methodInfo, null);
 
         /// <summary>
+        /// Emits the necessary instructions to execute a <see langword="callvirt"/> operation onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="methodInfo">The <see cref="MethodInfo"/> instance representing the method to invoke</param>
+        public static void EmitInitValueType(this ILGenerator il, ConstructorInfo constructorInfo) => il.Emit(OpCodes.Call, constructorInfo);
+
+        /// <summary>
         /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
         /// </summary>
         /// <typeparam name="T">The type of index to use</typeparam>
