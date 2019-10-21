@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BinaryPack.Serialization.Attributes
+namespace BinaryPack.Attributes
 {
     /// <summary>
     /// A custom <see cref="Attribute"/> that binds a specific type to a local variable

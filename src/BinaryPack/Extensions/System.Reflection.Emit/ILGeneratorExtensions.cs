@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using BinaryPack.Attributes;
 
 namespace BinaryPack.Extensions.System.Reflection.Emit
 {
@@ -10,6 +12,23 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
     /// </summary>
     internal static class ILGeneratorExtensions
     {
+        /// <summary>
+        /// Declares local variables with the types specified in the public members of a given type
+        /// </summary>
+        /// <typeparam name="T">The type to use to retrieve the types of locals to declare</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        public static void DeclareLocals<T>(this ILGenerator il) where T : Enum
+        {
+            foreach (Type type in
+                from field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+                let attribute = field.GetCustomAttributes().OfType<LocalTypeAttribute>().FirstOrDefault()
+                where attribute != null
+                select attribute.Type)
+            {
+                il.DeclareLocal(type);
+            }
+        }
+
         /// <summary>
         /// Emits the necessary instructions to execute a <see langword="call"/> operation onto the stream of instructions
         /// </summary>

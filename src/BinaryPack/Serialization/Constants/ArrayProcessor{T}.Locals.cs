@@ -1,4 +1,4 @@
-﻿using BinaryPack.Serialization.Attributes;
+﻿using BinaryPack.Attributes;
 
 namespace BinaryPack.Serialization.Processors
 {
