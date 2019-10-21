@@ -66,12 +66,12 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(copy);
 
             // ReadOnlySpan<T> span = new ReadOnlySpan<T>(obj._items, 0, count);
+            il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
             il.EmitLoadInt32(0);
             il.EmitLoadLocal(Locals.Write.Count);
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
-            il.EmitStoreLocal(Locals.Write.ReadOnlySpanT);
+            il.Emit(OpCodes.Call, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
 
             /* Just like in ArrayProcessor<T>, handle unmanaged types as a special case.
              * If T is unmanaged, the whole buffer is written directly to the stream
