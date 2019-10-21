@@ -160,13 +160,13 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(isNotEmpty);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Newarr, typeof(T));
-            il.EmitStoreLocal(Locals.Read.Array);
+            il.EmitStoreLocal(Locals.Read.ArrayT);
 
             if (typeof(T).IsUnmanaged())
             {
                 // _ = stream.Read(MemoryMarshal.AsBytes(new Span<T>(array)));
                 il.EmitLoadArgument(Arguments.Read.Stream);
-                il.EmitLoadLocal(Locals.Read.Array);
+                il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(T)));
                 il.EmitCall(OpCodes.Call, KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)), null);
                 il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
@@ -188,7 +188,7 @@ namespace BinaryPack.Serialization.Processors
                     : KnownMembers.ObjectProcessor.DeserializerInfo(typeof(T));
 
                 // array[i] = ...(stream);
-                il.EmitLoadLocal(Locals.Read.Array);
+                il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadLocal(Locals.Read.I);
                 il.EmitLoadArgument(Arguments.Read.Stream);
                 il.EmitCall(OpCodes.Call, methodInfo, null);
@@ -208,7 +208,7 @@ namespace BinaryPack.Serialization.Processors
             }
 
             // return array;
-            il.EmitLoadLocal(Locals.Read.Array);
+            il.EmitLoadLocal(Locals.Read.ArrayT);
             il.Emit(OpCodes.Ret);
         }
     }

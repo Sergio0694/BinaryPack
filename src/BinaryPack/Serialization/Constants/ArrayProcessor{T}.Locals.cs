@@ -41,7 +41,7 @@ namespace BinaryPack.Serialization.Processors
                 /// <summary>
                 /// The target <typeparamref name="T"/> array
                 /// </summary>
-                Array,
+                ArrayT,
 
                 /// <summary>
                 /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
