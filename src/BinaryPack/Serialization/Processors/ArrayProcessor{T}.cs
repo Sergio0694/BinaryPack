@@ -62,11 +62,11 @@ namespace BinaryPack.Serialization.Processors
              * serializer is invoked. For all other cases, the standard object serializer is used. */
             if (typeof(T).IsUnmanaged())
             {
-                // if (size == 0) return;
+                // if (size <= 0) return;
                 Label copy = il.DefineLabel();
                 il.EmitLoadLocal(Locals.Write.Length);
                 il.EmitLoadInt32(0);
-                il.Emit(OpCodes.Bne_Un_S, copy);
+                il.Emit(OpCodes.Bge_S, copy);
                 il.Emit(OpCodes.Ret);
 
                 // stream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan(obj)));
