@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Extensions;
@@ -189,7 +190,7 @@ namespace BinaryPack.Serialization.Processors
 
             // T[] array = new T[CalculateCapacityFromCount(count)];
             il.EmitLoadLocal(Locals.Read.Count);
-            il.EmitCall(typeof(ListProcessor<T>).GetMethod(nameof(CalculateCapacityFromCount), BindingFlags.NonPublic | BindingFlags.Static));
+            il.EmitCall(typeof(ListProcessor<T>).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(m => m.Name.Contains(nameof(CalculateCapacityFromCount))));
             il.Emit(OpCodes.Newarr, typeof(T));
             il.EmitStoreLocal(Locals.Read.ArrayT);
 
