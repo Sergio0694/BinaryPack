@@ -38,9 +38,14 @@ namespace BinaryPack.Serialization.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Read<T>() where T : unmanaged
         {
-            ref byte r0 = ref Buffer.GetPinnableReference();
-            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
-            T value = Unsafe.As<byte, T>(ref r1);
+            /* The reasons for declaring this struct as a ref struct, and for
+             * carrying a Span<byte> instead of a byte[] array are that this way
+             * the reader can also read data from memory areas that are now owned
+             * by the caller, or data that is just a slice on another array.
+             * These variable declarations are just for clarity, they are
+             * all optimized away bit the JIT compiler anyway. */
+            ref byte r0 = ref Buffer[_Position];
+            T value = Unsafe.As<byte, T>(ref r0);
             _Position += Unsafe.SizeOf<T>();
 
             return value;
@@ -54,9 +59,8 @@ namespace BinaryPack.Serialization.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Read<T>(out T value) where T : unmanaged
         {
-            ref byte r0 = ref Buffer.GetPinnableReference();
-            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
-            value = Unsafe.As<byte, T>(ref r1);
+            ref byte r0 = ref Buffer[_Position];
+            value = Unsafe.As<byte, T>(ref r0);
             _Position += Unsafe.SizeOf<T>();
         }
 
@@ -68,13 +72,18 @@ namespace BinaryPack.Serialization.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Read<T>(Span<T> span) where T : unmanaged
         {
+            /* This method is only invoked by the internal deserializers,
+             * which already perform bounds check before creating the target Span<T>.
+             * Since the input Span<T> is guaranteed to never be empty,
+             * we can use GetPinnableReference() instead of the this[int]
+             * indexer and skip one extra conditional jump in the JITted code. */
             int size = Unsafe.SizeOf<T>() * span.Length;
-            ref byte r0 = ref Buffer.GetPinnableReference();
-            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
-            ref T r2 = ref Unsafe.As<byte, T>(ref r1);
-            Span<T> source = MemoryMarshal.CreateSpan(ref r2, span.Length);
+            ref T r0 = ref span.GetPinnableReference();
+            ref byte r1 = ref Unsafe.As<T, byte>(ref r0);
+            Span<byte> destination = MemoryMarshal.CreateSpan(ref r1, size);
+            Span<byte> source = Buffer.Slice(_Position, size);
 
-            source.CopyTo(span);
+            source.CopyTo(destination);
             _Position += size;
         }
     }
