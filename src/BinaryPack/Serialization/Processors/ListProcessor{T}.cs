@@ -122,23 +122,11 @@ namespace BinaryPack.Serialization.Processors
             il.DeclareLocal(typeof(List<T>));
             il.DeclareLocal(typeof(T[]));
             il.DeclareLocals<Locals.Read>();
+            if (!typeof(T).IsUnmanaged()) il.DeclareLocal(typeof(T).MakeByRefType());
 
-            // Span<byte> span = stackalloc byte[sizeof(int)];
-            il.EmitStackalloc(typeof(int));
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
-
-            // _ = stream.Read(span);
+            // int count = reader.Read<int>();
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCallvirt(KnownMembers.Stream.Read);
-            il.Emit(OpCodes.Pop);
-
-            // int count = span.GetPinnableReference();
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
-            il.EmitLoadFromAddress(typeof(int));
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
             il.EmitStoreLocal(Locals.Read.Count);
 
             // if (count == -1) return null;
@@ -157,7 +145,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Brtrue_S, isNotEmpty);
             il.Emit(OpCodes.Ret);
 
-            // else list = new List<T>();
+            // List<T> list = new List<T>();
             il.MarkLabel(isNotEmpty);
             il.EmitStoreLocal(Locals.Read.ListT);
 
@@ -166,7 +154,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Read.Count);
             il.EmitWriteMember(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
 
-            // T[] array = new T[CalculateCapacityFromCount(count)];
+            // T[] array = new T[count.UpperBoundLog2()];
             il.EmitLoadLocal(Locals.Read.Count);
             il.EmitCall(typeof(NumericExtensions).GetMethod(nameof(NumericExtensions.UpperBoundLog2)));
             il.Emit(OpCodes.Newarr, typeof(T));
@@ -174,18 +162,22 @@ namespace BinaryPack.Serialization.Processors
 
             if (typeof(T).IsUnmanaged())
             {
-                // _ = stream.Read(MemoryMarshal.AsBytes(new Span<T>(array, 0, count)));
+                // reader.Read(new Span<T>(array, 0, count));
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadInt32(0);
                 il.EmitLoadLocal(Locals.Read.Count);
                 il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
-                il.EmitCall(KnownMembers.MemoryMarshal.AsByteSpan(typeof(T)));
-                il.EmitCallvirt(KnownMembers.Stream.Read);
-                il.Emit(OpCodes.Pop);
+                il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(typeof(T)));
             }
             else
             {
+                // ref T r0 = ref array[0];
+                il.EmitLoadLocal(Locals.Read.ArrayT);
+                il.EmitLoadInt32(0);
+                il.Emit(OpCodes.Ldelema, typeof(T));
+                il.EmitStoreLocal(Locals.Read.RefT);
+
                 // for (int i = 0; i < count; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
@@ -199,12 +191,13 @@ namespace BinaryPack.Serialization.Processors
                     ? StringProcessor.Instance.DeserializerInfo.MethodInfo
                     : KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), typeof(T));
 
-                // array[i] = ...(stream);
-                il.EmitLoadLocal(Locals.Read.ArrayT);
+                // Unsafe.Add(ref r0, i) = ...(ref reader);
+                il.EmitLoadLocal(Locals.Read.RefT);
                 il.EmitLoadLocal(Locals.Read.I);
+                il.EmitAddOffset(typeof(T));
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitCall(methodInfo);
-                il.Emit(OpCodes.Stelem_Ref);
+                il.EmitStoreToAddress(typeof(T));
 
                 // i++;
                 il.EmitLoadLocal(Locals.Read.I);

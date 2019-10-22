@@ -48,12 +48,6 @@ namespace BinaryPack.Serialization.Processors
                 ArrayT,
 
                 /// <summary>
-                /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
-                /// </summary>
-                [LocalType(typeof(System.Span<byte>))]
-                SpanByte,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the count of the target <see cref="System.Collections.Generic.List{T}"/>
                 /// </summary>
                 [LocalType(typeof(int))]
@@ -63,7 +57,12 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
                 [LocalType(typeof(int))]
-                I
+                I,
+
+                /// <summary>
+                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// </summary>
+                RefT
             }
         }
     }

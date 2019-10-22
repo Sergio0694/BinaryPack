@@ -43,12 +43,6 @@ namespace BinaryPack.Serialization.Processors
                 ArrayT,
 
                 /// <summary>
-                /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
-                /// </summary>
-                [LocalType(typeof(System.Span<byte>))]
-                SpanByte,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
                 /// </summary>
                 [LocalType(typeof(int))]
