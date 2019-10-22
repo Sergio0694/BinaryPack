@@ -125,7 +125,7 @@ namespace BinaryPack.Serialization.Processors
 
             // return Encoding.UTF8.GetString(p, length);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
-            il.EmitLoadLocalAddress(Locals.Read.BytePtr);
+            il.EmitLoadLocal(Locals.Read.BytePtr);
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetString), new[] { typeof(byte*), typeof(int) }));
             il.Emit(OpCodes.Ret);
