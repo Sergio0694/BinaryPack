@@ -118,7 +118,7 @@ namespace BinaryPack
         /// <typeparam name="T">The type of instance to deserialize</typeparam>
         /// <param name="stream">The input <see cref="Stream"/> instance to read data from</param>
         [Pure]
-        public static unsafe T Deserialize<T>(Stream stream) where T : new()
+        public static T Deserialize<T>(Stream stream) where T : new()
         {
             if (stream.CanSeek)
             {
@@ -127,12 +127,9 @@ namespace BinaryPack
                  * to copy the contents of the input Stream to the memory area of this
                  * rented array. Then we just deserialize the item from that Span<byte> slice. */
                 byte[] rent = ArrayPool<byte>.Shared.Rent((int)stream.Length);
-                fixed (byte* p0 = rent)
-                {
-                    using Stream unmanagedmemoryStream = new UnmanagedMemoryStream(p0, rent.Length);
+                using Stream destination0 = new MemoryStream(rent, 0, (int)stream.Length);
 
-                    stream.CopyTo(unmanagedmemoryStream);
-                }
+                stream.CopyTo(destination0);
 
                 Span<byte> rentSpan = rent.AsSpan(0, (int)stream.Length);
                 T item = Deserialize<T>(rentSpan);
@@ -145,11 +142,11 @@ namespace BinaryPack
             /* If the stream doesn't support seeking, we just create a temporary
              * MemoryStream instance to copy the input data to, and then extract a
              * Span<byte> slice from the underlying byte[] instance for that stream. */
-            using MemoryStream memoryStream = new MemoryStream();
+            using MemoryStream destination1 = new MemoryStream();
 
-            stream.CopyTo(memoryStream);
+            stream.CopyTo(destination1);
 
-            Span<byte> span = memoryStream.GetBuffer().AsSpan(0, (int)memoryStream.Position);
+            Span<byte> span = destination1.GetBuffer().AsSpan(0, (int)destination1.Position);
 
             return Deserialize<T>(span);
         }
