@@ -232,7 +232,8 @@ namespace BinaryPack.Models
                 Optional1 == other.Optional1 &&
                 Optional2 == other.Optional2 &&
                 Optional3 == other.Optional3 &&
-                Info?.Equals(other.Info) == true;
+                (Info == null && other.Info == null ||
+                 Info?.Equals(other.Info) == true);
         }
     }
 
