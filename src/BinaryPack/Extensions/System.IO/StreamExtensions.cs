@@ -1,8 +1,6 @@
 ﻿using System.Buffers;
-using System.IO;
-using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
-namespace System
+namespace System.IO
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see cref="Stream"/> type
@@ -23,11 +21,11 @@ namespace System
         }
 
         /// <summary>
-        /// Copies the contents of a given <see cref="Stream"/> to the target <see cref="BinaryWriter"/> instance
+        /// Copies the contents of a given <see cref="Stream"/> to the target <see cref="BinaryPack.Serialization.Buffers.BinaryWriter"/> instance
         /// </summary>
         /// <param name="stream">The input <see cref="Stream"/> to read data from</param>
-        /// <param name="writer">The target <see cref="BinaryWriter"/> instance to write data to</param>
-        public static void CopyTo(this Stream stream, ref BinaryWriter writer)
+        /// <param name="writer">The target <see cref="BinaryPack.Serialization.Buffers.BinaryWriter"/> instance to write data to</param>
+        public static void CopyTo(this Stream stream, ref BinaryPack.Serialization.Buffers.BinaryWriter writer)
         {
             byte[] buffer = ArrayPool<byte>.Shared.Rent(81920);
             try
