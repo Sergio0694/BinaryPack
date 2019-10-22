@@ -30,13 +30,13 @@ namespace BinaryPack.Serialization.Processors
 
             // int length = obj?.Length ?? -1;
             Label
-                notNull = il.DefineLabel(),
+                isNotNull = il.DefineLabel(),
                 lengthLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Brtrue_S, notNull);
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Br_S, lengthLoaded);
-            il.MarkLabel(notNull);
+            il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Ldlen);
             il.Emit(OpCodes.Conv_I4);

@@ -8,7 +8,7 @@ namespace BinaryPack.Serialization.Buffers
     /// <summary>
     /// A <see langword="struct"/> that provides a fast implementation of a binary writer, leveraging <see cref="ArrayPool{T}"/> for memory pooling
     /// </summary>
-    internal ref struct BinaryWriter
+    internal struct BinaryWriter
     {
         /// <summary>
         /// The default size to use to create new <see cref="BinaryWriter"/> instances
