@@ -10,18 +10,6 @@ namespace BinaryPack.Serialization.Processors
         private static class Locals
         {
             /// <summary>
-            /// An <see langword="enum"/> with a collection of local variables used during serialization
-            /// </summary>
-            public enum Write
-            {
-                /// <summary>
-                /// The <see cref="byte"/>* local variable
-                /// </summary>
-                [LocalType(typeof(byte*))]
-                BytePtr
-            }
-
-            /// <summary>
             /// An <see langword="enum"/> with a collection of local variables used during deserialization
             /// </summary>
             public enum Read

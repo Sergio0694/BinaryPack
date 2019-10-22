@@ -23,8 +23,6 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            il.DeclareLocals<Locals.Write>();
-
             /* Perform a null check only if the type is a reference type.
              * In this case, a single byte will be written to the target stream,
              * with a value of 0 if the input item is null, and 1 otherwise. */
