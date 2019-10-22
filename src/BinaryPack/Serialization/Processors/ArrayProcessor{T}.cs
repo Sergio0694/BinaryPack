@@ -70,7 +70,7 @@ namespace BinaryPack.Serialization.Processors
             }
             else
             {
-                // ref T r0 = ref obj[i];
+                // ref T r0 = ref obj[0];
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.EmitLoadInt32(0);
                 il.Emit(OpCodes.Ldelema, typeof(T));

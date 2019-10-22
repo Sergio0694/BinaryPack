@@ -15,17 +15,6 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The extracted <typeparamref name="T"/> <see cref="System.ReadOnlySpan{T}"/>
-                /// </summary>
-                ReadOnlySpanT,
-
-                /// <summary>
-                /// The <see cref="byte"/>* local variable
-                /// </summary>
-                [LocalType(typeof(byte*))]
-                BytePtr,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the count of the source <see cref="System.Collections.Generic.List{T}"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
@@ -35,7 +24,12 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
                 [LocalType(typeof(int))]
-                I
+                I,
+
+                /// <summary>
+                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// </summary>
+                RefT
             }
 
             /// <summary>
