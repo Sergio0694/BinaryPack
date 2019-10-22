@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ListContainerModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MessagePackSampleModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NestedHierarchySimpleModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NeuralNetworkLayerModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UnmanagedArrayModel.cs" />
   </ItemGroup>
 </Project>

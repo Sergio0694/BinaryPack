@@ -47,6 +47,9 @@ namespace BinaryPack.Unit.Internals
         public void NestedHierarchySimple() => Test<NestedHierarchySimpleModel>();
 
         [TestMethod]
+        public void NeuralNetworkLayer() => Test<NeuralNetworkLayerModel>();
+
+        [TestMethod]
         public void UnmanagedArray() => Test<UnmanagedArrayModel>();
 
     }

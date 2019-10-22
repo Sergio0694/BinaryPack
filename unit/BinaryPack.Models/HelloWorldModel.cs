@@ -27,9 +27,10 @@ namespace BinaryPack.Models
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
-            return (Property == null && other.Property == null ||
-                    Property?.Equals(other.Property) == true) &&
-                   Value == other.Value;
+            return
+                (Property == null && other.Property == null ||
+                 Property?.Equals(other.Property) == true) &&
+                Value == other.Value;
         }
     }
 }
