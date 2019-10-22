@@ -120,6 +120,8 @@ namespace BinaryPack
         [Pure]
         public static T Deserialize<T>(Stream stream) where T : new()
         {
+            T item;
+
             if (stream.CanSeek)
             {
                 /* If the stream support the seek operation, we rent a single
@@ -130,23 +132,26 @@ namespace BinaryPack
                 stream.CopyTo(rent);
 
                 Span<byte> rentSpan = rent.AsSpan(0, (int)stream.Length);
-                T item = Deserialize<T>(rentSpan);
+                item = Deserialize<T>(rentSpan);
 
                 ArrayPool<byte>.Shared.Return(rent);
 
                 return item;
             }
 
-            /* If the stream doesn't support seeking, we just create a temporary
-             * MemoryStream instance to copy the input data to, and then extract a
-             * Span<byte> slice from the underlying byte[] instance for that stream. */
-            using MemoryStream destination1 = new MemoryStream();
+            /* If the stream doesn't support seeking, we use a BinaryWriter instance
+             * to copy the contents of the input Stream, without allocating arrays not
+             * from the array pool, which is what an empty MemoryStream would have done. */
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            stream.CopyTo(destination1);
+            stream.CopyTo(ref writer);
 
-            Span<byte> span = destination1.GetBuffer().AsSpan(0, (int)destination1.Position);
+            // Deserialize from the Span<byte> retrieved from the BinaryWriter instance
+            item = Deserialize<T>(writer.Span);
 
-            return Deserialize<T>(span);
+            writer.Dispose();
+
+            return item;
         }
     }
 }
