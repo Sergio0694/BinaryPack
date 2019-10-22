@@ -6,14 +6,14 @@ using System.Runtime.InteropServices;
 namespace BinaryPack.Serialization.Buffers
 {
     /// <summary>
-    /// A <see langword="struct"/> that provides a fast implementation of a binary reader, pulling data from a given <see cref="byte"/> array
+    /// A <see langword="struct"/> that provides a fast implementation of a binary reader, pulling data from a given <see cref="Span{T}"/>
     /// </summary>
-    internal struct BinaryReader
+    internal ref struct BinaryReader
     {
         /// <summary>
-        /// The <see cref="byte"/> array current in use
+        /// The <see cref="Span{T}"/> current in use
         /// </summary>
-        private readonly byte[] Buffer;
+        private readonly Span<byte> Buffer;
 
         /// <summary>
         /// The current position into <see cref="Buffer"/>
@@ -23,8 +23,8 @@ namespace BinaryPack.Serialization.Buffers
         /// <summary>
         /// Creates a new <see cref="BinaryReader"/> instance with the given parameters
         /// </summary>
-        /// <param name="buffer">The source <see cref="byte"/> array to read data from</param>
-        public BinaryReader(byte[] buffer)
+        /// <param name="buffer">The source<see cref="Span{T}"/> to read data from</param>
+        public BinaryReader(Span<byte> buffer)
         {
             Buffer = buffer;
             _Position = 0;
@@ -38,7 +38,9 @@ namespace BinaryPack.Serialization.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Read<T>() where T : unmanaged
         {
-            T value = Unsafe.As<byte, T>(ref Buffer[_Position]);
+            ref byte r0 = ref Buffer.GetPinnableReference();
+            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
+            T value = Unsafe.As<byte, T>(ref r1);
             _Position += Unsafe.SizeOf<T>();
 
             return value;
@@ -52,7 +54,9 @@ namespace BinaryPack.Serialization.Buffers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Read<T>(out T value) where T : unmanaged
         {
-            value = Unsafe.As<byte, T>(ref Buffer[_Position]);
+            ref byte r0 = ref Buffer.GetPinnableReference();
+            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
+            value = Unsafe.As<byte, T>(ref r1);
             _Position += Unsafe.SizeOf<T>();
         }
 
@@ -65,10 +69,12 @@ namespace BinaryPack.Serialization.Buffers
         public void Read<T>(Span<T> span) where T : unmanaged
         {
             int size = Unsafe.SizeOf<T>() * span.Length;
-            ref T r0 = ref span.GetPinnableReference();
-            ref byte r1 = ref Unsafe.As<T, byte>(ref r0);
+            ref byte r0 = ref Buffer.GetPinnableReference();
+            ref byte r1 = ref Unsafe.Add(ref r0, _Position);
+            ref T r2 = ref Unsafe.As<byte, T>(ref r1);
+            Span<T> source = MemoryMarshal.CreateSpan(ref r2, span.Length);
 
-            Buffer.AsSpan(_Position, size).CopyTo(MemoryMarshal.CreateSpan(ref r1, size));
+            source.CopyTo(span);
             _Position += size;
         }
     }

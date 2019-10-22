@@ -79,7 +79,7 @@ namespace BinaryPack.Unit.Internals
 
             // Read
             BinaryReader reader = new BinaryReader(array);
-            Span<byte> target = stackalloc byte[array.Length];
+            Span<byte> target = new byte[array.Length];
             reader.Read(target);
 
             // Verify
