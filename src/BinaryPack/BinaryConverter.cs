@@ -24,7 +24,11 @@ namespace BinaryPack
 
             ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
 
-            return writer.Span.ToArray();
+            byte[] data = writer.Span.ToArray();
+
+            writer.Dispose();
+
+            return data;
         }
 
         /// <summary>
@@ -40,6 +44,8 @@ namespace BinaryPack
             ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
 
             stream.Write(writer.Span);
+
+            writer.Dispose();
         }
 
         /// <summary>

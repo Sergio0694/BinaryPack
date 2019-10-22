@@ -8,7 +8,7 @@ namespace BinaryPack.Serialization.Buffers
     /// <summary>
     /// A <see langword="struct"/> that provides a fast implementation of a binary writer, leveraging <see cref="ArrayPool{T}"/> for memory pooling
     /// </summary>
-    internal struct BinaryWriter
+    internal ref struct BinaryWriter
     {
         /// <summary>
         /// The default size to use to create new <see cref="BinaryWriter"/> instances
@@ -108,5 +108,10 @@ namespace BinaryPack.Serialization.Buffers
             ArrayPool<byte>.Shared.Return(_Buffer);
             _Buffer = rent;
         }
+
+        /// <summary>
+        /// Disposes the current instance, like <see cref="IDisposable.Dispose"/>
+        /// </summary>
+        public void Dispose() => ArrayPool<byte>.Shared.Return(_Buffer);
     }
 }
