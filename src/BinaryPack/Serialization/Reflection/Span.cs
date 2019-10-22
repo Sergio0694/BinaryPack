@@ -29,12 +29,6 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             [Pure]
             public static ConstructorInfo UnsafeConstructor(Type type) => typeof(Span<>).MakeGenericType(type).GetConstructor(new[] { typeof(void*), typeof(int) });
-
-            /// <summary>
-            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="Span{T}.GetPinnableReference"/> method
-            /// </summary>
-            [Pure]
-            public static MethodInfo GetPinnableReference(Type type) => typeof(Span<>).MakeGenericType(type).GetMethod(nameof(Span<byte>.GetPinnableReference));
         }
     }
 }
