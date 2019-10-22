@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BinaryPack.Extensions;
 
 namespace BinaryPack.Serialization.Buffers
 {
@@ -49,7 +50,7 @@ namespace BinaryPack.Serialization.Buffers
         {
             int size = Unsafe.SizeOf<T>();
 
-            if (!IsInCapacity(size)) ExpandBuffer();
+            EnsureCapacity(size);
 
             Unsafe.As<byte, T>(ref _Buffer[_Position]) = value;
             _Position += size;
@@ -67,7 +68,7 @@ namespace BinaryPack.Serialization.Buffers
                 elementSize = Unsafe.SizeOf<T>(),
                 totalSize = elementSize * span.Length;
 
-            if (!IsInCapacity(totalSize)) ExpandBuffer();
+            EnsureCapacity(totalSize);
 
             ref T r0 = ref span.GetPinnableReference();
             ref byte r1 = ref Unsafe.As<T, byte>(ref r0);
@@ -77,32 +78,22 @@ namespace BinaryPack.Serialization.Buffers
         }
 
         /// <summary>
-        /// Checks whether or not <see cref="_Buffer"/> can contain the requested number of bytes to write
+        /// Ensures the buffer in use has the capacity to contain the specified amount of new data
         /// </summary>
-        /// <param name="count">The requested number of bytes to write to the buffer</param>
-        /// <returns><see langword="true"/> if <see cref="_Buffer"/> can contain another <paramref name="count"/> byte(s), <see langword="false"/> otherwise</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsInCapacity(int count)
+        /// <param name="count">The size in bytes of the new data to insert into the buffer</param>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void EnsureCapacity(int count)
         {
             int
                 currentLength = _Buffer.Length,
                 requiredLength = _Position + count;
 
-            return requiredLength <= currentLength;
-        }
-
-        /// <summary>
-        /// Expands the capacity of the current buffer in use
-        /// </summary>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ExpandBuffer()
-        {
-            int currentLength = _Buffer.Length;
+            if (requiredLength <= currentLength) return;
 
             if (currentLength == 0x7FFFFFC7) throw new InvalidOperationException("Maximum size for a byte[] array exceeded (0x7FFFFFC7), see: https://msdn.microsoft.com/en-us/library/system.array");
 
             // Calculate the new size of the target array
-            int targetLength = unchecked(currentLength * 2);
+            int targetLength = requiredLength.UpperBoundLog2();
             if (targetLength < 0) targetLength = 0x7FFFFFC7;
 
             // Rent the new array and copy the content of the current array
