@@ -64,7 +64,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
                 il.EmitLoadInt32(0);
                 il.EmitLoadLocal(Locals.Write.Count);
-                il.Emit(OpCodes.Call, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
+                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
                 il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(T)));
             }
             else
