@@ -1,4 +1,5 @@
-﻿using BinaryPack.Attributes;
+﻿using System;
+using BinaryPack.Attributes;
 
 namespace BinaryPack.Serialization.Processors
 {
@@ -17,8 +18,8 @@ namespace BinaryPack.Serialization.Processors
                 /// <summary>
                 /// The <see cref="byte"/>* local variable
                 /// </summary>
-                [LocalType(typeof(byte*))]
-                BytePtr,
+                [LocalType(typeof(Span<byte>))]
+                SpanByte,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable to track the length of the source <see cref="string"/>
