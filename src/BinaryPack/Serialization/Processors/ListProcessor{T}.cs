@@ -48,7 +48,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreToAddress(typeof(int));
 
             // stream.Write(new ReadOnlySpan<byte>(p, 4));
-            il.EmitLoadArgument(Arguments.Write.Stream);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
@@ -77,7 +77,7 @@ namespace BinaryPack.Serialization.Processors
             if (typeof(T).IsUnmanaged())
             {
                 // stream.Write(MemoryMarshal.AsBytes(span));
-                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadLocal(Locals.Write.ReadOnlySpanT);
                 il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
                 il.EmitCallvirt(KnownMembers.Stream.Write);
@@ -97,7 +97,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitCall(KnownMembers.ReadOnlySpan.GetterAt(typeof(T)));
                 il.Emit(typeof(T).IsValueType ? OpCodes.Ldobj : OpCodes.Ldind_Ref);
-                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
 
                 // StringProcessor/ObjectProcessor<T>.Serialize(...);
                 MethodInfo methodInfo = typeof(T) == typeof(string)

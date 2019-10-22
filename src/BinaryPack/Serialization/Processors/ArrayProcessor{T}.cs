@@ -46,7 +46,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreToAddress(typeof(int));
 
             // stream.Write(new ReadOnlySpan<byte>(p, 4));
-            il.EmitLoadArgument(Arguments.Write.Stream);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadInt32(sizeof(int));
             il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
@@ -69,7 +69,7 @@ namespace BinaryPack.Serialization.Processors
 
                 // stream.Write(MemoryMarshal.AsBytes(new ReadOnlySpan(obj)));
                 il.MarkLabel(copy);
-                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.ArrayConstructor(typeof(T)));
                 il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
@@ -90,7 +90,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadArgument(Arguments.Write.T);
                 il.EmitLoadLocal(Locals.Write.I);
                 il.Emit(OpCodes.Ldelem_Ref);
-                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
 
                 // StringProcessor/ObjectProcessor<T>.Serialize(...);
                 MethodInfo methodInfo = typeof(T) == typeof(string)

@@ -87,7 +87,7 @@ namespace BinaryPack.Serialization.Processors
 
             // stream.Write(new ReadOnlySpan<byte>(p, size + 4));
             il.MarkLabel(serialize);
-            il.EmitLoadArgument(Arguments.Write.Stream);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadLocal(Locals.Write.BytePtr);
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitLoadInt32(sizeof(int));
