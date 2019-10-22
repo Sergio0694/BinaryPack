@@ -157,7 +157,6 @@ namespace BinaryPack.Serialization.Processors
         {
             // T obj; ...;
             il.DeclareLocal(typeof(T));
-            il.DeclareLocals<Locals.Read>();
 
             /* Initial null reference check for reference types.
              * If the first byte in the stream is 0, just return null. */
