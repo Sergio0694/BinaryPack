@@ -12,6 +12,11 @@ namespace BinaryPack.Serialization.Buffers
     internal struct BinaryWriter
     {
         /// <summary>
+        /// The default size to use to create new <see cref="BinaryWriter"/> instances
+        /// </summary>
+        public const int DefaultSize = 128;
+
+        /// <summary>
         /// The <see cref="byte"/> array current in use
         /// </summary>
         private byte[] _Buffer;
@@ -25,7 +30,7 @@ namespace BinaryPack.Serialization.Buffers
         /// Creates a new <see cref="BinaryWriter"/> instance with the given parameters
         /// </summary>
         /// <param name="initialSize">The initial size of the internal buffer</param>
-        public BinaryWriter(int initialSize = 128)
+        public BinaryWriter(int initialSize)
         {
             _Buffer = ArrayPool<byte>.Shared.Rent(initialSize);
             _Position = 0;
@@ -98,7 +103,7 @@ namespace BinaryPack.Serialization.Buffers
 
             // Rent the new array and copy the content of the current array
             byte[] rent = ArrayPool<byte>.Shared.Rent(targetLength);
-            Buffer.BlockCopy(_Buffer, 0, rent, 0, _Position);
+            Unsafe.CopyBlock(ref rent[0], ref _Buffer[0], (uint)_Position);
 
             // Return the old buffer and swap it
             ArrayPool<byte>.Shared.Return(_Buffer);

@@ -6,6 +6,7 @@ using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -16,9 +17,9 @@ namespace BinaryPack.Unit.Internals
         public static void Test<T>(T[]? array) where T : class, IEquatable<T>
         {
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            ArrayProcessor<T>.Instance.Serializer(array, stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            ArrayProcessor<T>.Instance.Serializer(array, ref writer);
+            using Stream stream = new MemoryStream(writer.Span.ToArray());
             T[]? result = ArrayProcessor<T>.Instance.Deserializer(stream);
 
             // Equality check
@@ -83,9 +84,9 @@ namespace BinaryPack.Unit.Internals
         public static void Test(DateTime[]? array)
         {
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            ArrayProcessor<DateTime>.Instance.Serializer(array, stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            ArrayProcessor<DateTime>.Instance.Serializer(array, ref writer);
+            using Stream stream = new MemoryStream(writer.Span.ToArray());
             DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(stream);
 
             // Equality check

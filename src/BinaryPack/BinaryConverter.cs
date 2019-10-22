@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Diagnostics.Contracts;
 using System.IO;
 using BinaryPack.Serialization.Processors;
+using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack
 {
@@ -17,13 +18,13 @@ namespace BinaryPack
         /// <typeparam name="T">The type of instance to serialize</typeparam>
         /// <param name="obj">The input instance to serialize</param>
         /// <returns>A <see cref="Memory{T}"/> instance containing the serialized data</returns>
-        public static Memory<byte> Serialize<T>(T obj) where T : new()
+        public static byte[] Serialize<T>(T obj) where T : new()
         {
-            using MemoryStream stream = new MemoryStream();
-            Serialize(obj, stream);
-            byte[] data = stream.GetBuffer();
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            return new Memory<byte>(data, 0, (int)stream.Position);
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+
+            return writer.Span.ToArray();
         }
 
         /// <summary>
@@ -34,7 +35,11 @@ namespace BinaryPack
         /// <param name="stream">The <see cref="Stream"/> instance to use to write the data</param>
         public static void Serialize<T>(T obj, Stream stream) where T : new()
         {
-            ObjectProcessor<T>.Instance.Serializer(obj, stream);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+
+            stream.Write(writer.Span);
         }
 
         /// <summary>

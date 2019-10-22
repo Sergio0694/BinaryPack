@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -23,9 +24,9 @@ namespace BinaryPack.Unit.Internals
         private static void Test(string? text)
         {
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            StringProcessor.Instance.Serializer(text, stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            StringProcessor.Instance.Serializer(text, ref writer);
+            using Stream stream = new MemoryStream(writer.Span.ToArray());
             string? result = StringProcessor.Instance.Deserializer(stream);
 
             // Equality check
