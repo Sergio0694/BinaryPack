@@ -123,13 +123,11 @@ namespace BinaryPack
             if (stream.CanSeek)
             {
                 /* If the stream support the seek operation, we rent a single
-                 * array from the array pool, and use an UnmanagedMemoryStream instance
+                 * array from the array pool, and use a MemoryStream instance
                  * to copy the contents of the input Stream to the memory area of this
                  * rented array. Then we just deserialize the item from that Span<byte> slice. */
                 byte[] rent = ArrayPool<byte>.Shared.Rent((int)stream.Length);
-                using Stream destination0 = new MemoryStream(rent, 0, (int)stream.Length);
-
-                stream.CopyTo(destination0);
+                stream.CopyTo(rent);
 
                 Span<byte> rentSpan = rent.AsSpan(0, (int)stream.Length);
                 T item = Deserialize<T>(rentSpan);
