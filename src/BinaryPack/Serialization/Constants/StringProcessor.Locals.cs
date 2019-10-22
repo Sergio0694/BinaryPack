@@ -34,16 +34,16 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
-                /// </summary>
-                [LocalType(typeof(System.Span<byte>))]
-                SpanByte,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the length of the target <see cref="string"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length
+                Length,
+
+                /// <summary>
+                /// The <see cref="byte"/>* pointer to the <see cref="string"/> data being read
+                /// </summary>
+                [LocalType(typeof(byte*))]
+                BytePtr
             }
         }
     }

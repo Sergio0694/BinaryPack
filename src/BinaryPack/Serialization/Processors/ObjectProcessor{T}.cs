@@ -157,33 +157,19 @@ namespace BinaryPack.Serialization.Processors
         {
             // T obj; ...;
             il.DeclareLocal(typeof(T));
-            il.DeclareLocals<Locals.Read>();
 
             /* Initial null reference check for reference types.
              * If the first byte in the stream is 0, just return null. */
             if (!typeof(T).IsValueType)
             {
-                // Span<byte> span = stackalloc byte[1];
-                il.EmitStackalloc(typeof(byte));
-                il.EmitLoadInt32(sizeof(byte));
-                il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-                il.EmitStoreLocal(Locals.Read.SpanByte);
-
-                // _ = stream.Read(span);
-                il.EmitLoadArgument(Arguments.Read.Stream);
-                il.EmitLoadLocal(Locals.Read.SpanByte);
-                il.EmitCallvirt(KnownMembers.Stream.Read);
-                il.Emit(OpCodes.Pop);
-
-                // if (span[0] == 0) return null;
-                Label skip = il.DefineLabel();
-                il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-                il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
-                il.EmitLoadFromAddress(typeof(byte));
-                il.Emit(OpCodes.Brtrue_S, skip);
+                // if (!reader.Read<bool>()) return null;
+                Label isNotNull = il.DefineLabel();
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
+                il.Emit(OpCodes.Brtrue_S, isNotNull);
                 il.Emit(OpCodes.Ldnull);
                 il.Emit(OpCodes.Ret);
-                il.MarkLabel(skip);
+                il.MarkLabel(isNotNull);
 
                 // T obj = new T();
                 il.Emit(OpCodes.Newobj, typeof(T).GetConstructor(Type.EmptyTypes));
@@ -207,30 +193,17 @@ namespace BinaryPack.Serialization.Processors
                  * stream and assign the target property by reinterpreting them to the right type. */
                 if (property.PropertyType.IsUnmanaged())
                 {
-                    // Span<byte> span = stackalloc byte[Unsafe.SizeOf<TProperty>()];
-                    il.EmitStackalloc(property.PropertyType);
-                    il.EmitLoadInt32(property.PropertyType.GetSize());
-                    il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-                    il.EmitStoreLocal(Locals.Read.SpanByte);
-
-                    // _ = stream.Read(span);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
-                    il.EmitLoadLocal(Locals.Read.SpanByte);
-                    il.EmitCallvirt(KnownMembers.Stream.Read);
-                    il.Emit(OpCodes.Pop);
-
-                    // obj.Property = Unsafe.As<byte, TProperty>(ref span.GetPinnableReference());
+                    // obj.Property = reader.Read<TProperty>();
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-                    il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
-                    il.EmitLoadFromAddress(property.PropertyType);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.BinaryReader.ReadT(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType == typeof(string))
                 {
                     // Invoke StringProcessor to read the string property
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(StringProcessor.Instance.DeserializerInfo.MethodInfo);
                     il.EmitWriteMember(property);
                 }
@@ -238,7 +211,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // Invoke ArrayProcessor<T> to read the TItem[] array
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
                     il.EmitWriteMember(property);
                 }
@@ -247,7 +220,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // Invoke ListProcessor<T> to read the List<T> list
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
                     il.EmitWriteMember(property);
                 }
@@ -262,7 +235,7 @@ namespace BinaryPack.Serialization.Processors
                      * always used, regardless of the actual underlying type that the property originally had
                      * during the serialization pass (eg. it could have been a T[] array, or a HashSet<T>). */
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
                     il.EmitWriteMember(property);
                 }
@@ -270,7 +243,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
-                    il.EmitLoadArgument(Arguments.Read.Stream);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), property.PropertyType));
                     il.EmitWriteMember(property);
                 }

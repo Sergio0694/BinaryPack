@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
+using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -20,8 +20,9 @@ namespace BinaryPack.Unit.Internals
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
             ListProcessor<T>.Instance.Serializer(list, ref writer);
-            using Stream stream = new MemoryStream(writer.Span.ToArray());
-            List<T>? result = ListProcessor<T>.Instance.Deserializer(stream);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            List<T>? result = ListProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
             if (list == null) Assert.IsNull(result);
@@ -87,8 +88,9 @@ namespace BinaryPack.Unit.Internals
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
             ListProcessor<DateTime>.Instance.Serializer(list, ref writer);
-            using Stream stream = new MemoryStream(writer.Span.ToArray());
-            List<DateTime>? result = ListProcessor<DateTime>.Instance.Deserializer(stream);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            List<DateTime>? result = ListProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
             if (list == null) Assert.IsNull(result);

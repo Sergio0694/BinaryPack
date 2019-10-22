@@ -89,58 +89,43 @@ namespace BinaryPack.Serialization.Processors
         {
             il.DeclareLocals<Locals.Read>();
 
-            // Span<byte> span = stackalloc byte[4];
-            il.EmitStackalloc(typeof(int));
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
-
-            // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCallvirt(KnownMembers.Stream.Read);
-            il.Emit(OpCodes.Pop);
-
-            // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
-            il.Emit(OpCodes.Ldind_I4);
+            // int length = reader.Read<int>();
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
             il.EmitStoreLocal(Locals.Read.Length);
 
-            // if (size == -1) return null;
-            Label notNull = il.DefineLabel();
+            // if (length == -1) return null;
+            Label isNotNull = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitLoadInt32(-1);
-            il.Emit(OpCodes.Bne_Un_S, notNull);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
 
-            // if (size == 0) return "";
-            il.MarkLabel(notNull);
+            // if (length == 0) return "";
+            il.MarkLabel(isNotNull);
             Label notEmpty = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Brtrue_S, notEmpty);
             il.Emit(OpCodes.Ldstr, string.Empty);
             il.Emit(OpCodes.Ret);
 
-            // span = stackalloc byte[size];
+            // byte* p = stackalloc byte[length];
             il.MarkLabel(notEmpty);
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitStackalloc();
+            il.EmitStoreLocal(Locals.Read.BytePtr);
+
+            // reader.Read(new Span<byte>(p, length));
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitLoadLocal(Locals.Read.BytePtr);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
+            il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(typeof(byte)));
 
-            // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCallvirt(KnownMembers.Stream.Read);
-            il.Emit(OpCodes.Pop);
-
-            // return Encoding.UTF8.GetString(&span.GetPinnableReference(), size);
+            // return Encoding.UTF8.GetString(p, length);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(KnownMembers.Span.GetPinnableReference(typeof(byte)));
+            il.EmitLoadLocal(Locals.Read.BytePtr);
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetString), new[] { typeof(byte*), typeof(int) }));
             il.Emit(OpCodes.Ret);

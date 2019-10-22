@@ -1,12 +1,12 @@
 using System;
-using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
+using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -19,8 +19,9 @@ namespace BinaryPack.Unit.Internals
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
             ArrayProcessor<T>.Instance.Serializer(array, ref writer);
-            using Stream stream = new MemoryStream(writer.Span.ToArray());
-            T[]? result = ArrayProcessor<T>.Instance.Deserializer(stream);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            T[]? result = ArrayProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
             if (array == null) Assert.IsNull(result);
@@ -66,7 +67,7 @@ namespace BinaryPack.Unit.Internals
         public void StringEmptyArraySerializationTest() => Test(Array.Empty<string>());
 
         [TestMethod]
-        public void StringArraySerializationTest1() => Test(new[] { RandomProvider.NextString(60) });
+        public void StringArraySerializationTest1() => Test(new[] { "Hello world!" });
 
         [TestMethod]
         public void StringArraySerializationTest2() => Test((
@@ -86,8 +87,9 @@ namespace BinaryPack.Unit.Internals
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
             ArrayProcessor<DateTime>.Instance.Serializer(array, ref writer);
-            using Stream stream = new MemoryStream(writer.Span.ToArray());
-            DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(stream);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
             if (array == null) Assert.IsNull(result);

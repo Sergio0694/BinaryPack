@@ -1,6 +1,4 @@
-﻿using BinaryPack.Attributes;
-
-namespace BinaryPack.Serialization.Processors
+﻿namespace BinaryPack.Serialization.Processors
 {
     internal sealed partial class ObjectProcessor<T>
     {
@@ -17,13 +15,7 @@ namespace BinaryPack.Serialization.Processors
                 /// <summary>
                 /// The input instance
                 /// </summary>
-                T,
-
-                /// <summary>
-                /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
-                /// </summary>
-                [LocalType(typeof(System.Span<byte>))]
-                SpanByte
+                T
             }
         }
     }

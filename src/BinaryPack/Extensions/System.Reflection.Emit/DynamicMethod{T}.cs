@@ -71,41 +71,17 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
-        /// Creates a new <typeparamref name="T"/> <see langword="delegate"/> for the target owner
-        /// </summary>
-        /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
-        /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
-        [Pure]
-        public static T New(Action<ILGenerator> builder) => New().Build(builder);
-
-        /// <summary>
-        /// Creates a new <typeparamref name="T"/> <see langword="delegate"/> for the target owner
-        /// </summary>
-        /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
-        /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
-        [Pure]
-        public static T New(Action<ILGenerator, MethodInfo> builder) => New().Build(builder);
-
-        /// <summary>
         /// Creates a new <typeparamref name="T"/> <see langword="delegate"/> for the current <see cref="MethodInfo"/> handle
         /// </summary>
         /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
         /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
         [Pure]
-        public T Build(Action<ILGenerator> builder) => Build((il, _) => builder(il));
-
-        /// <summary>
-        /// Creates a new <typeparamref name="T"/> <see langword="delegate"/> for the current <see cref="MethodInfo"/> handle
-        /// </summary>
-        /// <param name="builder">An <see cref="Action"/> that builds the IL bytecode for the new method</param>
-        /// <returns>A new dynamic method wrapped as a <typeparamref name="T"/> <see langword="delegate"/></returns>
-        [Pure]
-        public T Build(Action<ILGenerator, MethodInfo> builder)
+        public T Build(Action<ILGenerator> builder)
         {
             // Create and build the new method
             DynamicMethod method = (DynamicMethod)MethodInfo;
             ILGenerator il = method.GetILGenerator();
-            builder(il, method);
+            builder(il);
 
             // Build and delegate instance
             return (T)method.CreateDelegate(typeof(T));
