@@ -67,7 +67,7 @@ namespace BinaryPack.Unit.Internals
         public void StringEmptyArraySerializationTest() => Test(Array.Empty<string>());
 
         [TestMethod]
-        public void StringArraySerializationTest1() => Test(new[] { RandomProvider.NextString(60) });
+        public void StringArraySerializationTest1() => Test(new[] { "Hello world!" });
 
         [TestMethod]
         public void StringArraySerializationTest2() => Test((
