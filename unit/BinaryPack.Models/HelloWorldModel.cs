@@ -23,7 +23,7 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(HelloWorldModel other)
+        public bool Equals(HelloWorldModel? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;

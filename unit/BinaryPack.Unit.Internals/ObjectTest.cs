@@ -1,7 +1,9 @@
 ﻿using System;
-using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Interfaces;
+using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,10 +20,11 @@ namespace BinaryPack.Unit.Internals
             obj.Initialize();
 
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            ObjectProcessor<T>.Instance.Serializer(obj, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            T result = ObjectProcessor<T>.Instance.Deserializer(stream);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            T result = ObjectProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsNotNull(result);
@@ -33,6 +36,9 @@ namespace BinaryPack.Unit.Internals
 
         [TestMethod]
         public void JsonResponse() => Test<JsonResponseModel>();
+
+        [TestMethod]
+        public void ListContainer() => Test<ListContainerModel>();
 
         [TestMethod]
         public void MessagePackSample() => Test<MessagePackSampleModel>();

@@ -38,7 +38,7 @@ namespace BinaryPack.Models.Helpers
         [Pure]
         public static DateTime NextDateTime() => DateTime.Today.AddSeconds(Random.Next(0, 31536000));
 
-        private const string Characters = " !\"#$&\'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]_abcdefghijklmnopqrstuvwxyz{}'";
+        private const string Characters = "!?\"'#$&()*+,-.0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz{}";
 
         /// <summary>
         /// Creates a new random <see langword="string"/> with a specified length

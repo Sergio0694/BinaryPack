@@ -77,7 +77,7 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
-        /// Serialization powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// Serialization powered by <see cref="Portable.Xaml.XamlServices"/>
         /// </summary>
         [Benchmark]
         [BenchmarkCategory(SERIALIZATION)]
@@ -89,7 +89,7 @@ namespace BinaryPack.Benchmark.Implementations
         }
 
         /// <summary>
-        /// Serialization powered by <see cref="System.Xml.Serialization.XmlSerializer"/>
+        /// Serialization powered by <see cref="Utf8JsonSerializer"/>
         /// </summary>
         [Benchmark]
         [BenchmarkCategory(SERIALIZATION)]
@@ -98,6 +98,18 @@ namespace BinaryPack.Benchmark.Implementations
             using Stream stream = new MemoryStream();
 
             Utf8JsonSerializer.Serialize(stream, Model);
+        }
+
+        /// <summary>
+        /// Serialization powered by <see cref="MessagePack.MessagePackSerializer"/>
+        /// </summary>
+        [Benchmark]
+        [BenchmarkCategory(SERIALIZATION)]
+        public void MessagePack1()
+        {
+            using Stream stream = new MemoryStream();
+
+            MessagePack.MessagePackSerializer.Serialize(stream, Model, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
         }
 
         /// <summary>

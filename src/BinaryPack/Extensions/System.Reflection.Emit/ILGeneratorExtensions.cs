@@ -1,9 +1,7 @@
-﻿using System;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
+﻿using System.Linq;
+using BinaryPack.Attributes;
 
-namespace BinaryPack.Extensions.System.Reflection.Emit
+namespace System.Reflection.Emit
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see langword="ILGenerator"/> type
@@ -11,14 +9,35 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
     internal static class ILGeneratorExtensions
     {
         /// <summary>
-        /// Puts the appropriate <see langword="unbox"/> or <see langword="castclass"/> instruction to unbox/cast a value onto the stream of instructions
+        /// Declares local variables with the types specified in the public members of a given type
+        /// </summary>
+        /// <typeparam name="T">The type to use to retrieve the types of locals to declare</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        public static void DeclareLocals<T>(this ILGenerator il) where T : Enum
+        {
+            foreach (Type type in
+                from field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
+                let attribute = field.GetCustomAttributes().OfType<LocalTypeAttribute>().FirstOrDefault()
+                where attribute != null
+                select attribute.Type)
+            {
+                il.DeclareLocal(type);
+            }
+        }
+
+        /// <summary>
+        /// Emits the necessary instructions to execute a <see langword="call"/> operation onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="type">The type of value to convert</param>
-        public static void EmitCastOrUnbox(this ILGenerator il, Type type)
-        {
-            il.Emit(type.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, type);
-        }
+        /// <param name="methodInfo">The <see cref="MethodInfo"/> instance representing the method to invoke</param>
+        public static void EmitCall(this ILGenerator il, MethodInfo methodInfo) => il.EmitCall(OpCodes.Call, methodInfo, null);
+
+        /// <summary>
+        /// Emits the necessary instructions to execute a <see langword="callvirt"/> operation onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="methodInfo">The <see cref="MethodInfo"/> instance representing the method to invoke</param>
+        public static void EmitCallvirt(this ILGenerator il, MethodInfo methodInfo) => il.EmitCall(OpCodes.Callvirt, methodInfo, null);
 
         /// <summary>
         /// Puts the appropriate <see langword="ldarg"/> instruction to read an argument onto the stream of instructions
@@ -203,22 +222,14 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
         }
 
         /// <summary>
-        /// Puts the appropriate <see langword="ldc.i4"/>, <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
-        /// </summary>
-        /// <typeparam name="T">The type of reference at the top of the stack</typeparam>
-        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="offset">The offset to use to advance the current reference on top of the execution stack</param>
-        public static void EmitAddOffset<T>(this ILGenerator il, int offset) => il.EmitAddOffset(Unsafe.SizeOf<T>() * offset);
-
-        /// <summary>
-        /// Puts the appropriate <see langword="ldc.i4"/>, <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
+        /// Puts the appropriate <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="offset">The offset in bytes to use to advance the current reference on top of the execution stack</param>
-        public static void EmitAddOffset(this ILGenerator il, int offset)
+        /// <param name="type">The type of value being read from the current reference on top of the execution stack</param>
+        public static void EmitAddOffset(this ILGenerator il, Type type)
         {
-            il.EmitLoadInt32(offset);
-            il.Emit(OpCodes.Conv_I);
+            il.EmitLoadInt32(type.GetSize());
+            il.Emit(OpCodes.Mul);
             il.Emit(OpCodes.Add);
         }
 
@@ -285,18 +296,6 @@ namespace BinaryPack.Extensions.System.Reflection.Emit
                 else il.Emit(opcode);
             }
             else il.Emit(OpCodes.Stind_Ref);
-        }
-
-        /// <summary>
-        /// Loads a buffer of type <see cref="byte"/> onto the execution stack, through the use of <see langword="stackalloc"/>
-        /// </summary>
-        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="type">The type of item for the buffer to create</param>
-        /// <param name="size">The number of items of the specified type to fit onto the created buffer</param>
-        public static void EmitStackalloc(this ILGenerator il, Type type, int size = 1)
-        {
-            il.EmitLoadInt32(type.GetSize() * size);
-            il.EmitStackalloc();
         }
 
         /// <summary>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Reflection;
 
 namespace BinaryPack.Serialization.Reflection
@@ -16,33 +15,20 @@ namespace BinaryPack.Serialization.Reflection
             /// Gets the <see cref="Span{T}"/> constructor that takes a generic array
             /// </summary>
             [Pure]
-            public static ConstructorInfo ArrayConstructor(Type type) => (
-                from ctor in typeof(Span<>).MakeGenericType(type).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 1 &&
-                      args[0].ParameterType == type.MakeArrayType()
-                select ctor).First();
+            public static ConstructorInfo ArrayConstructor(Type type) => typeof(Span<>).MakeGenericType(type).GetConstructor(new[] { type.MakeArrayType() });
+
+            /// <summary>
+            /// Gets the <see cref="Span{T}"/> constructor that takes a generic array, a start index and the length
+            /// </summary>
+            /// <param name="type">The type parameter to use for the target <see cref="Span{T}"/> type to use</param>
+            [Pure]
+            public static ConstructorInfo ArrayWithOffsetAndLengthConstructor(Type type) => typeof(Span<>).MakeGenericType(type).GetConstructor(new[] { type.MakeArrayType(), typeof(int), typeof(int) });
 
             /// <summary>
             /// Gets the <see cref="Span{T}"/> constructor that takes a <see langword="void"/> pointer and a size
             /// </summary>
             [Pure]
-            public static ConstructorInfo UnsafeConstructor(Type type) => (
-                from ctor in typeof(Span<>).MakeGenericType(type).GetConstructors()
-                let args = ctor.GetParameters()
-                where args.Length == 2 &&
-                      args[0].ParameterType == typeof(void*) &&
-                      args[1].ParameterType == typeof(int)
-                select ctor).First();
-
-            /// <summary>
-            /// Gets the <see cref="MethodInfo"/> instance mapping the <see cref="Span{T}.GetPinnableReference"/> method
-            /// </summary>
-            [Pure]
-            public static MethodInfo GetPinnableReference(Type type) => (
-                from method in typeof(Span<>).MakeGenericType(type).GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                where method.Name.Equals(nameof(Span<byte>.GetPinnableReference))
-                select method).First();
+            public static ConstructorInfo UnsafeConstructor(Type type) => typeof(Span<>).MakeGenericType(type).GetConstructor(new[] { typeof(void*), typeof(int) });
         }
     }
 }

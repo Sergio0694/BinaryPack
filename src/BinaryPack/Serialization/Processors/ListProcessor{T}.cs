@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
@@ -8,75 +9,74 @@ using BinaryPack.Serialization.Reflection;
 namespace BinaryPack.Serialization.Processors
 {
     /// <summary>
-    /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
+    /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="List{T}"/> types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
+    internal sealed partial class ListProcessor<T> : TypeProcessor<List<T>?>
     {
         /// <summary>
         /// Gets the singleton <see cref="ArrayProcessor{T}"/> instance to use
         /// </summary>
-        public static ArrayProcessor<T> Instance { get; } = new ArrayProcessor<T>();
+        public static ListProcessor<T> Instance { get; } = new ListProcessor<T>();
 
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            /* Declare the local variables that are shared across all the
-             * different implementations, and the additional ref T variable if
-             * T is not an unmanaged type. This is a micro-optimization to speed up
-             * the loop iterations when the whole array can't be copied directly. */
+            /* Just like in ArrayProcessor<T>, declare the shared variables,
+             * and the additional ref T variable if the T is not an unmanaged type. */
             il.DeclareLocals<Locals.Write>();
             if (!typeof(T).IsUnmanaged()) il.DeclareLocal(typeof(T).MakeByRefType());
 
-            // int length = obj?.Length ?? -1;
+            // int count = obj?._size ?? -1;
             Label
                 isNotNull = il.DefineLabel(),
-                lengthLoaded = il.DefineLabel();
+                countLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadInt32(-1);
-            il.Emit(OpCodes.Br_S, lengthLoaded);
+            il.Emit(OpCodes.Br_S, countLoaded);
             il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Ldlen);
-            il.Emit(OpCodes.Conv_I4);
-            il.MarkLabel(lengthLoaded);
-            il.EmitStoreLocal(Locals.Write.Length);
+            il.EmitReadMember(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
+            il.MarkLabel(countLoaded);
+            il.EmitStoreLocal(Locals.Write.Count);
 
-            // writer.Write(length);
+            // writer.Write(count);
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitLoadLocal(Locals.Write.Count);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // if (size > 0) { }
+            // if (count > 0) { }
             Label end = il.DefineLabel();
-            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitLoadLocal(Locals.Write.Count);
             il.EmitLoadInt32(0);
             il.Emit(OpCodes.Ble_S, end);
 
-            /* The generic type parameter T doesn't have constraints, and there are three
-             * main cases that need to be handled. This is all done while building the
-             * method, so there are no actual checks being performed during serialization.
-             * If T is unmanaged, the whole array is written directly to the stream.
-             * If T is a string, the dedicated serializer is invoked. For all other
-             * cases,the standard object serializer is used. */
+            /* Just like in ArrayProcessor<T>, handle unmanaged types as a special case.
+             * If T is unmanaged, the whole buffer is written directly to the stream
+             * after being broadcast as a byte span. If T is a string, the dedicated
+             * serializer is invoked. For all other cases, the standard object serializer is used. */
             if (typeof(T).IsUnmanaged())
             {
-                // writer.Write(obj.AsSpan());
+                // writer.Write(obj._items.AsSpan(0, count));
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadArgument(Arguments.Write.T);
-                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(T)));
+                il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitLoadInt32(0);
+                il.EmitLoadLocal(Locals.Write.Count);
+                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
                 il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(T)));
             }
             else
             {
-                // ref T r0 = ref obj[0];
+                // ref T r0 = ref obj._items[0];
                 il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
                 il.EmitLoadInt32(0);
                 il.Emit(OpCodes.Ldelema, typeof(T));
                 il.EmitStoreLocal(Locals.Write.RefT);
 
-                // for (int i = 0; i < length; i++) { }
+                // for (int i = 0; i < count; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
                 il.EmitStoreLocal(Locals.Write.I);
@@ -106,7 +106,7 @@ namespace BinaryPack.Serialization.Processors
                 // Loop check
                 il.MarkLabel(check);
                 il.EmitLoadLocal(Locals.Write.I);
-                il.EmitLoadLocal(Locals.Write.Length);
+                il.EmitLoadLocal(Locals.Write.Count);
                 il.Emit(OpCodes.Blt_S, loop);
             }
 
@@ -118,46 +118,56 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            /* Just like the serialization method, declare the shared local
-             * variables and then the optional ref T variable for arrays
-             * where T doesn't respect the unmanaged type constraint. */
-            il.DeclareLocal(typeof(T).MakeArrayType());
+            // List<T> list; ...;
+            il.DeclareLocal(typeof(List<T>));
+            il.DeclareLocal(typeof(T[]));
             il.DeclareLocals<Locals.Read>();
             if (!typeof(T).IsUnmanaged()) il.DeclareLocal(typeof(T).MakeByRefType());
 
-            // int length = reader.Read<int>();
+            // int count = reader.Read<int>();
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
-            il.EmitStoreLocal(Locals.Read.Length);
+            il.EmitStoreLocal(Locals.Read.Count);
 
-            // if (length == -1) return null;
+            // if (count == -1) return null;
             Label isNotNull = il.DefineLabel();
-            il.EmitLoadLocal(Locals.Read.Length);
+            il.EmitLoadLocal(Locals.Read.Count);
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Bne_Un_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
 
-            // if (length == 0) return Array.Empty<T>();
+            // if (count == 0) return new List<T>();
             Label isNotEmpty = il.DefineLabel();
             il.MarkLabel(isNotNull);
-            il.EmitLoadLocal(Locals.Read.Length);
+            il.Emit(OpCodes.Newobj, typeof(List<T>).GetConstructor(Type.EmptyTypes));
+            il.EmitLoadLocal(Locals.Read.Count);
             il.Emit(OpCodes.Brtrue_S, isNotEmpty);
-            il.EmitCall(typeof(Array).GetMethod(nameof(Array.Empty)).MakeGenericMethod(typeof(T)));
             il.Emit(OpCodes.Ret);
 
-            // T[] array = new T[length];
+            // List<T> list = new List<T>();
             il.MarkLabel(isNotEmpty);
-            il.EmitLoadLocal(Locals.Read.Length);
+            il.EmitStoreLocal(Locals.Read.ListT);
+
+            // list._size = count;
+            il.EmitLoadLocal(Locals.Read.ListT);
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.EmitWriteMember(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
+
+            // T[] array = new T[count.UpperBoundLog2()];
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.EmitCall(typeof(NumericExtensions).GetMethod(nameof(NumericExtensions.UpperBoundLog2)));
             il.Emit(OpCodes.Newarr, typeof(T));
             il.EmitStoreLocal(Locals.Read.ArrayT);
 
             if (typeof(T).IsUnmanaged())
             {
-                // reader.Read(new Span<T>(array));
+                // reader.Read(new Span<T>(array, 0, count));
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
-                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(T)));
+                il.EmitLoadInt32(0);
+                il.EmitLoadLocal(Locals.Read.Count);
+                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
                 il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(typeof(T)));
             }
             else
@@ -168,7 +178,7 @@ namespace BinaryPack.Serialization.Processors
                 il.Emit(OpCodes.Ldelema, typeof(T));
                 il.EmitStoreLocal(Locals.Read.RefT);
 
-                // for (int i = 0; i < length; i++) { }
+                // for (int i = 0; i < count; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
                 il.EmitStoreLocal(Locals.Read.I);
@@ -198,13 +208,19 @@ namespace BinaryPack.Serialization.Processors
                 // Loop check
                 il.MarkLabel(check);
                 il.EmitLoadLocal(Locals.Read.I);
-                il.EmitLoadLocal(Locals.Read.Length);
+                il.EmitLoadLocal(Locals.Read.Count);
                 il.Emit(OpCodes.Blt_S, loop);
             }
 
-            // return array;
+            // list._items = array;
+            il.EmitLoadLocal(Locals.Read.ListT);
             il.EmitLoadLocal(Locals.Read.ArrayT);
+            il.EmitWriteMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+
+            // return list;
+            il.EmitLoadLocal(Locals.Read.ListT);
             il.Emit(OpCodes.Ret);
         }
     }
 }
+

@@ -11,9 +11,9 @@
         public enum Read
         {
             /// <summary>
-            /// The the target <see cref="System.IO.Stream"/> instance
+            /// The source <see cref="Buffers.BinaryReader"/> instance
             /// </summary>
-            Stream
+            RefBinaryReader
         }
 
         /// <summary>
@@ -27,9 +27,9 @@
             T,
 
             /// <summary>
-            /// The input <see cref="System.IO.Stream"/> instance
+            /// The <see langword="ref"/> to the target <see cref="Buffers.BinaryWriter"/> instance
             /// </summary>
-            Stream
+            RefBinaryWriter
         }
     }
 }

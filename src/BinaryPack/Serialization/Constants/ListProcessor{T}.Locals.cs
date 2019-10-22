@@ -2,10 +2,10 @@
 
 namespace BinaryPack.Serialization.Processors
 {
-    internal sealed partial class ArrayProcessor<T>
+    internal sealed partial class ListProcessor<T>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ArrayProcessor{T}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ListProcessor{T}"/>
         /// </summary>
         private static class Locals
         {
@@ -15,10 +15,10 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the source <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the count of the source <see cref="System.Collections.Generic.List{T}"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length,
+                Count,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable for the loop counter
@@ -38,15 +38,20 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <typeparamref name="T"/> array
+                /// The target <see cref="System.Collections.Generic.List{T}"/> instance
+                /// </summary>
+                ListT,
+
+                /// <summary>
+                /// The target array of type <typeparamref name="T"/> to load and inject
                 /// </summary>
                 ArrayT,
 
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the count of the target <see cref="System.Collections.Generic.List{T}"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length,
+                Count,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable for the loop counter
@@ -62,3 +67,4 @@ namespace BinaryPack.Serialization.Processors
         }
     }
 }
+

@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Xml.Serialization;
 using BinaryPack.Models.Interfaces;
-using Newtonsoft.Json;
+using MessagePack;
+using MessagePack.Resolvers;
+using Portable.Xaml;
+using Utf8Json;
 
 namespace BinaryPack.Comparison.Implementation
 {
@@ -18,59 +24,75 @@ namespace BinaryPack.Comparison.Implementation
             T model = new T();
             model.Initialize();
 
-            // Newtonsoft.Json serialization
-            using MemoryStream jsonStream = new MemoryStream();
-            using StreamWriter textWriter = new StreamWriter(jsonStream);
-            using JsonTextWriter jsonWriter = new JsonTextWriter(textWriter);
-            new JsonSerializer().Serialize(jsonWriter, model);
-            jsonWriter.Flush();
+            // JSON
+            var json = CalculateFileSize(stream => JsonSerializer.Serialize(stream, model));
 
-            // XML serialization
-            using Stream xmlStream = new MemoryStream();
-            var serializer = new XmlSerializer(typeof(T));
-            serializer.Serialize(xmlStream, model);
-
-            // BinaryPack serialization
-            using MemoryStream binaryStream = new MemoryStream();
-            BinaryConverter.Serialize(model, binaryStream);
-
-            Console.WriteLine($">> Newtonsoft.Json:\t{jsonStream.Position} bytes");
-            Console.WriteLine($">> XML serializer:\t{xmlStream.Position} bytes");
-            Console.WriteLine($">> BinaryPack:\t\t{binaryStream.Position} bytes");
-            Console.WriteLine($"{Environment.NewLine}Compressing with GZip...{Environment.NewLine}");
-
-            // Newtonsoft.Json compression
-            using (MemoryStream output = new MemoryStream())
+            // XML
+            var xml = CalculateFileSize(stream =>
             {
-                using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+                var serializer = new XmlSerializer(typeof(T));
+                serializer.Serialize(stream, model);
+            });
 
-                jsonStream.Seek(0, SeekOrigin.Begin);
-                jsonStream.CopyTo(gzip);
+            // XAML
+            var xaml = CalculateFileSize(stream => XamlServices.Save(stream, model));
 
-                Console.WriteLine($">> Newtonsoft.Json:\t{output.Position} bytes");
-            }
-
-            // XML serializer compression
-            using (MemoryStream output = new MemoryStream())
+            // BinaryFormatter
+            var binaryFormatter = CalculateFileSize(stream =>
             {
-                using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(stream, model);
+            });
 
-                xmlStream.Seek(0, SeekOrigin.Begin);
-                xmlStream.CopyTo(gzip);
+            // MessagePack
+            var messagePack = CalculateFileSize(stream => MessagePackSerializer.Serialize(stream, model, ContractlessStandardResolver.Instance));
 
-                Console.WriteLine($">> XML serializer:\t{output.Position} bytes");
-            }
+            // BinaryPack
+            var binaryPack = CalculateFileSize(stream => BinaryConverter.Serialize(model, stream));
 
-            // BinaryPack compression
-            using (MemoryStream output = new MemoryStream())
-            {
-                using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+            // Report
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("=================");
+            builder.AppendLine("Default output");
+            builder.AppendLine("=================");
+            builder.AppendLine($"JSON:\t\t{json.Plain}");
+            builder.AppendLine($"XML:\t\t{xml.Plain}");
+            builder.AppendLine($"XAML:\t\t{xaml.Plain}");
+            builder.AppendLine($"BinaryForm.:\t{binaryFormatter.Plain}");
+            builder.AppendLine($"MessagePack:\t{messagePack.Plain}");
+            builder.AppendLine($"BinaryPack:\t{binaryPack.Plain}");
+            builder.AppendLine();
+            builder.AppendLine("=================");
+            builder.AppendLine("GZip output");
+            builder.AppendLine("=================");
+            builder.AppendLine($"JSON:\t\t{json.GZip}");
+            builder.AppendLine($"XML:\t\t{xml.GZip}");
+            builder.AppendLine($"XAML:\t\t{xaml.GZip}");
+            builder.AppendLine($"BinaryForm.:\t{binaryFormatter.GZip}");
+            builder.AppendLine($"MessagePack:\t{messagePack.GZip}");
+            builder.AppendLine($"BinaryPack:\t{binaryPack.GZip}");
+            Console.WriteLine(builder);
+        }
 
-                binaryStream.Seek(0, SeekOrigin.Begin);
-                binaryStream.CopyTo(gzip);
+        /// <summary>
+        /// Calculates the file size for a given serializer
+        /// </summary>
+        /// <param name="f">An <see cref="Action{T}"/> that writes the serialized data to a given <see cref="Stream"/></param>
+        [Pure]
+        private static (long Plain, long GZip) CalculateFileSize(Action<Stream> f)
+        {
+            using MemoryStream stream = new MemoryStream();
+            f(stream);
 
-                Console.WriteLine($">> BinaryPack:\t\t{output.Position} bytes");
-            }
+            long plain = stream.Position;
+
+            using MemoryStream output = new MemoryStream();
+            using GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal);
+
+            stream.Seek(0, SeekOrigin.Begin);
+            stream.CopyTo(gzip);
+
+            return (plain, output.Position);
         }
     }
 }

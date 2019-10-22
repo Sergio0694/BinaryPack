@@ -1,7 +1,7 @@
-﻿using System.Reflection.Emit;
-using BinaryPack.Extensions.System.Reflection.Emit;
+﻿using System;
+using System.Reflection.Emit;
+using System.Text;
 using BinaryPack.Serialization.Constants;
-using BinaryPack.Serialization.Extensions;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
 
@@ -22,78 +22,65 @@ namespace BinaryPack.Serialization.Processors
         {
             il.DeclareLocals<Locals.Write>();
 
-            // if (obj == null) { } else { }
+            // int length = obj?.Length ?? -1;
             Label
-                notNull = il.DefineLabel(),
-                serialize = il.DefineLabel();
+                isNotNull = il.DefineLabel(),
+                lengthLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Brtrue_S, notNull);
-
-            // void* p = stackalloc byte[4]; *p = -1; length = 0;
-            il.EmitStackalloc(typeof(int));
-            il.EmitStoreLocal(Locals.Write.BytePtr);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadInt32(-1);
-            il.EmitStoreToAddress(typeof(int));
-            il.EmitLoadInt32(0);
-            il.EmitStoreLocal(Locals.Write.Length);
-            il.Emit(OpCodes.Br_S, serialize);
-
-            // if (obj.Property.Length == 0) { } else { }
-            Label notEmpty = il.DefineLabel();
-            il.MarkLabel(notNull);
+            il.Emit(OpCodes.Br_S, lengthLoaded);
+            il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(KnownMembers.String.Length);
-            il.Emit(OpCodes.Brtrue_S, notEmpty);
-
-            // void* p = stackalloc byte[4]; *p = 0; size = 0;
-            il.EmitStackalloc(typeof(int));
-            il.EmitStoreLocal(Locals.Write.BytePtr);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadInt32(0);
-            il.EmitStoreToAddress(typeof(int));
-            il.EmitLoadInt32(0);
+            il.EmitReadMember(typeof(string).GetProperty(nameof(string.Length)));
+            il.MarkLabel(lengthLoaded);
             il.EmitStoreLocal(Locals.Write.Length);
-            il.Emit(OpCodes.Br_S, serialize);
 
-            // void* p = stackalloc byte[Encoding.UTF8.GetByteCount(obj.AsSpan()) + 4];
-            il.MarkLabel(notEmpty);
-            il.EmitReadMember(KnownMembers.Encoding.UTF8);
-            il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetByteCount, null);
-            il.Emit(OpCodes.Dup);
-            il.EmitStoreLocal(Locals.Write.Length);
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Add);
-            il.EmitStackalloc();
-            il.EmitStoreLocal(Locals.Write.BytePtr);
-
-            // *p = size;
-            il.EmitLoadLocal(Locals.Write.BytePtr);
+            // if (length > 0) length = Encoding.UTF8.GetByteCount(obj.AsSpan());
+            Label skipGetByteCount = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.Length);
-            il.EmitStoreToAddress(typeof(int));
-
-            // _ = Encoding.UTF8.GetBytes(obj.AsSpan(), new Span<byte>(p + 4, size);
-            il.EmitReadMember(KnownMembers.Encoding.UTF8);
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Ble_S, skipGetByteCount);
+            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitCall(OpCodes.Call, KnownMembers.String.AsSpan, null);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitAddOffset(sizeof(int));
+            il.EmitCall(typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }));
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetByteCount), new[] { typeof(ReadOnlySpan<char>) }));
+            il.EmitStoreLocal(Locals.Write.Length);
+            il.MarkLabel(skipGetByteCount);
+
+            // writer.Write(length);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
+
+            // if (length > 0) { }
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Ble_S, end);
+
+            // Span<byte> span = stackalloc byte[length];
+            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitStackalloc();
             il.EmitLoadLocal(Locals.Write.Length);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetBytes, null);
+            il.EmitStoreLocal(Locals.Write.SpanByte);
+
+            // _ = Encoding.UTF8.GetBytes(obj.AsSpan(), span);
+            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
+            il.EmitLoadArgument(Arguments.Write.T);
+            il.EmitCall(typeof(MemoryExtensions).GetMethod(nameof(MemoryExtensions.AsSpan), new[] { typeof(string) }));
+            il.EmitLoadLocal(Locals.Write.SpanByte);
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetBytes), new[] { typeof(ReadOnlySpan<char>), typeof(Span<byte>) }));
             il.Emit(OpCodes.Pop);
 
-            // stream.Write(new ReadOnlySpan<byte>(p, size + 4));
-            il.MarkLabel(serialize);
-            il.EmitLoadArgument(Arguments.Write.Stream);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadLocal(Locals.Write.Length);
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Add);
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Write, null);
+            // writer.Write(span);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+            il.EmitLoadLocal(Locals.Write.SpanByte);
+            il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(byte)));
+
+            // return;
+            il.MarkLabel(end);
             il.Emit(OpCodes.Ret);
         }
 
@@ -102,60 +89,45 @@ namespace BinaryPack.Serialization.Processors
         {
             il.DeclareLocals<Locals.Read>();
 
-            // Span<byte> span = stackalloc byte[4];
-            il.EmitStackalloc(typeof(int));
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
-
-            // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
-            il.Emit(OpCodes.Pop);
-
-            // int size = Unsafe.As<byte, int>(ref span.GetPinnableReference());
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
-            il.Emit(OpCodes.Ldind_I4);
+            // int length = reader.Read<int>();
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
             il.EmitStoreLocal(Locals.Read.Length);
 
-            // if (size == -1) return null;
-            Label notNull = il.DefineLabel();
+            // if (length == -1) return null;
+            Label isNotNull = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitLoadInt32(-1);
-            il.Emit(OpCodes.Bne_Un_S, notNull);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
 
-            // if (size == 0) return "";
-            il.MarkLabel(notNull);
+            // if (length == 0) return "";
+            il.MarkLabel(isNotNull);
             Label notEmpty = il.DefineLabel();
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Brtrue_S, notEmpty);
             il.Emit(OpCodes.Ldstr, string.Empty);
             il.Emit(OpCodes.Ret);
 
-            // span = stackalloc byte[size];
+            // byte* p = stackalloc byte[length];
             il.MarkLabel(notEmpty);
             il.EmitLoadLocal(Locals.Read.Length);
             il.EmitStackalloc();
+            il.EmitStoreLocal(Locals.Read.BytePtr);
+
+            // reader.Read(new Span<byte>(p, length));
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitLoadLocal(Locals.Read.BytePtr);
             il.EmitLoadLocal(Locals.Read.Length);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.UnsafeConstructor(typeof(byte)));
-            il.EmitStoreLocal(Locals.Read.SpanByte);
+            il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(typeof(byte)));
 
-            // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
-            il.EmitLoadLocal(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Stream.Read, null);
-            il.Emit(OpCodes.Pop);
-
-            // return Encoding.UTF8.GetString(&span.GetPinnableReference(), size);
-            il.EmitReadMember(KnownMembers.Encoding.UTF8);
-            il.EmitLoadLocalAddress(Locals.Read.SpanByte);
-            il.EmitCall(OpCodes.Call, KnownMembers.Span.GetPinnableReference(typeof(byte)), null);
+            // return Encoding.UTF8.GetString(p, length);
+            il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
+            il.EmitLoadLocal(Locals.Read.BytePtr);
             il.EmitLoadLocal(Locals.Read.Length);
-            il.EmitCall(OpCodes.Callvirt, KnownMembers.Encoding.GetString, null);
+            il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetString), new[] { typeof(byte*), typeof(int) }));
             il.Emit(OpCodes.Ret);
         }
     }

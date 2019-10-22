@@ -2,7 +2,11 @@
 using System.Buffers;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BinaryPack.Serialization.Processors;
+using BinaryReader = BinaryPack.Serialization.Buffers.BinaryReader;
+using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack
 {
@@ -17,13 +21,17 @@ namespace BinaryPack
         /// <typeparam name="T">The type of instance to serialize</typeparam>
         /// <param name="obj">The input instance to serialize</param>
         /// <returns>A <see cref="Memory{T}"/> instance containing the serialized data</returns>
-        public static Memory<byte> Serialize<T>(T obj) where T : new()
+        public static byte[] Serialize<T>(T obj) where T : new()
         {
-            using MemoryStream stream = new MemoryStream();
-            Serialize(obj, stream);
-            byte[] data = stream.GetBuffer();
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            return new Memory<byte>(data, 0, (int)stream.Position);
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+
+            byte[] data = writer.Span.ToArray();
+
+            writer.Dispose();
+
+            return data;
         }
 
         /// <summary>
@@ -34,7 +42,41 @@ namespace BinaryPack
         /// <param name="stream">The <see cref="Stream"/> instance to use to write the data</param>
         public static void Serialize<T>(T obj, Stream stream) where T : new()
         {
-            ObjectProcessor<T>.Instance.Serializer(obj, stream);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+
+            stream.Write(writer.Span);
+
+            writer.Dispose();
+        }
+
+        /// <summary>
+        /// Deserializes a <typeparamref name="T"/> instance from the input <see cref="Span{T}"/> instance
+        /// </summary>
+        /// <typeparam name="T">The type of instance to deserialize</typeparam>
+        /// <param name="span">The input <see cref="Span{T}"/> instance to read data from</param>
+        [Pure]
+        public static T Deserialize<T>(Span<byte> span) where T : new()
+        {
+            BinaryReader reader = new BinaryReader(span);
+
+            return ObjectProcessor<T>.Instance.Deserializer(ref reader);
+        }
+
+        /// <summary>
+        /// Deserializes a <typeparamref name="T"/> instance from the input <see cref="ReadOnlySpan{T}"/> instance
+        /// </summary>
+        /// <typeparam name="T">The type of instance to deserialize</typeparam>
+        /// <param name="span">The input <see cref="ReadOnlySpan{T}"/> instance to read data from</param>
+        [Pure]
+        public static T Deserialize<T>(ReadOnlySpan<byte> span) where T : new()
+        {
+            ref readonly byte r0 = ref span[0];
+            ref byte r1 = ref Unsafe.AsRef(r0);
+            Span<byte> source = MemoryMarshal.CreateSpan(ref r1, span.Length);
+
+            return Deserialize<T>(source);
         }
 
         /// <summary>
@@ -43,12 +85,31 @@ namespace BinaryPack
         /// <typeparam name="T">The type of instance to deserialize</typeparam>
         /// <param name="memory">The input <see cref="Memory{T}"/> instance to read data from</param>
         [Pure]
-        public static unsafe T Deserialize<T>(Memory<byte> memory) where T : new()
+        public static T Deserialize<T>(Memory<byte> memory) where T : new()
         {
-            using MemoryHandle handle = memory.Pin();
-            using UnmanagedMemoryStream stream = new UnmanagedMemoryStream((byte*)handle.Pointer, memory.Length);
+            return Deserialize<T>(memory.Span);
+        }
 
-            return Deserialize<T>(stream);
+        /// <summary>
+        /// Deserializes a <typeparamref name="T"/> instance from the input <see cref="ReadOnlyMemory{T}"/> instance
+        /// </summary>
+        /// <typeparam name="T">The type of instance to deserialize</typeparam>
+        /// <param name="memory">The input <see cref="ReadOnlyMemory{T}"/> instance to read data from</param>
+        [Pure]
+        public static T Deserialize<T>(ReadOnlyMemory<byte> memory) where T : new()
+        {
+            return Deserialize<T>(memory.Span);
+        }
+
+        /// <summary>
+        /// Deserializes a <typeparamref name="T"/> instance from the input <see cref="byte"/> array
+        /// </summary>
+        /// <typeparam name="T">The type of instance to deserialize</typeparam>
+        /// <param name="array">The input <see cref="byte"/> array instance to read data from</param>
+        [Pure]
+        public static T Deserialize<T>(byte[] array) where T : new()
+        {
+            return Deserialize<T>(array.AsSpan());
         }
 
         /// <summary>
@@ -59,7 +120,38 @@ namespace BinaryPack
         [Pure]
         public static T Deserialize<T>(Stream stream) where T : new()
         {
-            return ObjectProcessor<T>.Instance.Deserializer(stream);
+            T item;
+
+            if (stream.CanSeek)
+            {
+                /* If the stream support the seek operation, we rent a single
+                 * array from the array pool, and use a MemoryStream instance
+                 * to copy the contents of the input Stream to the memory area of this
+                 * rented array. Then we just deserialize the item from that Span<byte> slice. */
+                byte[] rent = ArrayPool<byte>.Shared.Rent((int)stream.Length);
+                stream.CopyTo(rent);
+
+                Span<byte> rentSpan = rent.AsSpan(0, (int)stream.Length);
+                item = Deserialize<T>(rentSpan);
+
+                ArrayPool<byte>.Shared.Return(rent);
+
+                return item;
+            }
+
+            /* If the stream doesn't support seeking, we use a BinaryWriter instance
+             * to copy the contents of the input Stream, without allocating arrays not
+             * from the array pool, which is what an empty MemoryStream would have done. */
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+
+            stream.CopyTo(ref writer);
+
+            // Deserialize from the Span<byte> retrieved from the BinaryWriter instance
+            item = Deserialize<T>(writer.Span);
+
+            writer.Dispose();
+
+            return item;
         }
     }
 }

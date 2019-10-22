@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -23,10 +26,11 @@ namespace BinaryPack.Unit.Internals
         private static void Test(string? text)
         {
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            StringProcessor.Instance.Serializer(text, stream);
-            stream.Seek(0, SeekOrigin.Begin);
-            string? result = StringProcessor.Instance.Deserializer(stream);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            StringProcessor.Instance.Serializer(text, ref writer);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            string? result = StringProcessor.Instance.Deserializer(ref reader);
 
             // Equality check
             if (text == null) Assert.IsNull(result);
