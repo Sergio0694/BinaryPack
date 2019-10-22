@@ -1,6 +1,5 @@
 ﻿using System.Reflection.Emit;
 using BinaryPack.Delegates;
-using BinaryPack.Extensions.System.Reflection.Emit;
 
 namespace BinaryPack.Serialization.Processors.Abstract
 {

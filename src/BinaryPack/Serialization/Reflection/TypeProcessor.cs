@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using System.Reflection;
-using BinaryPack.Extensions.System.Reflection.Emit;
+using System.Reflection.Emit;
 using BinaryPack.Serialization.Processors;
 
 namespace BinaryPack.Serialization.Reflection

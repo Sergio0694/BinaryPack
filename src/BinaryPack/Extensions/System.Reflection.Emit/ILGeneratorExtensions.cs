@@ -1,11 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
+﻿using System.Linq;
 using System.Runtime.CompilerServices;
 using BinaryPack.Attributes;
 
-namespace BinaryPack.Extensions.System.Reflection.Emit
+namespace System.Reflection.Emit
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see langword="ILGenerator"/> type

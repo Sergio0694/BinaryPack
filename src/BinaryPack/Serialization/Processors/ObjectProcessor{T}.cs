@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using BinaryPack.Extensions;
-using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;

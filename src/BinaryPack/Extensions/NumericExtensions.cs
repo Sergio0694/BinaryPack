@@ -1,9 +1,8 @@
-﻿using System;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace BinaryPack.Extensions
+namespace System
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for numeric types

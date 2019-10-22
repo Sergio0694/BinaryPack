@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection.Emit;
 using System.Text;
-using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
