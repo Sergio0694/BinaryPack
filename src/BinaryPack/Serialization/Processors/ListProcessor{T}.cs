@@ -130,7 +130,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
@@ -175,7 +175,7 @@ namespace BinaryPack.Serialization.Processors
             if (typeof(T).IsUnmanaged())
             {
                 // _ = stream.Read(MemoryMarshal.AsBytes(new Span<T>(array, 0, count)));
-                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadInt32(0);
                 il.EmitLoadLocal(Locals.Read.Count);
@@ -202,7 +202,7 @@ namespace BinaryPack.Serialization.Processors
                 // array[i] = ...(stream);
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 il.EmitLoadLocal(Locals.Read.I);
-                il.EmitLoadArgument(Arguments.Read.Stream);
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitCall(methodInfo);
                 il.Emit(OpCodes.Stelem_Ref);
 

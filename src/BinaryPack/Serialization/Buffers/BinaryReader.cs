@@ -52,19 +52,6 @@ namespace BinaryPack.Serialization.Buffers
         }
 
         /// <summary>
-        /// Reads a value of type <typeparamref name="T"/> from the underlying buffer
-        /// </summary>
-        /// <typeparam name="T">The type of value to read from the buffer</typeparam>
-        /// <param name="value">The value to assign to after reading from the buffer</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Read<T>(out T value) where T : unmanaged
-        {
-            ref byte r0 = ref Buffer[_Position];
-            value = Unsafe.As<byte, T>(ref r0);
-            _Position += Unsafe.SizeOf<T>();
-        }
-
-        /// <summary>
         /// Reads a sequence of elements of type <typeparamref name="T"/> from the underlying buffer
         /// </summary>
         /// <typeparam name="T">The type of elements to read from the buffer</typeparam>

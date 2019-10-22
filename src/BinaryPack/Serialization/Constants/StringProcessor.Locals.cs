@@ -34,9 +34,9 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The <see cref="byte"/> <see cref="System.Span{T}"/> local variable
+                /// The <see cref="byte"/> <see cref="Span{T}"/> local variable
                 /// </summary>
-                [LocalType(typeof(System.Span<byte>))]
+                [LocalType(typeof(Span<byte>))]
                 SpanByte,
 
                 /// <summary>

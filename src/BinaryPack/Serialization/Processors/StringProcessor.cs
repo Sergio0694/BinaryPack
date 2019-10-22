@@ -96,7 +96,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
@@ -132,7 +132,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Read.SpanByte);
 
             // _ = stream.Read(span);
-            il.EmitLoadArgument(Arguments.Read.Stream);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitLoadLocal(Locals.Read.SpanByte);
             il.EmitCallvirt(KnownMembers.Stream.Read);
             il.Emit(OpCodes.Pop);
