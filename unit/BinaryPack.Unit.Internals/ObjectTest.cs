@@ -1,10 +1,11 @@
 ﻿using System;
-using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Interfaces;
+using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -21,8 +22,9 @@ namespace BinaryPack.Unit.Internals
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
             ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
-            using Stream stream = new MemoryStream(writer.Span.ToArray());
-            T result = ObjectProcessor<T>.Instance.Deserializer(stream);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            T result = ObjectProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsNotNull(result);
