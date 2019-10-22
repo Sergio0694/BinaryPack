@@ -25,13 +25,16 @@ namespace BinaryPack
         {
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+            try
+            {
+                ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
 
-            byte[] data = writer.Span.ToArray();
-
-            writer.Dispose();
-
-            return data;
+                return writer.Span.ToArray();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
 
         /// <summary>
@@ -44,11 +47,16 @@ namespace BinaryPack
         {
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+            try
+            {
+                ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
 
-            stream.Write(writer.Span);
-
-            writer.Dispose();
+                stream.Write(writer.Span);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
 
         /// <summary>
@@ -120,8 +128,6 @@ namespace BinaryPack
         [Pure]
         public static T Deserialize<T>(Stream stream) where T : new()
         {
-            T item;
-
             if (stream.CanSeek)
             {
                 /* If the stream support the seek operation, we rent a single
@@ -129,14 +135,17 @@ namespace BinaryPack
                  * to copy the contents of the input Stream to the memory area of this
                  * rented array. Then we just deserialize the item from that Span<byte> slice. */
                 byte[] rent = ArrayPool<byte>.Shared.Rent((int)stream.Length);
-                stream.CopyTo(rent);
 
-                Span<byte> rentSpan = rent.AsSpan(0, (int)stream.Length);
-                item = Deserialize<T>(rentSpan);
+                try
+                {
+                    stream.CopyTo(rent);
 
-                ArrayPool<byte>.Shared.Return(rent);
-
-                return item;
+                    return Deserialize<T>(rent.AsSpan(0, (int)stream.Length));
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(rent);
+                }
             }
 
             /* If the stream doesn't support seeking, we use a BinaryWriter instance
@@ -144,14 +153,16 @@ namespace BinaryPack
              * from the array pool, which is what an empty MemoryStream would have done. */
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
 
-            stream.CopyTo(ref writer);
+            try
+            {
+                stream.CopyTo(ref writer);
 
-            // Deserialize from the Span<byte> retrieved from the BinaryWriter instance
-            item = Deserialize<T>(writer.Span);
-
-            writer.Dispose();
-
-            return item;
+                return Deserialize<T>(writer.Span);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
     }
 }
