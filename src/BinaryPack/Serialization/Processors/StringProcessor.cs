@@ -79,6 +79,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.SpanByte);
             il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(byte)));
 
+            // return;
             il.MarkLabel(end);
             il.Emit(OpCodes.Ret);
         }

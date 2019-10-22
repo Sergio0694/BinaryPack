@@ -223,22 +223,14 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
-        /// Puts the appropriate <see langword="ldc.i4"/>, <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
-        /// </summary>
-        /// <typeparam name="T">The type of reference at the top of the stack</typeparam>
-        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="offset">The offset to use to advance the current reference on top of the execution stack</param>
-        public static void EmitAddOffset<T>(this ILGenerator il, int offset) => il.EmitAddOffset(Unsafe.SizeOf<T>() * offset);
-
-        /// <summary>
-        /// Puts the appropriate <see langword="ldc.i4"/>, <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
+        /// Puts the appropriate <see langword="conv.i"/> and <see langword="add"/> instructions to advance a reference onto the stream of instructions
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <param name="offset">The offset in bytes to use to advance the current reference on top of the execution stack</param>
-        public static void EmitAddOffset(this ILGenerator il, int offset)
+        /// <param name="type">The type of value being read from the current reference on top of the execution stack</param>
+        public static void EmitAddOffset(this ILGenerator il, Type type)
         {
-            il.EmitLoadInt32(offset);
-            il.Emit(OpCodes.Conv_I);
+            il.EmitLoadInt32(type.GetSize());
+            il.Emit(OpCodes.Mul);
             il.Emit(OpCodes.Add);
         }
 
