@@ -15,12 +15,6 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="byte"/>* local variable
-                /// </summary>
-                [LocalType(typeof(byte*))]
-                BytePtr,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the length of the source <typeparamref name="T"/> array
                 /// </summary>
                 [LocalType(typeof(int))]
@@ -30,7 +24,12 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
                 [LocalType(typeof(int))]
-                I
+                I,
+
+                /// <summary>
+                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// </summary>
+                RefT
             }
 
             /// <summary>

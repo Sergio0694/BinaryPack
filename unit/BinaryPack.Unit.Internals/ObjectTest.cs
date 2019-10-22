@@ -4,6 +4,7 @@ using BinaryPack.Models;
 using BinaryPack.Models.Interfaces;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using BinaryWriter = BinaryPack.Serialization.Buffers.BinaryWriter;
 
 namespace BinaryPack.Unit.Internals
 {
@@ -18,9 +19,9 @@ namespace BinaryPack.Unit.Internals
             obj.Initialize();
 
             // Serialization
-            using MemoryStream stream = new MemoryStream();
-            ObjectProcessor<T>.Instance.Serializer(obj, stream);
-            stream.Seek(0, SeekOrigin.Begin);
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            ObjectProcessor<T>.Instance.Serializer(obj, ref writer);
+            using Stream stream = new MemoryStream(writer.Span.ToArray());
             T result = ObjectProcessor<T>.Instance.Deserializer(stream);
 
             // Equality check

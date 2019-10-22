@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using BinaryPack.Extensions;
-using BinaryPack.Extensions.System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -24,53 +22,35 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            // ReadOnlySpan<T> span; ...;
-            il.DeclareLocal(typeof(ReadOnlySpan<T>));
+            /* Just like in ArrayProcessor<T>, declare the shared variables,
+             * and the additional ref T variable if the T is not an unmanaged type. */
             il.DeclareLocals<Locals.Write>();
+            if (!typeof(T).IsUnmanaged()) il.DeclareLocal(typeof(T).MakeByRefType());
 
-            // int count = obj?.Count ?? -1;
+            // int count = obj?._size ?? -1;
             Label
-                notNull = il.DefineLabel(),
+                isNotNull = il.DefineLabel(),
                 countLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Brtrue_S, notNull);
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Br_S, countLoaded);
-            il.MarkLabel(notNull);
+            il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(List<T>).GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
             il.MarkLabel(countLoaded);
             il.EmitStoreLocal(Locals.Write.Count);
 
-            // byte* p = stackalloc byte[sizeof(int)]; *(int*)p = count;
-            il.EmitStackalloc(typeof(int));
-            il.EmitStoreLocal(Locals.Write.BytePtr);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
+            // writer.Write(count);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadLocal(Locals.Write.Count);
-            il.EmitStoreToAddress(typeof(int));
+            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // stream.Write(new ReadOnlySpan<byte>(p, 4));
-            il.EmitLoadArgument(Arguments.Write.Stream);
-            il.EmitLoadLocal(Locals.Write.BytePtr);
-            il.EmitLoadInt32(sizeof(int));
-            il.Emit(OpCodes.Newobj, KnownMembers.ReadOnlySpan.UnsafeConstructor(typeof(byte)));
-            il.EmitCallvirt(KnownMembers.Stream.Write);
-
-            // if (count <= 0) return;
-            Label copy = il.DefineLabel();
+            // if (count > 0) { }
+            Label end = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.Count);
             il.EmitLoadInt32(0);
-            il.Emit(OpCodes.Bgt_S, copy);
-            il.Emit(OpCodes.Ret);
-            il.MarkLabel(copy);
-
-            // ReadOnlySpan<T> span = new ReadOnlySpan<T>(obj._items, 0, count);
-            il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
-            il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
-            il.EmitLoadInt32(0);
-            il.EmitLoadLocal(Locals.Write.Count);
-            il.Emit(OpCodes.Call, KnownMembers.ReadOnlySpan.ArrayWithOffsetAndLengthConstructor(typeof(T)));
+            il.Emit(OpCodes.Ble_S, end);
 
             /* Just like in ArrayProcessor<T>, handle unmanaged types as a special case.
              * If T is unmanaged, the whole buffer is written directly to the stream
@@ -78,14 +58,24 @@ namespace BinaryPack.Serialization.Processors
              * serializer is invoked. For all other cases, the standard object serializer is used. */
             if (typeof(T).IsUnmanaged())
             {
-                // stream.Write(MemoryMarshal.AsBytes(span));
-                il.EmitLoadArgument(Arguments.Write.Stream);
-                il.EmitLoadLocal(Locals.Write.ReadOnlySpanT);
-                il.EmitCall(KnownMembers.MemoryMarshal.AsByteReadOnlySpan(typeof(T)));
-                il.EmitCallvirt(KnownMembers.Stream.Write);
+                // writer.Write(obj._items.AsSpan(0, count));
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitLoadInt32(0);
+                il.EmitLoadLocal(Locals.Write.Count);
+                il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayWithOffsetAndLengthConstructor(typeof(T)));
+                il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(T)));
             }
             else
             {
+                // ref T r0 = ref obj._items[0];
+                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitReadMember(typeof(List<T>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitLoadInt32(0);
+                il.Emit(OpCodes.Ldelema, typeof(T));
+                il.EmitStoreLocal(Locals.Write.RefT);
+
                 // for (int i = 0; i < count; i++) { }
                 Label check = il.DefineLabel();
                 il.EmitLoadInt32(0);
@@ -94,12 +84,12 @@ namespace BinaryPack.Serialization.Processors
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
 
-                // ...(span[i], stream);
-                il.EmitLoadLocalAddress(Locals.Write.ReadOnlySpanT);
+                // ...(Unsafe.Add(ref r0, i), ref writer);
+                il.EmitLoadLocal(Locals.Write.RefT);
                 il.EmitLoadLocal(Locals.Write.I);
-                il.EmitCall(KnownMembers.ReadOnlySpan.GetterAt(typeof(T)));
-                il.Emit(typeof(T).IsValueType ? OpCodes.Ldobj : OpCodes.Ldind_Ref);
-                il.EmitLoadArgument(Arguments.Write.Stream);
+                il.EmitAddOffset(typeof(T));
+                il.EmitLoadFromAddress(typeof(T));
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
 
                 // StringProcessor/ObjectProcessor<T>.Serialize(...);
                 MethodInfo methodInfo = typeof(T) == typeof(string)
@@ -120,6 +110,8 @@ namespace BinaryPack.Serialization.Processors
                 il.Emit(OpCodes.Blt_S, loop);
             }
 
+            // return;
+            il.MarkLabel(end);
             il.Emit(OpCodes.Ret);
         }
 

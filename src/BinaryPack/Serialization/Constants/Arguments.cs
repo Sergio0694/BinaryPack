@@ -27,9 +27,9 @@
             T,
 
             /// <summary>
-            /// The input <see cref="System.IO.Stream"/> instance
+            /// The <see langword="ref"/> to the target <see cref="Buffers.BinaryWriter"/> instance
             /// </summary>
-            Stream
+            RefBinaryWriter
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
-namespace BinaryPack.Extensions
+namespace System
 {
     /// <summary>
     /// A <see langword="class"/> that provides extension methods for the <see cref="Type"/> type
