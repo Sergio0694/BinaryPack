@@ -32,12 +32,12 @@ namespace BinaryPack.Serialization.Buffers
         }
 
         /// <summary>
-        /// Gets a <see cref="Span{T}"/> instance mapping the used content of the underlying buffer
+        /// Gets a <see cref="ReadOnlySpan{T}"/> instance mapping the used content of the underlying buffer
         /// </summary>
-        public Span<byte> Span
+        public ReadOnlySpan<byte> Span
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _Buffer.AsSpan(0, _Position);
+            get => new ReadOnlySpan<byte>(_Buffer, 0, _Position);
         }
 
         /// <summary>
