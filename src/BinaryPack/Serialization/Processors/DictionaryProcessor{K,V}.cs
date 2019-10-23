@@ -13,17 +13,17 @@ namespace BinaryPack.Serialization.Processors
     /// </summary>
     /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
-    internal sealed partial class DictionaryProcessor<K, V> : TypeProcessor<(K, V)>
+    internal sealed partial class DictionaryProcessor<K, V> : TypeProcessor<Dictionary<K, V>>
     {
-        /// <summary>
-        /// Gets the singleton <see cref="DictionaryProcessor{K,V}"/> instance to use
-        /// </summary>
-        public static DictionaryProcessor<K, V> Instance { get; } = new DictionaryProcessor<K, V>();
-
         /// <summary>
         /// The <see cref="Type"/> instance for the nested <see cref="Dictionary{TKey,TValue}"/>.Entry <see langword="struct"/>
         /// </summary>
         private static readonly Type EntryType = typeof(Dictionary<K, V>).GetNestedType("Entry", BindingFlags.NonPublic);
+
+        /// <summary>
+        /// Gets the singleton <see cref="DictionaryProcessor{K,V}"/> instance to use
+        /// </summary>
+        public static DictionaryProcessor<K, V> Instance { get; } = new DictionaryProcessor<K, V>();
 
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
@@ -77,7 +77,7 @@ namespace BinaryPack.Serialization.Processors
             // if (r0.next >= -1) { }
             Label emptyEntry = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.RefEntry);
-            il.EmitReadMember(EntryType.GetField("_next"));
+            il.EmitReadMember(EntryType.GetField("next"));
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Blt_S, emptyEntry);
 
