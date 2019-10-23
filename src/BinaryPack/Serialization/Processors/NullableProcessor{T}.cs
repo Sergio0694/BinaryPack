@@ -93,8 +93,48 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            throw new NotImplementedException();
+            if (typeof(T) == typeof(bool))
+            {
+                // sbyte value = reader.Read<sbyte>();
+                il.DeclareLocal(Locals.Read.NullableBoolAsSignedByte);
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(sbyte)));
+                il.EmitStoreLocal(Locals.Read.NullableBoolAsSignedByte);
+
+                // return value == -1 ? default(bool?) : Unsafe.As<sbyte, bool>(ref value);
+                Label
+                    isNotNull = il.DefineLabel(),
+                    end = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Read.NullableBoolAsSignedByte);
+                il.EmitLoadInt32(-1);
+                il.Emit(OpCodes.Bne_Un_S, isNotNull);
+                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Br_S, end);
+                il.MarkLabel(isNotNull);
+                il.EmitLoadLocal(Locals.Read.NullableBoolAsSignedByte);
+                il.MarkLabel(end);
+            }
+            else
+            {
+                // if (!reader.Read<bool>()) return default(T?);
+                Label
+                    isNotNull = il.DefineLabel(),
+                    end = il.DefineLabel();
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
+                il.Emit(OpCodes.Brtrue_S, isNotNull);
+                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Br_S, end);
+
+                // else return reader.Read<T>();
+                il.MarkLabel(isNotNull);
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(T)));
+                il.MarkLabel(end);
+            }
+
+            // return;
+            il.Emit(OpCodes.Ret);
         }
     }
 }
-

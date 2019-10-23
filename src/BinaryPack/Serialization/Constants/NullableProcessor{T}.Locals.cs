@@ -27,26 +27,10 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <typeparamref name="T"/> array
+                /// The <see cref="bool"/> local variable that indicates whether the input <see cref="System.Nullable{T}"/> instance has a value
                 /// </summary>
-                ArrayT,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
-                /// </summary>
-                [LocalType(typeof(int))]
-                Length,
-
-                /// <summary>
-                /// The <see cref="int"/> local variable for the loop counter
-                /// </summary>
-                [LocalType(typeof(int))]
-                I,
-
-                /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
-                /// </summary>
-                RefT
+                [LocalType(typeof(sbyte))]
+                NullableBoolAsSignedByte
             }
         }
     }

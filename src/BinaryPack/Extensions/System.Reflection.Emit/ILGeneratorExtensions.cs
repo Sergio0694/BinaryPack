@@ -9,6 +9,19 @@ namespace System.Reflection.Emit
     internal static class ILGeneratorExtensions
     {
         /// <summary>
+        /// Declares a local variable with the name specified by the given <typeparamref name="T"/> value
+        /// </summary>
+        /// <typeparam name="T">The type to use to retrieve the type of local to declare</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="local">The name of the local variable to declare</param>
+        public static void DeclareLocal<T>(this ILGenerator il, T local) where T : Enum
+        {
+            FieldInfo fieldInfo = typeof(T).GetField(local.ToString(), BindingFlags.Public | BindingFlags.Static);
+            LocalTypeAttribute attribute = fieldInfo.GetCustomAttribute<LocalTypeAttribute>();
+            il.DeclareLocal(attribute.Type);
+        }
+
+        /// <summary>
         /// Declares local variables with the types specified in the public members of a given type
         /// </summary>
         /// <typeparam name="T">The type to use to retrieve the types of locals to declare</typeparam>
@@ -17,7 +30,7 @@ namespace System.Reflection.Emit
         {
             foreach (Type type in
                 from field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
-                let attribute = field.GetCustomAttributes().OfType<LocalTypeAttribute>().FirstOrDefault()
+                let attribute = field.GetCustomAttributes<LocalTypeAttribute>().FirstOrDefault()
                 where attribute != null
                 select attribute.Type)
             {
