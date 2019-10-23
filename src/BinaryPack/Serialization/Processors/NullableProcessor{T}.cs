@@ -13,6 +13,16 @@ namespace BinaryPack.Serialization.Processors
     internal sealed partial class NullableProcessor<T> : TypeProcessor<T?> where T : struct
     {
         /// <summary>
+        /// The <see cref="FieldInfo"/> instance mapping the private <see cref="Nullable{T}"/> field indicating whether or not the value is not <see langword="null"/>
+        /// </summary>
+        private static readonly FieldInfo HasValueField = typeof(T?).GetField("hasValue", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>
+        /// The <see cref="FieldInfo"/> instance mapping the private <see cref="Nullable{T}"/> field with the actual <typeparamref name="T"/> value
+        /// </summary>
+        private static readonly FieldInfo ValueField = typeof(T?).GetField("value", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>
         /// Gets the singleton <see cref="NullableProcessor{T}"/> instance to use
         /// </summary>
         public static NullableProcessor<T> Instance { get; } = new NullableProcessor<T>();
@@ -32,7 +42,7 @@ namespace BinaryPack.Serialization.Processors
                     write = il.DefineLabel();
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadArgument(Arguments.Write.T);
-                il.EmitReadMember(typeof(T?).GetField("hasValue", BindingFlags.NonPublic));
+                il.EmitReadMember(HasValueField);
                 il.Emit(OpCodes.Brtrue_S, isNotNull);
                 il.EmitLoadInt32(-1);
                 il.Emit(OpCodes.Br_S, write);
@@ -40,7 +50,7 @@ namespace BinaryPack.Serialization.Processors
                 // else writer.Write<sbyte>(obj.value);
                 il.MarkLabel(isNotNull);
                 il.EmitLoadArgument(Arguments.Write.T);
-                il.EmitReadMember(typeof(T?).GetField("value", BindingFlags.NonPublic));
+                il.EmitReadMember(ValueField);
                 il.MarkLabel(write);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(sbyte)));
             }
@@ -56,14 +66,14 @@ namespace BinaryPack.Serialization.Processors
                 // writer.Write(hasValue = obj.hasValue);
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadArgument(Arguments.Write.T);
-                il.EmitReadMember(typeof(T?).GetField("hasValue", BindingFlags.NonPublic));
+                il.EmitReadMember(HasValueField);
                 il.Emit(OpCodes.Dup);
                 il.EmitStoreLocal(Locals.Write.HasValue);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
                 // if (hasValue) { }
                 Label isNull = il.DefineLabel();
-                il.EmitLoadArgument(Locals.Write.HasValue);
+                il.EmitLoadLocal(Locals.Write.HasValue);
                 il.Emit(OpCodes.Brfalse_S, isNull);
 
                 if (typeof(T).IsUnmanaged())
@@ -71,14 +81,14 @@ namespace BinaryPack.Serialization.Processors
                     // writer.Write(obj.value);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadArgument(Arguments.Write.T);
-                    il.EmitReadMember(typeof(T?).GetField("value", BindingFlags.NonPublic));
+                    il.EmitReadMember(ValueField);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
                 }
                 else
                 {
                     // ObjectProcessor<T>.Serialize(obj.value, ref writer);
                     il.EmitLoadArgument(Arguments.Write.T);
-                    il.EmitReadMember(typeof(T?).GetField("value", BindingFlags.NonPublic));
+                    il.EmitReadMember(ValueField);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(T)));
                 }
@@ -93,6 +103,8 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
+            il.DeclareLocal(typeof(T?));
+
             if (typeof(T) == typeof(bool))
             {
                 // sbyte value = reader.Read<sbyte>();
@@ -108,10 +120,13 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Read.NullableBoolAsSignedByte);
                 il.EmitLoadInt32(-1);
                 il.Emit(OpCodes.Bne_Un_S, isNotNull);
-                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Initobj, typeof(T?));
+                il.EmitLoadLocal(Locals.Read.NullableT);
                 il.Emit(OpCodes.Br_S, end);
                 il.MarkLabel(isNotNull);
                 il.EmitLoadLocal(Locals.Read.NullableBoolAsSignedByte);
+                il.Emit(OpCodes.Conv_U1);
+                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(new[] { typeof(T) }));
                 il.MarkLabel(end);
             }
             else
@@ -123,13 +138,15 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
                 il.Emit(OpCodes.Brtrue_S, isNotNull);
-                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Initobj, typeof(T?));
+                il.EmitLoadLocal(Locals.Read.NullableT);
                 il.Emit(OpCodes.Br_S, end);
 
                 // else return reader.Read<T>();
                 il.MarkLabel(isNotNull);
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(T)));
+                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(new[] { typeof(T) }));
                 il.MarkLabel(end);
             }
 

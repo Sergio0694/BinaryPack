@@ -27,6 +27,11 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
+                /// The <see cref="System.Nullable{T}"/> 
+                /// </summary>
+                NullableT,
+
+                /// <summary>
                 /// The <see cref="bool"/> local variable that indicates whether the input <see cref="System.Nullable{T}"/> instance has a value
                 /// </summary>
                 [LocalType(typeof(sbyte))]
