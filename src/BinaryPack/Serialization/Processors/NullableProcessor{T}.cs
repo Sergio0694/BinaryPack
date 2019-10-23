@@ -120,6 +120,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadLocal(Locals.Read.NullableBoolAsSignedByte);
                 il.EmitLoadInt32(-1);
                 il.Emit(OpCodes.Bne_Un_S, isNotNull);
+                il.EmitLoadLocalAddress(Locals.Read.NullableT);
                 il.Emit(OpCodes.Initobj, typeof(T?));
                 il.EmitLoadLocal(Locals.Read.NullableT);
                 il.Emit(OpCodes.Br_S, end);
@@ -138,6 +139,7 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                 il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
                 il.Emit(OpCodes.Brtrue_S, isNotNull);
+                il.EmitLoadLocalAddress(Locals.Read.NullableT);
                 il.Emit(OpCodes.Initobj, typeof(T?));
                 il.EmitLoadLocal(Locals.Read.NullableT);
                 il.Emit(OpCodes.Br_S, end);
