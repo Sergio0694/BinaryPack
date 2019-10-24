@@ -38,22 +38,25 @@ namespace BinaryPack.Serialization.Processors
             il.MarkLabel(isNullLoaded);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-            // if (object != null) { }
-            Label end = il.DefineLabel();
+            // if (object == null) return;
+            Label enumeration = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Brfalse_S, end);
+            il.Emit(OpCodes.Brtrue_S, enumeration);
+            il.Emit(OpCodes.Ret);
+            il.MarkLabel(enumeration);
 
             // using IEnumerator<T> enumerator = obj.GetEnumerator();
-            Label moveNext = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitCallvirt(typeof(IEnumerable<T>).GetMethod(nameof(IEnumerable<T>.GetEnumerator)));
             il.EmitStoreLocal(Locals.Write.IEnumeratorT);
             using (il.EmitTryBlockScope())
             {
+                Label moveNext = il.DefineLabel();
                 il.Emit(OpCodes.Br_S, moveNext);
 
                 // writer.Write(true);
                 Label loop = il.DefineLabel();
+                il.MarkLabel(loop);
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadInt32(1);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
@@ -88,7 +91,6 @@ namespace BinaryPack.Serialization.Processors
             }
 
             // return;
-            il.MarkLabel(end);
             il.Emit(OpCodes.Ret);
         }
 
