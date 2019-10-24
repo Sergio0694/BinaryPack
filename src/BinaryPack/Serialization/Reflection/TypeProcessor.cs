@@ -22,7 +22,12 @@ namespace BinaryPack.Serialization.Reflection
             [Pure]
             private static MethodInfo GetMethodInfo(Type objectType, string name)
             {
-                // Get the right processor type for the input object type
+                /* Get the right processor type for the input object type.
+                 * Note that not all possible types are supported here. For instance,
+                 * generic interfaces like IList<T> require special handling during
+                 * the serialization and deserialization, which is not limited to
+                 * just the use of a specific processor. For now, those case
+                 * are just marked as not supported. */
                 Type processorType;
                 if (objectType.IsGenericType &&
                     objectType.GetGenericTypeDefinition() == typeof(Nullable<>))
