@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.Contracts;
+using System.Linq;
 using BinaryPack.Attributes;
 
 namespace System.Reflection.Emit
@@ -320,6 +321,35 @@ namespace System.Reflection.Emit
         {
             il.Emit(OpCodes.Conv_U);
             il.Emit(OpCodes.Localloc);
+        }
+
+        /// <summary>
+        /// Creates a new try block scope that is automatically closed when it's not needed anymore
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <returns>An <see cref="IDisposable"/> instance that's responsible for closing the try scope</returns>
+        [Pure]
+        public static IDisposable EmitTryBlockScope(this ILGenerator il)
+        {
+            il.BeginExceptionBlock();
+
+            return new TryBlock(il);
+        }
+
+        /// <summary>
+        /// A <see langword="class"/> used as a proxy for the <see cref="EmitTryBlock"/> method
+        /// </summary>
+        private sealed class TryBlock : IDisposable
+        {
+            /// <summary>
+            /// The <see cref="ILGenerator"/> instance currently in use
+            /// </summary>
+            private readonly ILGenerator IL;
+
+            public TryBlock(ILGenerator il) => IL = il;
+
+            /// <inheritdoc/>
+            public void Dispose() => IL.EndExceptionBlock();
         }
     }
 }
