@@ -87,11 +87,6 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitCallvirt(typeof(IEnumerator).GetMethod(nameof(IEnumerator.MoveNext)));
                 il.Emit(OpCodes.Brtrue_S, loop);
 
-                // writer.Write(false);
-                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                il.EmitLoadInt32(0);
-                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
-
                 // finally { enumerator.Dispose(); }
                 il.BeginFinallyBlock();
                 il.EmitLoadLocal(Locals.Write.IEnumeratorT);
@@ -106,12 +101,12 @@ namespace BinaryPack.Serialization.Processors
         protected override void EmitDeserializer(ILGenerator il)
         {
             il.DeclareLocal(typeof(T).MakeArrayType());
-            il.DeclareLocal(typeof(T).MakeByRefType());
             il.DeclareLocals<Locals.Read>();
+            il.DeclareLocal(typeof(T).MakeByRefType());
 
             // int count = reader.Read<int>();
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
             il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Read.Count);
 
@@ -127,7 +122,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Read.Count);
             il.Emit(OpCodes.Newarr, typeof(T));
             il.Emit(OpCodes.Dup);
-            il.EmitLoadLocal(Locals.Read.ArrayT);
+            il.EmitStoreLocal(Locals.Read.ArrayT);
 
             // ref T r0 = ref array[0];
             il.EmitLoadInt32(0);

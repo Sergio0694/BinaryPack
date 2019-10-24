@@ -26,16 +26,15 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
+                /// The <typeparamref name="T"/> array that will contain the items being deserialized
+                /// </summary>
+                ArrayT,
+
+                /// <summary>
                 /// The number of items that were serialized from the original <see cref="System.Collections.Generic.ICollection{T}"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
                 Count,
-
-
-                /// <summary>
-                /// The <typeparamref name="T"/> array that will contain the items being deserialized
-                /// </summary>
-                ArrayT,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable for the loop counter
