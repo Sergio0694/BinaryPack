@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
@@ -47,45 +48,44 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitCallvirt(typeof(IEnumerable<T>).GetMethod(nameof(IEnumerable<T>.GetEnumerator)));
             il.EmitStoreLocal(Locals.Write.IEnumeratorT);
-            il.BeginExceptionBlock();
-            il.Emit(OpCodes.Br_S, moveNext);
+            using (il.EmitTryBlockScope())
+            {
+                il.Emit(OpCodes.Br_S, moveNext);
 
-            // writer.Write(true);
-            Label loop = il.DefineLabel();
-            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitLoadInt32(1);
-            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
+                // writer.Write(true);
+                Label loop = il.DefineLabel();
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitLoadInt32(1);
+                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-            // T item = enumerator.Current
-            il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-            il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
+                // T item = enumerator.Current
+                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
 
-            // writer.Write(item);
-            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
+                // writer.Write(item);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
 
-            // while (enumerator.MoveNext()) { }
-            il.MarkLabel(moveNext);
-            il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-            il.EmitCallvirt(typeof(IEnumerator<T>).GetMethod(nameof(IEnumerator<T>.MoveNext)));
-            il.Emit(OpCodes.Brtrue_S, loop);
+                // while (enumerator.MoveNext()) { }
+                il.MarkLabel(moveNext);
+                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                il.EmitCallvirt(typeof(IEnumerator).GetMethod(nameof(IEnumerator.MoveNext)));
+                il.Emit(OpCodes.Brtrue_S, loop);
 
-            // writer.Write(false);
-            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitLoadInt32(0);
-            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
-            il.Emit(OpCodes.Leave_S, end);
-            il.EndExceptionBlock();
+                // writer.Write(false);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitLoadInt32(0);
+                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-            // finally { enumerator?.Dispose(); }
-            Label endFinally = il.DefineLabel();
-            il.BeginFinallyBlock();
-            il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-            il.Emit(OpCodes.Brfalse_S, endFinally);
-            il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-            il.EmitCallvirt(typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose)));
-            il.MarkLabel(endFinally);
-            il.Emit(OpCodes.Endfinally);
+                // finally { enumerator?.Dispose(); }
+                il.BeginFinallyBlock();
+                Label endFinally = il.DefineLabel();
+                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                il.Emit(OpCodes.Brfalse_S, endFinally);
+                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                il.EmitCallvirt(typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose)));
+                il.MarkLabel(endFinally);
+            }
 
             // return;
             il.MarkLabel(end);
