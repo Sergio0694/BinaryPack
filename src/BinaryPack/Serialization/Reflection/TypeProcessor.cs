@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -16,16 +17,41 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for a dynamic serialization method for a given type
             /// </summary>
-            /// <param name="processorType">The type of processor to target, must be a generic version of a type inheriting from <see cref="Processors.Abstract.TypeProcessor{T}"/></param>
             /// <param name="objectType">The type of the item being handled by the requested processor</param>
             /// <param name="name">The name of property to retrieve from the processor instance</param>
             [Pure]
-            private static MethodInfo GetMethodInfo(Type processorType, Type objectType, string name)
+            private static MethodInfo GetMethodInfo(Type objectType, string name)
             {
-                Type genericType = processorType.MakeGenericType(objectType);
-                PropertyInfo instanceInfo = genericType.GetProperty(nameof(ArrayProcessor<object>.Instance)); // Guaranteed to be there for all processors
+                // Get the right processor type for the input object type
+                Type processorType;
+                if (objectType.IsGenericType &&
+                    objectType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    Type structType = objectType.GenericTypeArguments[0];
+                    processorType = typeof(NullableProcessor<>).MakeGenericType(structType);
+                }
+                else if (objectType == typeof(string))
+                {
+                    processorType = typeof(StringProcessor);
+                }
+                else if (objectType.IsArray &&
+                         objectType == objectType.GetElementType().MakeArrayType())
+                {
+                    Type elementType = objectType.GetElementType();
+                    processorType = typeof(ArrayProcessor<>).MakeGenericType(elementType);
+                }
+                else if (objectType.IsGenericType &&
+                            objectType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    Type itemType = objectType.GenericTypeArguments[0];
+                    processorType = typeof(ListProcessor<>).MakeGenericType(itemType);
+                }
+                else processorType = typeof(ObjectProcessor<>).MakeGenericType(objectType);
+
+                // Access the static TypeProcessor<T> instance to get the requested dynamic method
+                PropertyInfo instanceInfo = processorType.GetProperty(nameof(ArrayProcessor<object>.Instance)); // Guaranteed to be there for all processors
                 object processorInstance = instanceInfo.GetValue(null);
-                FieldInfo fieldInfo = genericType.GetField(name);
+                FieldInfo fieldInfo = processorType.GetField(name);
                 object genericMethod = fieldInfo.GetValue(processorInstance);
                 PropertyInfo propertyInfo = genericMethod.GetType().GetProperty(nameof(DynamicMethod<Action>.MethodInfo));
 
@@ -35,18 +61,16 @@ namespace BinaryPack.Serialization.Reflection
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic serializer of a given type
             /// </summary>
-            /// <param name="processorType">The type of processor to target, must be a generic version of a type inheriting from <see cref="Processors.Abstract.TypeProcessor{T}"/></param>
             /// <param name="objectType">The type of the item being handled by the requested processor</param>
             [Pure]
-            public static MethodInfo SerializerInfo(Type processorType, Type objectType) => GetMethodInfo(processorType, objectType, nameof(ArrayProcessor<object>.SerializerInfo));
+            public static MethodInfo SerializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(ArrayProcessor<object>.SerializerInfo));
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic deserializer of a given type
             /// </summary>
-            /// <param name="processorType">The type of processor to target, must be a generic version of a type inheriting from <see cref="Processors.Abstract.TypeProcessor{T}"/></param>
             /// <param name="objectType">The type of the item being handled by the requested processor</param>
             [Pure]
-            public static MethodInfo DeserializerInfo(Type processorType, Type objectType) => GetMethodInfo(processorType, objectType, nameof(ArrayProcessor<object>.DeserializerInfo));
+            public static MethodInfo DeserializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(ArrayProcessor<object>.DeserializerInfo));
         }
     }
 }

@@ -86,11 +86,11 @@ namespace BinaryPack.Serialization.Processors
                 }
                 else
                 {
-                    // ObjectProcessor<T>.Serialize(obj.value, ref writer);
+                    // TypeProcessor<T>.Serializer(obj.value, ref writer);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(ValueField);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(T)));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(T)));
                 }
 
                 il.MarkLabel(isNull);

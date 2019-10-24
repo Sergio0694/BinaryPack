@@ -69,7 +69,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(NullableProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType));
                 }
                 else if (property.PropertyType == typeof(string))
                 {
@@ -90,7 +90,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType));
                 }
                 else if (property.PropertyType.IsGenericType &&
                          property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
@@ -100,7 +100,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType));
                 }
                 else if (property.PropertyType.IsInterface &&
                          property.PropertyType.IsGenericType &&
@@ -127,7 +127,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
                     // else if (obj.Property is T[] array) ArrayProcessor<T>.Instance.Serializer(array, stream);
@@ -139,7 +139,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0].MakeArrayType()));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
                     // else IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
@@ -155,7 +155,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), property.PropertyType));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType));
                 }
             }
 
@@ -215,7 +215,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke NullableProcessor<T> to read the T? value
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(NullableProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType == typeof(string))
@@ -231,7 +231,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke ArrayProcessor<T> to read the TItem[] array
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ArrayProcessor<>), property.PropertyType.GetElementType()));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType.IsGenericType &&
@@ -240,7 +240,7 @@ namespace BinaryPack.Serialization.Processors
                     // Invoke ListProcessor<T> to read the List<T> list
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
                 else if (property.PropertyType.IsInterface &&
@@ -255,7 +255,7 @@ namespace BinaryPack.Serialization.Processors
                      * during the serialization pass (eg. it could have been a T[] array, or a HashSet<T>). */
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ListProcessor<>), property.PropertyType.GenericTypeArguments[0]));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
                     il.EmitWriteMember(property);
                 }
                 else
@@ -263,7 +263,7 @@ namespace BinaryPack.Serialization.Processors
                     // Fallback to another ObjectProcessor<T> for all other types
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), property.PropertyType));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(property.PropertyType));
                     il.EmitWriteMember(property);
                 }
             }

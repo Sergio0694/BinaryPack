@@ -84,18 +84,13 @@ namespace BinaryPack.Serialization.Processors
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
 
-                // ...(Unsafe.Add(ref r0, i), ref writer);
+                // TypeProcessor<T>.Serialize(Unsafe.Add(ref r0, i), ref writer);
                 il.EmitLoadLocal(Locals.Write.RefT);
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitAddOffset(typeof(T));
                 il.EmitLoadFromAddress(typeof(T));
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-
-                // StringProcessor/ObjectProcessor<T>.Serialize(...);
-                MethodInfo methodInfo = typeof(T) == typeof(string)
-                    ? StringProcessor.Instance.SerializerInfo.MethodInfo
-                    : KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(T));
-                il.EmitCall(methodInfo);
+                il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(T)));
 
                 // i++;
                 il.EmitLoadLocal(Locals.Write.I);
@@ -186,17 +181,12 @@ namespace BinaryPack.Serialization.Processors
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
 
-                // StringProcessor/ObjectProcessor<T>.Deserialize
-                MethodInfo methodInfo = typeof(T) == typeof(string)
-                    ? StringProcessor.Instance.DeserializerInfo.MethodInfo
-                    : KnownMembers.TypeProcessor.DeserializerInfo(typeof(ObjectProcessor<>), typeof(T));
-
                 // Unsafe.Add(ref r0, i) = ...(ref reader);
                 il.EmitLoadLocal(Locals.Read.RefT);
                 il.EmitLoadLocal(Locals.Read.I);
                 il.EmitAddOffset(typeof(T));
                 il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                il.EmitCall(methodInfo);
+                il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
                 il.EmitStoreToAddress(typeof(T));
 
                 // i++;
