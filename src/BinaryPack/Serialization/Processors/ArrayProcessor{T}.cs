@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection.Emit;
+using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -10,6 +11,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
+    [ProcessorId(0)]
     internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
     {
         /// <summary>

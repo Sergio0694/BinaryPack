@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -12,6 +13,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="IEnumerable{T}"/> types
     /// </summary>
     /// <typeparam name="T">The type of items in <see cref="IEnumerable{T}"/> instances to serialize and deserialize</typeparam>
+    [ProcessorId(2)]
     internal sealed partial class IEnumerableProcessor<T> : TypeProcessor<IEnumerable<T>?>
     {
         /// <summary>
