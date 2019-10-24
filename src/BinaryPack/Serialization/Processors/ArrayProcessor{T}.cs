@@ -47,7 +47,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // if (size > 0) { }
+            // if (length > 0) { }
             Label end = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitLoadInt32(0);
