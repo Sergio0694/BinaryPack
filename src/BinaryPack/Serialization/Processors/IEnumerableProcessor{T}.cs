@@ -30,7 +30,7 @@ namespace BinaryPack.Serialization.Processors
                 isNullLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.Emit(OpCodes.Brtrue_S);
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.EmitLoadInt32(0);
             il.Emit(OpCodes.Br_S, isNullLoaded);
             il.MarkLabel(isNotNull);
@@ -80,14 +80,10 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadInt32(0);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-                // finally { enumerator?.Dispose(); }
+                // finally { enumerator.Dispose(); }
                 il.BeginFinallyBlock();
-                Label endFinally = il.DefineLabel();
-                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-                il.Emit(OpCodes.Brfalse_S, endFinally);
                 il.EmitLoadLocal(Locals.Write.IEnumeratorT);
                 il.EmitCallvirt(typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose)));
-                il.MarkLabel(endFinally);
             }
 
             // return;
