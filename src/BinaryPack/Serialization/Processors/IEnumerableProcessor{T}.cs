@@ -61,12 +61,10 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadInt32(1);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-                // T item = enumerator.Current
+                // writer.Write(enumerator.Current);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitLoadLocal(Locals.Write.IEnumeratorT);
                 il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
-
-                // writer.Write(item);
-                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
 
                 // while (enumerator.MoveNext()) { }
