@@ -13,32 +13,33 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="IEnumerable{T}"/> types
     /// </summary>
     /// <typeparam name="T">The type of items in <see cref="IEnumerable{T}"/> instances to serialize and deserialize</typeparam>
-    [ProcessorId(3)]
-    internal sealed partial class IEnumerableProcessor<T> : TypeProcessor<IEnumerable<T>?>
+    [ProcessorId(2)]
+    internal sealed partial class ICollectionProcessor<T> : TypeProcessor<ICollection<T>?>
     {
         /// <summary>
         /// Gets the singleton <see cref="IEnumerableProcessor{T}"/> instance to use
         /// </summary>
-        public static IEnumerableProcessor<T> Instance { get; } = new IEnumerableProcessor<T>();
+        public static ICollectionProcessor<T> Instance { get; } = new ICollectionProcessor<T>();
 
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
             il.DeclareLocal(typeof(IEnumerator<T>));
 
-            // writer.Write(obj != null);
+            // writer.Write(obj?.Count ?? -1);
             Label
                 isNotNull = il.DefineLabel(),
-                isNullLoaded = il.DefineLabel();
+                countLoaded = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Brtrue_S, isNotNull);
-            il.EmitLoadInt32(0);
-            il.Emit(OpCodes.Br_S, isNullLoaded);
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Br_S, countLoaded);
             il.MarkLabel(isNotNull);
-            il.EmitLoadInt32(1);
-            il.MarkLabel(isNullLoaded);
-            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
+            il.EmitLoadArgument(Arguments.Write.T);
+            il.EmitReadMember(typeof(ICollection<T>).GetProperty(nameof(ICollection<T>.Count)));
+            il.MarkLabel(countLoaded);
+            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
             // if (object == null) return;
             Label enumeration = il.DefineLabel();
@@ -53,19 +54,16 @@ namespace BinaryPack.Serialization.Processors
             il.EmitStoreLocal(Locals.Write.IEnumeratorT);
             using (il.EmitTryBlockScope())
             {
-                Label moveNext = il.DefineLabel();
+                // Loop start
+                Label
+                    loop = il.DefineLabel(),
+                    moveNext = il.DefineLabel();
                 il.Emit(OpCodes.Br_S, moveNext);
-
-                // writer.Write(true);
-                Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
-                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                il.EmitLoadInt32(1);
-                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-                /* As usual, we handle unmanaged structs with a fast path. If that is the case,
-                 * we can just write the current enumerator value directly to the target BinaryWriter.
-                 * Otherwise, we use the appropriate TypeProcessor<T> instance to serialize the current value. */
+                /* Same item serialization used in the IEnumerableProcessor<T> type: we write
+                 * unmanaged structs directly and invoke the right TypeProcessor<T> instance
+                 * to serialize all other types. */
                 if (typeof(T).IsUnmanaged())
                 {
                     // writer.Write(enumerator.Current);
@@ -107,44 +105,65 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            il.DeclareLocal(typeof(List<T>));
+            il.DeclareLocal(typeof(T).MakeArrayType());
+            il.DeclareLocal(typeof(T).MakeByRefType());
+            il.DeclareLocals<Locals.Read>();
 
-            // if (!reader.Read<bool>()) return null;
-            Label isNotNull = il.DefineLabel();
+            // int count = reader.Read<int>();
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
-            il.Emit(OpCodes.Brtrue_S, isNotNull);
+            il.Emit(OpCodes.Dup);
+            il.EmitStoreLocal(Locals.Read.Count);
+
+            // if (count == -1) return null;
+            Label isNotNull = il.DefineLabel();
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
             il.MarkLabel(isNotNull);
 
-            // List<T> list = new List<T>();
-            il.Emit(OpCodes.Newobj, typeof(List<T>).GetConstructor(Type.EmptyTypes));
-            il.EmitStoreLocal(Locals.Read.ListT);
+            // T[] array = new T[count];
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.Emit(OpCodes.Newarr, typeof(T));
+            il.Emit(OpCodes.Dup);
+            il.EmitLoadLocal(Locals.Read.ArrayT);
 
-            // Loop setup
-            Label
-                loop = il.DefineLabel(),
-                check = il.DefineLabel();
+            // ref T r0 = ref array[0];
+            il.EmitLoadInt32(0);
+            il.Emit(OpCodes.Ldelema, typeof(T));
+            il.EmitStoreLocal(Locals.Read.RefT);
+
+            // for (int i = 0; i < count; i++) { }
+            Label check = il.DefineLabel();
+            il.EmitLoadInt32(0);
+            il.EmitStoreLocal(Locals.Read.I);
             il.Emit(OpCodes.Br_S, check);
+            Label loop = il.DefineLabel();
             il.MarkLabel(loop);
 
-            // list.Add(reader.Read<T>()/TypeProcessor<T>.Deserializer(ref reader));
-            il.EmitLoadLocal(Locals.Read.ListT);
+            // Unsafe.Add(ref r0, i) = TypeProcessor.Deserializer(ref reader);
+            il.EmitLoadLocal(Locals.Read.RefT);
+            il.EmitLoadLocal(Locals.Read.I);
+            il.EmitAddOffset(typeof(T));
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(typeof(T).IsUnmanaged()
-                ? KnownMembers.BinaryReader.ReadT(typeof(T))
-                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
-            il.EmitCallvirt(typeof(List<T>).GetMethod(nameof(List<T>.Add)));
+            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
+            il.EmitStoreToAddress(typeof(T));
 
-            // while (reader.Read<bool>()) { }
+            // i++;
+            il.EmitLoadLocal(Locals.Read.I);
+            il.EmitLoadInt32(1);
+            il.Emit(OpCodes.Add);
+            il.EmitStoreLocal(Locals.Read.I);
+
+            // Loop check
             il.MarkLabel(check);
-            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
-            il.Emit(OpCodes.Brtrue_S, loop);
+            il.EmitLoadLocal(Locals.Read.I);
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.Emit(OpCodes.Blt_S, loop);
 
             // return list;
-            il.EmitLoadLocal(Locals.Read.ListT);
+            il.EmitLoadLocal(Locals.Read.ArrayT);
             il.Emit(OpCodes.Ret);
         }
     }
