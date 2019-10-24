@@ -85,7 +85,7 @@ namespace BinaryPack.Serialization.Processors
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
 
-                // TypeProcessor<T>.Serialize(Unsafe.Add(ref r0, i), ref writer);
+                // TypeProcessor<T>.Serializer(Unsafe.Add(ref r0, i), ref writer);
                 il.EmitLoadLocal(Locals.Write.RefT);
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitAddOffset(typeof(T));

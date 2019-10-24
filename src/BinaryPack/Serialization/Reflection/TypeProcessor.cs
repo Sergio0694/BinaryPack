@@ -53,6 +53,13 @@ namespace BinaryPack.Serialization.Reflection
                 }
                 else if (objectType.IsInterface &&
                          objectType.IsGenericType &&
+                         objectType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                {
+                    Type itemType = objectType.GenericTypeArguments[0];
+                    processorType = typeof(ICollectionProcessor<>).MakeGenericType(itemType);
+                }
+                else if (objectType.IsInterface &&
+                         objectType.IsGenericType &&
                          objectType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
                     Type itemType = objectType.GenericTypeArguments[0];
