@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -107,46 +108,73 @@ namespace BinaryPack.Serialization.Processors
                          (property.PropertyType.GetGenericTypeDefinition() == typeof(IList<>) ||
                           property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>) ||
                           property.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>) ||
-                          property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
+                          property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>) ||
+                          property.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
                 {
                     /* Sixth special case, for generic interface types. This case only applies to properties
                      * of one of the generic interfaces mentioned above, and it includes two fast paths and a
                      * fallback path. The fast paths are for List<T> values, which are serialized with the
                      * ListProcessor<T> type, and for T[] values, which just use the ArrayProcessor<T> type.
-                     * All other values fallback to the IEnumerableProcessor<T> type. */
+                     * All other values fallback to the IEnumerableProcessor<T> type.
+                     * Before serializing each value, we need to add a marker to indicate the actual processor
+                     * that was used to serialize the property value, otherwise it wouldn't be possible to
+                     * read it back later on correctly. 0 stand for either a List<T> or a T[] value, and 1
+                     * indicates a generic IEnumerable<T> instance, using the IEnumerableProcessor<T> serializer. */
                     Label
                         isNotList = il.DefineLabel(),
                         fallback = il.DefineLabel(),
                         propertyHandled = il.DefineLabel();
 
-                    // if (obj.Property is List<T> list) ListProcessor<T>.Instance.Serializer(list, stream);
+                    // if (obj.Property is List<T> list) { }
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Isinst, typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0]));
                     il.Emit(OpCodes.Brfalse_S, isNotList);
+
+                    // writer.Write<byte>(ListProcessor<T>.Id);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadInt32(typeof(ListProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                    // ListProcessor<T>.Instance.Serializer(list, stream);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
-                    // else if (obj.Property is T[] array) ArrayProcessor<T>.Instance.Serializer(array, stream);
+                    // else if (obj.Property is T[] array) { }
                     il.MarkLabel(isNotList);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.Emit(OpCodes.Isinst, property.PropertyType.GenericTypeArguments[0].MakeArrayType());
                     il.Emit(OpCodes.Brfalse_S, fallback);
+
+                    // writer.Write<byte>(ArrayProcessor<T>.Id);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadInt32(typeof(ArrayProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                    // ArrayProcessor<T>.Instance.Serializer(array, stream);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(property.PropertyType.GenericTypeArguments[0].MakeArrayType()));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
-                    // else IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
+                    // else { }
                     il.MarkLabel(fallback);
-                    il.Emit(OpCodes.Ldnull);
-                    il.Emit(OpCodes.Throw); // TODO
 
+                    // writer.Write<byte>(IEnumerableProcessor<T>.Id);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadInt32(typeof(IEnumerableProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                    // IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(property);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IEnumerable<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
                     il.MarkLabel(propertyHandled);
                 }
                 else
@@ -248,15 +276,47 @@ namespace BinaryPack.Serialization.Processors
                          (property.PropertyType.GetGenericTypeDefinition() == typeof(IList<>) ||
                           property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>) ||
                           property.PropertyType.GetGenericTypeDefinition() == typeof(ICollection<>) ||
-                          property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)))
+                          property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>) ||
+                          property.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
                 {
-                    /* When deserializing a property of one of these interface types, the ListProcessor<T> is
-                     * always used, regardless of the actual underlying type that the property originally had
-                     * during the serialization pass (eg. it could have been a T[] array, or a HashSet<T>). */
+                    /* When deserializing a property of one of these interface types, we first load
+                     * a byte from the reader, which includes the id of the TypeSerializer<T> instance that
+                     * was used to serialize the property value. The ids of all the processors involved
+                     * are numbered in sequence and start at 0, so we can use an IL switch to avoid having
+                     * a series of conditional jumps in the JITted code, saving some time. */
+                    Label
+                        list = il.DefineLabel(),
+                        array = il.DefineLabel(),
+                        iEnumerable = il.DefineLabel(),
+                        end = il.DefineLabel();
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(byte)));
+                    il.Emit(OpCodes.Switch, new[] { list, array });
+                    il.Emit(OpCodes.Br_S, iEnumerable);
+
+                    // case ListProcessor<T>.Id: obj.Property = ListProcessor<T>.Deserializer(ref reader);
+                    il.MarkLabel(list);
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(List<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
                     il.EmitWriteMember(property);
+                    il.Emit(OpCodes.Br_S, end);
+
+                    // case ArrayProcessor<T>.Id: obj.Property = ArrayProcessor<T>.Deserializer(ref reader);
+                    il.MarkLabel(array);
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(property.PropertyType.GenericTypeArguments[0].MakeArrayType()));
+                    il.EmitWriteMember(property);
+                    il.Emit(OpCodes.Br_S, end);
+
+                    // default: obj.Property = IEnumerableProcessor<T>.Deserializer(ref reader);
+                    il.MarkLabel(iEnumerable);
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IEnumerable<>).MakeGenericType(property.PropertyType.GenericTypeArguments[0])));
+                    il.EmitWriteMember(property);
+                    il.MarkLabel(end);
                 }
                 else
                 {

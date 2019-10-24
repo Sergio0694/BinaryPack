@@ -11,7 +11,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    [ProcessorId(0)]
+    [ProcessorId(1)]
     internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
     {
         /// <summary>

@@ -13,7 +13,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="List{T}"/> types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
-    [ProcessorId(1)]
+    [ProcessorId(0)]
     internal sealed partial class ListProcessor<T> : TypeProcessor<List<T>?>
     {
         /// <summary>
