@@ -46,10 +46,17 @@ namespace BinaryPack.Serialization.Reflection
                     processorType = typeof(ArrayProcessor<>).MakeGenericType(elementType);
                 }
                 else if (objectType.IsGenericType &&
-                            objectType.GetGenericTypeDefinition() == typeof(List<>))
+                         objectType.GetGenericTypeDefinition() == typeof(List<>))
                 {
                     Type itemType = objectType.GenericTypeArguments[0];
                     processorType = typeof(ListProcessor<>).MakeGenericType(itemType);
+                }
+                else if (objectType.IsInterface &&
+                         objectType.IsGenericType &&
+                         objectType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    Type itemType = objectType.GenericTypeArguments[0];
+                    processorType = typeof(IEnumerableProcessor<>).MakeGenericType(itemType);
                 }
                 else processorType = typeof(ObjectProcessor<>).MakeGenericType(objectType);
 

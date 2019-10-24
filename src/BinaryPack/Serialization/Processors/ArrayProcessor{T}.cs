@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection.Emit;
+using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -10,6 +11,7 @@ namespace BinaryPack.Serialization.Processors
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
+    [ProcessorId(1)]
     internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
     {
         /// <summary>
@@ -47,7 +49,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // if (size > 0) { }
+            // if (length > 0) { }
             Label end = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitLoadInt32(0);
@@ -83,7 +85,7 @@ namespace BinaryPack.Serialization.Processors
                 Label loop = il.DefineLabel();
                 il.MarkLabel(loop);
 
-                // TypeProcessor.Serialize(Unsafe.Add(ref r0, i), ref writer);
+                // TypeProcessor<T>.Serialize(Unsafe.Add(ref r0, i), ref writer);
                 il.EmitLoadLocal(Locals.Write.RefT);
                 il.EmitLoadLocal(Locals.Write.I);
                 il.EmitAddOffset(typeof(T));
