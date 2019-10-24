@@ -61,11 +61,25 @@ namespace BinaryPack.Serialization.Processors
                 il.EmitLoadInt32(1);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(bool)));
 
-                // writer.Write(enumerator.Current);
-                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-                il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
-                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
+                /* As usual, handle unmanaged structs with a fast path. If that is the case,
+                 * just write the current enumerator value directly to the target BinaryWriter.
+                 * Otherwise, use the appropriate TypeProcessor<T> instance to serialize the current value. */
+                if (typeof(T).IsUnmanaged())
+                {
+                    // writer.Write(enumerator.Current);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                    il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
+                }
+                else
+                {
+                    // TypeProcessor<T>.Serialize(enumerator.Current, ref writer);
+                    il.EmitLoadLocal(Locals.Write.IEnumeratorT);
+                    il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(T)));
+                }
 
                 // while (enumerator.MoveNext()) { }
                 il.MarkLabel(moveNext);
