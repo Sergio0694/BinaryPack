@@ -100,6 +100,11 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
+            /* Unlinke with IEnumerable<T> collections, we don't need the
+             * additional overhead of a List<T> when dealing with serialized
+             * ICollection<T> instances: since we have the total number of items
+             * we can just create a T[] array and then assign each item by shifting
+             * a ref T variable, which also removes bounds checks in the JITted code. */
             il.DeclareLocal(typeof(T).MakeArrayType());
             il.DeclareLocals<Locals.Read>();
             il.DeclareLocal(typeof(T).MakeByRefType());
@@ -121,10 +126,15 @@ namespace BinaryPack.Serialization.Processors
             // T[] array = new T[count];
             il.EmitLoadLocal(Locals.Read.Count);
             il.Emit(OpCodes.Newarr, typeof(T));
-            il.Emit(OpCodes.Dup);
             il.EmitStoreLocal(Locals.Read.ArrayT);
 
+            // if (count > 0) { }
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.Emit(OpCodes.Brfalse_S, end);
+
             // ref T r0 = ref array[0];
+            il.EmitLoadLocal(Locals.Read.ArrayT);
             il.EmitLoadInt32(0);
             il.Emit(OpCodes.Ldelema, typeof(T));
             il.EmitStoreLocal(Locals.Read.RefT);
@@ -137,12 +147,14 @@ namespace BinaryPack.Serialization.Processors
             Label loop = il.DefineLabel();
             il.MarkLabel(loop);
 
-            // Unsafe.Add(ref r0, i) = TypeProcessor.Deserializer(ref reader);
+            // Unsafe.Add(ref r0, i) = reader.Read<T>()/TypeProcessor<T>.Deserializer(ref reader)
             il.EmitLoadLocal(Locals.Read.RefT);
             il.EmitLoadLocal(Locals.Read.I);
             il.EmitAddOffset(typeof(T));
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
+            il.EmitCall(typeof(T).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(T))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
             il.EmitStoreToAddress(typeof(T));
 
             // i++;
@@ -157,7 +169,8 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadLocal(Locals.Read.Count);
             il.Emit(OpCodes.Blt_S, loop);
 
-            // return list;
+            // return array;
+            il.MarkLabel(end);
             il.EmitLoadLocal(Locals.Read.ArrayT);
             il.Emit(OpCodes.Ret);
         }
