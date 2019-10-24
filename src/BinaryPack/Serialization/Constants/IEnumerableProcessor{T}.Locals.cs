@@ -12,6 +12,9 @@
             /// </summary>
             public enum Write
             {
+                /// <summary>
+                /// The <see cref="System.Collections.Generic.IEnumerator{T}"/> instance used to enumerate over the input items
+                /// </summary>
                 IEnumeratorT
             }
 
@@ -20,6 +23,10 @@
             /// </summary>
             public enum Read
             {
+                /// <summary>
+                /// The <see cref="System.Collections.Generic.List{T}"/> instance to accumulate new items
+                /// </summary>
+                ListT
             }
         }
     }

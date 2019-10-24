@@ -105,7 +105,44 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
+            il.DeclareLocal(typeof(List<T>));
+
+            // if (!reader.Read<bool>()) return null;
+            Label isNotNull = il.DefineLabel();
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
+            il.Emit(OpCodes.Brtrue_S, isNotNull);
             il.Emit(OpCodes.Ldnull);
+            il.Emit(OpCodes.Ret);
+            il.MarkLabel(isNotNull);
+
+            // List<T> list = new List<T>();
+            il.Emit(OpCodes.Newobj, typeof(List<T>).GetConstructor(Type.EmptyTypes));
+            il.EmitStoreLocal(Locals.Read.ListT);
+
+            // Loop setup
+            Label
+                loop = il.DefineLabel(),
+                check = il.DefineLabel();
+            il.Emit(OpCodes.Br_S, check);
+            il.MarkLabel(loop);
+
+            // list.Add(reader.Read<T>()/TypeProcessor<T>.Deserializer(ref reader));
+            il.EmitLoadLocal(Locals.Read.ListT);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(typeof(T).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(T))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
+            il.EmitCallvirt(typeof(List<T>).GetMethod(nameof(List<T>.Add)));
+
+            // while (reader.Read<bool>()) { }
+            il.MarkLabel(check);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(bool)));
+            il.Emit(OpCodes.Brtrue_S, loop);
+
+            // return list;
+            il.EmitLoadLocal(Locals.Read.ListT);
             il.Emit(OpCodes.Ret);
         }
     }
