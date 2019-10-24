@@ -52,5 +52,8 @@ namespace BinaryPack.Unit.Internals
         [TestMethod]
         public void UnmanagedArray() => Test<UnmanagedArrayModel>();
 
+        [TestMethod]
+        public void ValidationReferenceType() => Test<ValidationReferenceTypeModel>();
+
     }
 }

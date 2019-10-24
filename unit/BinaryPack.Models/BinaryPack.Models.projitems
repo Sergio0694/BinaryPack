@@ -18,5 +18,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)NestedHierarchySimpleModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)NeuralNetworkLayerModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UnmanagedArrayModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ValidationReferenceTypeModel.cs" />
   </ItemGroup>
 </Project>
