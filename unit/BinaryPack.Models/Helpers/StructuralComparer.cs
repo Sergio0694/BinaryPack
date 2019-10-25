@@ -20,7 +20,7 @@ namespace BinaryPack.Models.Helpers
         /// <param name="b">The second <typeparamref name="T"/> value to compare</param>
         /// <returns><see langword="true"/> if both instances are either <see langword="null"/> or matching, <see langword="false"/> otherwise</returns>
         [Pure]
-        public static bool IsMatch<T>(T a, T b) where T : IEquatable<T>
+        public static bool IsMatch<T>(T? a, T? b) where T : class, IEquatable<T>
         {
             if (a != null && b != null) return a.Equals(b);
             return a == null && b == null;
@@ -55,8 +55,8 @@ namespace BinaryPack.Models.Helpers
                 if (a.Count() != b.Count()) return false;
                 foreach ((T first, T second) in a.Zip(b))
                 {
-                    if (first != null && second != null && !first.Equals(second) ||
-                        !(first == null && second == null)) return false;
+                    if (!(first != null && second != null && first.Equals(second) ||
+                          first == null && second == null)) return false;
                 }
 
                 return true;
@@ -84,8 +84,8 @@ namespace BinaryPack.Models.Helpers
                 foreach ((TKey k, TValue aValue) in a)
                 {
                     if (!b.TryGetValue(k, out TValue bValue)) return false;
-                    if (aValue != null && bValue != null && !aValue.Equals(bValue) ||
-                        !(aValue == null && bValue == null)) return false;
+                    if (!(aValue != null && bValue != null && aValue.Equals(bValue) ||
+                          aValue == null && bValue == null)) return false;
                 }
 
                 return true;
