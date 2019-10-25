@@ -71,7 +71,7 @@ namespace BinaryPack.Serialization.Processors
                           memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
                           memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>))))
                 {
-                    /* Second special case, for generic interface types. This case only applies to properties
+                    /* Second special case, for generic interface enumerable types. This case only applies to properties
                      * of one of the generic interfaces mentioned above, and it includes two fast paths and a
                      * fallback path. The fast paths are for List<T> values, which are serialized with the
                      * ListProcessor<T> type, and for T[] values, which just use the ArrayProcessor<T> type.
@@ -92,7 +92,7 @@ namespace BinaryPack.Serialization.Processors
                     il.Emit(OpCodes.Isinst, typeof(List<>).MakeGenericType(itemType));
                     il.Emit(OpCodes.Brfalse_S, isNotList);
 
-                    // writer.Write<byte>(ListProcessor<T>.Id);
+                    // writer.Write<byte>(ListProcessor<>.Id);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadInt32(typeof(ListProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
@@ -111,7 +111,7 @@ namespace BinaryPack.Serialization.Processors
                     il.Emit(OpCodes.Isinst, itemType.MakeArrayType());
                     il.Emit(OpCodes.Brfalse_S, isNotArray);
 
-                    // writer.Write<byte>(ArrayProcessor<T>.Id);
+                    // writer.Write<byte>(ArrayProcessor<>.Id);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadInt32(typeof(ArrayProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
@@ -137,7 +137,7 @@ namespace BinaryPack.Serialization.Processors
                     if (memberInfo.GetMemberType() == typeof(ICollection<>).MakeGenericType(itemType) ||
                         typeof(ICollection<>).MakeGenericType(itemType).IsAssignableFrom(memberInfo.GetMemberType()))
                     {
-                        // writer.Write<byte>(ICollectionProcessor<T>.Id);
+                        // writer.Write<byte>(ICollectionProcessor<>.Id);
                         il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                         il.EmitLoadInt32(typeof(ICollectionProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                         il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
@@ -150,7 +150,7 @@ namespace BinaryPack.Serialization.Processors
                         il.Emit(OpCodes.Br_S, propertyHandled);
                     }
 
-                    // writer.Write<byte>(IEnumerableProcessor<T>.Id);
+                    // writer.Write<byte>(IEnumerableProcessor<>.Id);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadInt32(typeof(IEnumerableProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
@@ -160,6 +160,57 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IEnumerable<>).MakeGenericType(memberInfo.GetMemberType().GenericTypeArguments[0])));
+                    il.MarkLabel(propertyHandled);
+                }
+                else if (memberInfo.GetMemberType().IsInterface &&
+                         memberInfo.GetMemberType().IsGenericType &&
+                         (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>))))
+                {
+                    /* Third special case, for generic interface dictionary types. As with the enumerable
+                     * interfaces, we first check whether the current property value is a Dictionary<K, V>
+                     * instance. If that's the case, we use the DictionaryProcessor<K, V> type, otherwise we
+                     * fallback to the IDictionaryProcessor<K, V> type. Other interfaces are not currently supported. */
+                    Type[] generics = memberInfo.GetMemberType().GenericTypeArguments;
+                    Label
+                        isNotDictionary = il.DefineLabel(),
+                        propertyHandled = il.DefineLabel();
+
+                    // if (obj.Property is Dictionary<K, V> dictionary) { }
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(memberInfo);
+                    il.Emit(OpCodes.Isinst, typeof(Dictionary<,>).MakeGenericType(generics));
+                    il.Emit(OpCodes.Brfalse_S, isNotDictionary);
+
+                    // writer.Write<byte>(DictionaryProcessor<,>.Id);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadInt32(typeof(ListProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                    // DictionaryProcessor<K, V>.Instance.Serializer(dictionary, stream);
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(memberInfo);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
+                    il.Emit(OpCodes.Br_S, propertyHandled);
+
+                    // IDictionary<K, V> support
+                    il.MarkLabel(isNotDictionary);
+                    if (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)))
+                    {
+                        // writer.Write<byte>(IDictionaryProcessor<,>.Id);
+                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                        il.EmitLoadInt32(typeof(IDictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                        il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                        // IDictionaryProcessor<K, V>.Instance.Serializer(obj.Property, stream);
+                        il.EmitLoadArgument(Arguments.Write.T);
+                        il.EmitReadMember(memberInfo);
+                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                        il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
+                    }
+                    else throw new NotSupportedException("The IReadOnlyDictionary<TKey, TValue> interface is not supported");
+                    
                     il.MarkLabel(propertyHandled);
                 }
                 else
@@ -277,6 +328,37 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IEnumerable<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
                     il.MarkLabel(end);
+                }
+                else if (memberInfo.GetMemberType().IsInterface &&
+                         memberInfo.GetMemberType().IsGenericType &&
+                         (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>))))
+                {
+                    // if (reader.Read<bool>() == DictionaryProcessor<,>.Id) { }
+                    Type[] generics = memberInfo.GetMemberType().GenericTypeArguments;
+                    Label
+                        isNotDictionary = il.DefineLabel(),
+                        end = il.DefineLabel();
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(byte)));
+                    il.EmitLoadInt32(typeof(DictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.Emit(OpCodes.Bne_Un_S, isNotDictionary);
+
+                    // Dictionary<K, V> dictionary = DictionaryProcessor<K, V>.Deserializer(ref reader);
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
+                    il.Emit(OpCodes.Br_S, end);
+
+                    // Dictionary<K, V> dictionary = IDictionaryProcessor<K, V>.Deserializer(ref reader);
+                    il.MarkLabel(isNotDictionary);
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IDictionary<,>).MakeGenericType(generics)));
+
+                    // obj.Property = dictionary;
+                    il.MarkLabel(end);
+                    il.EmitWriteMember(memberInfo);
                 }
                 else
                 {

@@ -68,10 +68,15 @@ namespace BinaryPack.Serialization.Reflection
                 else if (objectType.IsGenericType &&
                          objectType.IsGenericType(typeof(Dictionary<,>)))
                 {
-                    Type
-                        keyType = objectType.GenericTypeArguments[0],
-                        valueType = objectType.GenericTypeArguments[1];
-                    processorType = typeof(DictionaryProcessor<,>).MakeGenericType(keyType, valueType);
+                    Type[] generics = objectType.GenericTypeArguments;
+                    processorType = typeof(DictionaryProcessor<,>).MakeGenericType(generics);
+                }
+                else if (objectType.IsInterface &&
+                         objectType.IsGenericType &&
+                         objectType.IsGenericType(typeof(IDictionary<,>)))
+                {
+                    Type[] generics = objectType.GenericTypeArguments;
+                    processorType = typeof(IDictionaryProcessor<,>).MakeGenericType(generics);
                 }
                 else processorType = typeof(ObjectProcessor<>).MakeGenericType(objectType);
 
