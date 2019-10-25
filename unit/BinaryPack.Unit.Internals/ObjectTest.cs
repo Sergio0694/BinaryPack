@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BinaryPack.Models;
+using BinaryPack.Models.Helpers;
 using BinaryPack.Models.Interfaces;
 using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
@@ -27,8 +28,7 @@ namespace BinaryPack.Unit.Internals
             T result = ObjectProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
-            Assert.IsNotNull(result);
-            Assert.IsTrue(obj.Equals(result));
+            Assert.IsTrue(StructuralComparer.IsMatch(obj, result));
         }
 
         [TestMethod]

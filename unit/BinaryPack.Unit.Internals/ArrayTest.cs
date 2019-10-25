@@ -24,17 +24,7 @@ namespace BinaryPack.Unit.Internals
             T[]? result = ArrayProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (array == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.AreEqual(array.Length, result!.Length);
-                Assert.IsTrue(array.Zip(result).All(p =>
-                {
-                    if (p.First == null && p.Second == null) return true;
-                    return p.First?.Equals(p.Second) == true;
-                }));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(array, result));
         }
 
         [TestMethod]
@@ -92,13 +82,7 @@ namespace BinaryPack.Unit.Internals
             DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (array == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.AreEqual(array.Length, result!.Length);
-                Assert.IsTrue(MemoryMarshal.AsBytes(array.AsSpan()).SequenceEqual(MemoryMarshal.AsBytes(result.AsSpan())));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(array, result));
         }
 
         [TestMethod]

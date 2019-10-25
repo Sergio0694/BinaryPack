@@ -74,7 +74,7 @@ namespace BinaryPack.Serialization.Processors
                 }
                 else
                 {
-                    // TypeProcessor<T>.Serialize(enumerator.Current, ref writer);
+                    // TypeProcessor<T>.Serializer(enumerator.Current, ref writer);
                     il.EmitLoadLocal(Locals.Write.IEnumeratorT);
                     il.EmitReadMember(typeof(IEnumerator<T>).GetProperty(nameof(IEnumerator<T>.Current)));
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
