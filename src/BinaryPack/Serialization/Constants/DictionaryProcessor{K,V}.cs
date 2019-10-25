@@ -38,14 +38,9 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <see cref="System.Collections.Generic.List{T}"/> instance
+                /// The target <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance being deserialized
                 /// </summary>
-                ListT,
-
-                /// <summary>
-                /// The target array of type <typeparamref name="T"/> to load and inject
-                /// </summary>
-                ArrayT,
+                DictionaryKV,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable to track the count of the target <see cref="System.Collections.Generic.List{T}"/>
@@ -57,12 +52,7 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
                 [LocalType(typeof(int))]
-                I,
-
-                /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
-                /// </summary>
-                RefT
+                I
             }
         }
     }

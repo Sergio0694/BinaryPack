@@ -21,7 +21,6 @@ namespace BinaryPack.Unit.Internals
             DictionaryProcessor<K, V>.Instance.Serializer(dictionary, ref writer);
             Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
             BinaryReader reader = new BinaryReader(span);
-            return;
             Dictionary<K, V>? result = DictionaryProcessor<K, V>.Instance.Deserializer(ref reader);
 
             // Equality check

@@ -119,7 +119,64 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            il.Emit(OpCodes.Ret); // TODO
+            il.DeclareLocal(typeof(Dictionary<K, V>));
+            il.DeclareLocals<Locals.Read>();
+
+            // int count = reader.Read<int>();
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
+            il.EmitStoreLocal(Locals.Read.Count);
+
+            // if (count == -1) return null;
+            Label isNotNull = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
+            il.Emit(OpCodes.Ldnull);
+            il.Emit(OpCodes.Ret);
+
+            // Dictionary<K, V> dictionary = new Dictionary<K, V>();
+            il.MarkLabel(isNotNull);
+            il.Emit(OpCodes.Newobj, typeof(Dictionary<K, V>).GetConstructor(Type.EmptyTypes));
+            il.EmitStoreLocal(Locals.Read.DictionaryKV);
+
+            // for (int i = 0; i < count; i++) { }
+            Label check = il.DefineLabel();
+            il.EmitLoadInt32(0);
+            il.EmitStoreLocal(Locals.Read.I);
+            il.Emit(OpCodes.Br_S, check);
+            Label loop = il.DefineLabel();
+            il.MarkLabel(loop);
+
+            // dictionary(...);
+            il.EmitLoadLocal(Locals.Read.DictionaryKV);
+
+            // K key = TypeProcessor<K>.Deserializer(ref reader);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(K)));
+
+            // V value = TypeProcessor<V>.Deserializer(ref reader);
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(V)));
+
+            // dictionary.Add(key, value);
+            il.EmitCallvirt(typeof(Dictionary<K, V>).GetMethod(nameof(Dictionary<K, V>.Add)));
+
+            // i++;
+            il.EmitLoadLocal(Locals.Read.I);
+            il.EmitLoadInt32(1);
+            il.Emit(OpCodes.Add);
+            il.EmitStoreLocal(Locals.Read.I);
+
+            // Loop check
+            il.MarkLabel(check);
+            il.EmitLoadLocal(Locals.Read.I);
+            il.EmitLoadLocal(Locals.Read.Count);
+            il.Emit(OpCodes.Blt_S, loop);
+
+            // return dictionary;
+            il.EmitLoadLocal(Locals.Read.DictionaryKV);
+            il.Emit(OpCodes.Ret);
         }
     }
 }
