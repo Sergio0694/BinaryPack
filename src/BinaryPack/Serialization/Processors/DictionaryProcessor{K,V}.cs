@@ -18,7 +18,7 @@ namespace BinaryPack.Serialization.Processors
         /// <summary>
         /// The <see cref="Type"/> instance for the nested <see cref="Dictionary{TKey,TValue}"/>.Entry <see langword="struct"/>
         /// </summary>
-        private static readonly Type EntryType = typeof(Dictionary<K, V>).GetNestedType("Entry", BindingFlags.NonPublic);
+        private static readonly Type EntryType = typeof(Dictionary<K, V>).GetGenericNestedType("Entry");
 
         /// <summary>
         /// Gets the singleton <see cref="DictionaryProcessor{K,V}"/> instance to use
@@ -90,6 +90,12 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(V)));
 
+            // i++
+            il.EmitLoadLocal(Locals.Write.I);
+            il.EmitLoadInt32(1);
+            il.Emit(OpCodes.Add);
+            il.EmitStoreLocal(Locals.Write.I);
+
             il.MarkLabel(emptyEntry);
 
             // r0 = ref Unsafe.Add(ref r0, 1);
@@ -99,7 +105,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Add);
             il.EmitStoreLocal(Locals.Write.RefEntry);
 
-            // i++
+            // Loop check
             il.MarkLabel(check);
             il.EmitLoadLocal(Locals.Write.I);
             il.EmitLoadLocal(Locals.Write.Count);

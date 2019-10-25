@@ -100,5 +100,17 @@ namespace System
         /// <param name="target">The generic type to compare the input type to</param>
         [Pure]
         public static bool IsGenericType(this Type type, Type target) => type.GetGenericTypeDefinition() == target;
+
+        /// <summary>
+        /// Gets a generic instantiation of a nested type for a given generic type
+        /// </summary>
+        /// <param name="type">The input generic type</param>
+        /// <param name="name">The name of the nested <see cref="Type"/> to retrieve</param>
+        [Pure]
+        public static Type GetGenericNestedType(this Type type, string name)
+        {
+            Type nestedType = type.GetNestedType(name, BindingFlags.Public | BindingFlags.NonPublic);
+            return nestedType.MakeGenericType(type.GenericTypeArguments);
+        }
     }
 }
