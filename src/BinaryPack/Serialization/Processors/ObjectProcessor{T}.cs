@@ -172,8 +172,7 @@ namespace BinaryPack.Serialization.Processors
                      * With an ICollection<T> instance instead we can serialize all the items one after the other,
                      * and deserialize to a single target T[] array. To do so, we check the type of the property:
                      * if it's either ICollection<T> or a type that is assignable to it, we just serialize the
-                     * property with the ICollectionProcessor<T> type. Otherwise, we load the property and test
-                     * its value during the serialization, and if it's not an ICollection<T> instance then
+                     * property with the ICollectionProcessor<T> type. If that's not the case, then we're out of luck and
                      * we're forced to fallback to the IEnumerableProcessor<T> type. */
                     il.MarkLabel(isNotArray);
                     if (memberInfo.GetMemberType() == typeof(ICollection<>).MakeGenericType(itemType) ||
@@ -190,28 +189,6 @@ namespace BinaryPack.Serialization.Processors
                         il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                         il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
                         il.Emit(OpCodes.Br_S, propertyHandled);
-                    }
-                    else
-                    {
-                        // if (obj.Property is ICollection<T>) { }
-                        Label isNotCollection = il.DefineLabel();
-                        il.EmitLoadArgument(Arguments.Write.T);
-                        il.EmitReadMember(memberInfo);
-                        il.Emit(OpCodes.Isinst, typeof(ICollection<>).MakeGenericType(itemType));
-                        il.Emit(OpCodes.Brfalse_S, isNotCollection);
-
-                        // writer.Write<byte>(ICollectionProcessor<T>.Id);
-                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                        il.EmitLoadInt32(typeof(ICollectionProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
-                        il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
-
-                        // ICollectionProcessor<T>.Instance.Serializer(obj.Property, stream);
-                        il.EmitLoadArgument(Arguments.Write.T);
-                        il.EmitReadMember(memberInfo);
-                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                        il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
-                        il.Emit(OpCodes.Br_S, propertyHandled);
-                        il.MarkLabel(isNotCollection);
                     }
 
                     // writer.Write<byte>(IEnumerableProcessor<T>.Id);
