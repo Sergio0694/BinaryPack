@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)HelloWorldModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\EqualityComparer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\RandomProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IInitializable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)JsonResponseModel.cs" />
