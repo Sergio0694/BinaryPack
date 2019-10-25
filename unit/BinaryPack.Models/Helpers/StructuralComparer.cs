@@ -74,17 +74,46 @@ namespace BinaryPack.Models.Helpers
         /// <param name="b">The second <see cref="IDictionary{TKey,TValue}"/> instance</param>
         /// <returns><see langword="true"/> if both instances are either <see langword="null"/> or matching, <see langword="false"/> otherwise</returns>
         [Pure]
-        public static bool IsMatch<TKey, TValue>(IDictionary<TKey, TValue>? a, IDictionary<TKey, TValue>? b)
+        public static bool IsMatch<TKey, TValue>(IDictionary<TKey, TValue?>? a, IDictionary<TKey, TValue?>? b)
             where TKey : IEquatable<TKey>
-            where TValue : IEquatable<TValue>
+            where TValue : class, IEquatable<TValue>
         {
             if (a != null && b != null)
             {
                 if (a.Count != b.Count) return false;
-                foreach ((TKey k, TValue aValue) in a)
+                foreach ((TKey k, TValue? aValue) in a)
                 {
-                    if (!b.TryGetValue(k, out TValue bValue)) return false;
+                    if (!b.TryGetValue(k, out TValue? bValue)) return false;
                     if (!(aValue != null && bValue != null && aValue.Equals(bValue) ||
+                          aValue == null && bValue == null)) return false;
+                }
+
+                return true;
+            }
+
+            return a == null && b == null;
+        }
+
+        /// <summary>
+        /// Checks whether or not the two input <see cref="IDictionary{TKey,TValue}"/> instances represent a structural match
+        /// </summary>
+        /// <typeparam name="TKey">The type of keys in the input <see cref="IDictionary{TKey,TValue}"/> instances</typeparam>
+        /// <typeparam name="TValue">The type of <see cref="Nullable{T}"/> values in the input <see cref="IDictionary{TKey,TValue}"/> instances</typeparam>
+        /// <param name="a">The first <see cref="IDictionary{TKey,TValue}"/> instance</param>
+        /// <param name="b">The second <see cref="IDictionary{TKey,TValue}"/> instance</param>
+        /// <returns><see langword="true"/> if both instances are either <see langword="null"/> or matching, <see langword="false"/> otherwise</returns>
+        [Pure]
+        public static bool IsMatch<TKey, TValue>(IDictionary<TKey, TValue?>? a, IDictionary<TKey, TValue?>? b)
+            where TKey : IEquatable<TKey>
+            where TValue : struct, IEquatable<TValue>
+        {
+            if (a != null && b != null)
+            {
+                if (a.Count != b.Count) return false;
+                foreach ((TKey k, TValue? aValue) in a)
+                {
+                    if (!b.TryGetValue(k, out TValue? bValue)) return false;
+                    if (!(aValue != null && bValue != null && aValue.Value.Equals(bValue.Value) ||
                           aValue == null && bValue == null)) return false;
                 }
 

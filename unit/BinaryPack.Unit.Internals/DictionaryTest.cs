@@ -15,33 +15,35 @@ namespace BinaryPack.Unit.Internals
     public class DictionaryTest
     {
         // Test method for a generic dictionary
-        public static void Test<K, V>(Dictionary<K, V>? dictionary) where K : IEquatable<K>, IComparable<K> where V : IEquatable<V>
+        public static void Test<K, V>(Dictionary<K, V?>? dictionary)
+            where K : IEquatable<K>
+            where V : class, IEquatable<V>
         {
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
-            DictionaryProcessor<K, V>.Instance.Serializer(dictionary, ref writer);
+            DictionaryProcessor<K, V?>.Instance.Serializer(dictionary, ref writer);
             Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
             BinaryReader reader = new BinaryReader(span);
-            Dictionary<K, V>? result = DictionaryProcessor<K, V>.Instance.Deserializer(ref reader);
+            Dictionary<K, V?>? result = DictionaryProcessor<K, V?>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsTrue(StructuralComparer.IsMatch(dictionary, result));
         }
 
         [TestMethod]
-        public void IntAndReferenceTypeNullDictionarySerializationTest() => Test(default(Dictionary<int, MessagePackSampleModel>));
+        public void IntAndReferenceTypeNullDictionarySerializationTest() => Test(default(Dictionary<int, MessagePackSampleModel?>));
 
         [TestMethod]
-        public void IntAndReferenceTypeEmptyDictionarySerializationTest() => Test(new Dictionary<int, MessagePackSampleModel>());
+        public void IntAndReferenceTypeEmptyDictionarySerializationTest() => Test(new Dictionary<int, MessagePackSampleModel?>());
 
         [TestMethod]
-        public void IntAndReferenceTypeDictionarySerializationTest1() => Test(new Dictionary<int, MessagePackSampleModel> { [17] = new MessagePackSampleModel { Compact = true, Schema = 127 } });
+        public void IntAndReferenceTypeDictionarySerializationTest1() => Test(new Dictionary<int, MessagePackSampleModel?> { [17] = new MessagePackSampleModel { Compact = true, Schema = 127 } });
 
         [TestMethod]
         public void ReferenceTypeICollectionSerializationTest2() => Test((
             from i in Enumerable.Range(0, 10)
             let compact = i % 2 == 0
             let model = new MessagePackSampleModel { Compact = compact, Schema = i }
-            select (Key: i, Value: model)).ToDictionary(p => p.Key, p => p.Value));
+            select (i, model)).ToDictionary<(int Key, MessagePackSampleModel Value), int, MessagePackSampleModel?>(p => p.Key, p => p.Value));
     }
 }
