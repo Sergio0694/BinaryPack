@@ -78,24 +78,47 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Blt_S, emptyEntry);
 
-            // TypeProcessor<T>.Serializer(r0.key, ref writer);
-            il.EmitLoadLocal(Locals.Write.RefEntry);
-            il.EmitReadMember(EntryType.GetField("key"));
-            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(K)));
+            // Key serialization
+            if (typeof(K).IsUnmanaged())
+            {
+                // writer.Write(r0.key);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitLoadLocal(Locals.Write.RefEntry);
+                il.EmitReadMember(EntryType.GetField("key"));
+                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(K)));
+            }
+            else
+            {
+                // TypeProcessor<T>.Serializer(r0.key, ref writer);
+                il.EmitLoadLocal(Locals.Write.RefEntry);
+                il.EmitReadMember(EntryType.GetField("key"));
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(K)));
+            }
 
-            // TypeProcessor<T>.Serializer(r0.value, ref writer);
-            il.EmitLoadLocal(Locals.Write.RefEntry);
-            il.EmitReadMember(EntryType.GetField("value"));
-            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-            il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(V)));
+            // Value serialization
+            if (typeof(V).IsUnmanaged())
+            {
+                // writer.Write(r0.value);
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitLoadLocal(Locals.Write.RefEntry);
+                il.EmitReadMember(EntryType.GetField("value"));
+                il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(V)));
+            }
+            else
+            {
+                // TypeProcessor<T>.Serializer(r0.value, ref writer);
+                il.EmitLoadLocal(Locals.Write.RefEntry);
+                il.EmitReadMember(EntryType.GetField("value"));
+                il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(V)));
+            }
 
             // i++
             il.EmitLoadLocal(Locals.Write.I);
             il.EmitLoadInt32(1);
             il.Emit(OpCodes.Add);
             il.EmitStoreLocal(Locals.Write.I);
-
             il.MarkLabel(emptyEntry);
 
             // r0 = ref Unsafe.Add(ref r0, 1);
@@ -151,13 +174,17 @@ namespace BinaryPack.Serialization.Processors
             // dictionary(...);
             il.EmitLoadLocal(Locals.Read.DictionaryKV);
 
-            // K key = TypeProcessor<K>.Deserializer(ref reader);
+            // K key = reader.Read<K>()/TypeProcessor<K>.Deserializer(ref reader);
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(K)));
+            il.EmitCall(typeof(K).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(K))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(K)));
 
-            // V value = TypeProcessor<V>.Deserializer(ref reader);
+            // V value = reader.Read<V>()/TypeProcessor<V>.Deserializer(ref reader);
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(V)));
+            il.EmitCall(typeof(V).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(V))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(V)));
 
             // dictionary.Add(key, value);
             il.EmitCallvirt(typeof(Dictionary<K, V>).GetMethod(nameof(Dictionary<K, V>.Add)));
