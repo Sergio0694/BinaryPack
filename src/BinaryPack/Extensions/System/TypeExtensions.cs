@@ -18,7 +18,7 @@ namespace System
         /// </summary>
         /// <param name="type">The input type to analyze</param>
         [Pure]
-        public static IEnumerable<MemberInfo> GetSerializableMembers(this Type type)
+        public static IReadOnlyCollection<MemberInfo> GetSerializableMembers(this Type type)
         {
             BinarySerializationAttribute attribute = type.GetCustomAttribute<BinarySerializationAttribute>();
             SerializationMode mode = attribute?.Mode ?? SerializationMode.Properties;
