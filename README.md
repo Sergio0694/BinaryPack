@@ -41,7 +41,7 @@ Here is a list of the property types currently supported by the library:
 
 ✅ .NET collections: `List<T>`, `T[]`, `IList<T>`, `ICollection<T>`, `IEnumerable<T>`, etc.
 
-✅ .NET dictionaries: `Dictionary<TKey, TValue>`
+✅ .NET dictionaries: `Dictionary<TKey, TValue>` and `IDictionary<TKey, TValue>`
 
 # Requirements
 
