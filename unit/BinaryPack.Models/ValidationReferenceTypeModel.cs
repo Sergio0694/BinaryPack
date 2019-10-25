@@ -81,9 +81,9 @@ namespace BinaryPack.Models
 
         public Dictionary<string, int?>? P18 { get; set; }
 
-        public Dictionary<string, int?>? P19 { get; set; }
+        public IDictionary<string, int?>? P19 { get; set; }
 
-        public Dictionary<string, JsonResponseModel?>? P20 { get; set; }
+        public IDictionary<string, JsonResponseModel?>? P20 { get; set; }
 
         /// <inheritdoc/>
         public void Initialize()

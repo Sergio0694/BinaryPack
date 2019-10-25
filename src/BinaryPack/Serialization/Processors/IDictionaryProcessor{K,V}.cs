@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
@@ -13,6 +14,7 @@ namespace BinaryPack.Serialization.Processors
     /// </summary>
     /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
+    [ProcessorId(5)]
     internal sealed partial class IDictionaryProcessor<K, V> : TypeProcessor<IDictionary<K, V>?>
     {
         /// <summary>
@@ -37,7 +39,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Br_S, countLoaded);
             il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(IDictionary<K, V>).GetProperty(nameof(IDictionary<K, V>.Count)));
+            il.EmitReadMember(typeof(ICollection<KeyValuePair<K, V>>).GetProperty(nameof(ICollection<K>.Count)));
             il.MarkLabel(countLoaded);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
