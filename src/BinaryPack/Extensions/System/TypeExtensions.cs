@@ -92,5 +92,13 @@ namespace System
                 return false;
             }
         }
+
+        /// <summary>
+        /// Checks whether or not the input type is a generic type that matches a given definition
+        /// </summary>
+        /// <param name="type">The input type to analyze</param>
+        /// <param name="target">The generic type to compare the input type to</param>
+        [Pure]
+        public static bool IsGenericType(this Type type, Type target) => type.GetGenericTypeDefinition() == target;
     }
 }

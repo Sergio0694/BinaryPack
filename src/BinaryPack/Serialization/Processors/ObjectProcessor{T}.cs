@@ -64,7 +64,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(memberInfo.GetMemberType()));
                 }
                 else if (memberInfo.GetMemberType().IsGenericType &&
-                         memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(Nullable<>))
+                         memberInfo.GetMemberType().IsGenericType(typeof(Nullable<>)))
                 {
                     /* Second special case, for nullable value types. Here we
                      * can just delegate the serialization to the NullableProcessor<T> type. */
@@ -95,7 +95,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
                 }
                 else if (memberInfo.GetMemberType().IsGenericType &&
-                         memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(List<>))
+                         memberInfo.GetMemberType().IsGenericType(typeof(List<>)))
                 {
                     /* Fifth special case, for List<T> types. In this case we just need to get
                      * the property value and leave the rest of the work to ListProcessor<T>. */
@@ -106,11 +106,11 @@ namespace BinaryPack.Serialization.Processors
                 }
                 else if (memberInfo.GetMemberType().IsInterface &&
                          memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IList<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IReadOnlyList<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(ICollection<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                         (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>))))
                 {
                     /* Sixth special case, for generic interface types. This case only applies to properties
                      * of one of the generic interfaces mentioned above, and it includes two fast paths and a
@@ -284,7 +284,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitWriteMember(memberInfo);
                 }
                 else if (memberInfo.GetMemberType().IsGenericType &&
-                         memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(Nullable<>))
+                         memberInfo.GetMemberType().IsGenericType(typeof(Nullable<>)))
                 {
                     // Invoke NullableProcessor<T> to read the T? value
                     il.EmitLoadLocal(Locals.Read.T);
@@ -309,7 +309,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitWriteMember(memberInfo);
                 }
                 else if (memberInfo.GetMemberType().IsGenericType &&
-                         memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(List<>))
+                         memberInfo.GetMemberType().IsGenericType(typeof(List<>)))
                 {
                     // Invoke ListProcessor<T> to read the List<T> list
                     il.EmitLoadLocal(Locals.Read.T);
@@ -319,11 +319,11 @@ namespace BinaryPack.Serialization.Processors
                 }
                 else if (memberInfo.GetMemberType().IsInterface &&
                          memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IList<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IReadOnlyList<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(ICollection<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>) ||
-                          memberInfo.GetMemberType().GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                         (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
+                          memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>))))
                 {
                     /* When deserializing a property of one of these interface types, we first load
                      * a byte from the reader, which includes the id of the TypeSerializer<T> instance that
