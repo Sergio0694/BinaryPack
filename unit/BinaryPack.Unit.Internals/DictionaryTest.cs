@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using BinaryPack.Models;
+using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -24,15 +25,7 @@ namespace BinaryPack.Unit.Internals
             Dictionary<K, V>? result = DictionaryProcessor<K, V>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (dictionary == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.IsTrue(dictionary.Count == result!.Count);
-                Assert.IsTrue(dictionary.OrderBy(p => p.Key).Zip(result.OrderBy(p => p.Key)).All(p =>
-                    p.First.Key.Equals(p.Second.Key) &&
-                    p.First.Value.Equals(p.Second.Value)));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(dictionary, result));
         }
 
         [TestMethod]

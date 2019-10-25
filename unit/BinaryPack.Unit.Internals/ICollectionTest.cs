@@ -25,17 +25,7 @@ namespace BinaryPack.Unit.Internals
             ICollection<T>? result = ICollectionProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (sequence == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.IsTrue(sequence.Count == result!.Count);
-                Assert.IsTrue(sequence.Zip(result).All(p =>
-                {
-                    if (p.First == null && p.Second == null) return true;
-                    return p.First?.Equals(p.Second) == true;
-                }));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(sequence, result));
         }
 
         [TestMethod]
@@ -93,13 +83,7 @@ namespace BinaryPack.Unit.Internals
             ICollection<DateTime>? result = ICollectionProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (sequence == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.AreEqual(sequence.Count, result!.Count);
-                Assert.IsTrue(MemoryMarshal.AsBytes(sequence.ToArray().AsSpan()).SequenceEqual(MemoryMarshal.AsBytes(result.ToArray().AsSpan())));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(sequence, result));
         }
 
         [TestMethod]

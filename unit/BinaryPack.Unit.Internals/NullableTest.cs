@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,12 +22,7 @@ namespace BinaryPack.Unit.Internals
             T? result = NullableProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (value.HasValue)
-            {
-                Assert.IsTrue(result.HasValue);
-                Assert.IsTrue(value.Value.Equals(result!.Value));
-            }
-            else Assert.IsTrue(!result.HasValue);
+            Assert.IsTrue(StructuralComparer.IsMatch(value, result));
         }
 
         [TestMethod]

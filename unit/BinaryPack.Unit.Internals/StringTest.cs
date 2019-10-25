@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,8 +34,7 @@ namespace BinaryPack.Unit.Internals
             string? result = StringProcessor.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (text == null) Assert.IsNull(result);
-            else Assert.IsTrue(text.Equals(result));
+            Assert.IsTrue(StructuralComparer.IsMatch(text, result));
         }
     }
 }

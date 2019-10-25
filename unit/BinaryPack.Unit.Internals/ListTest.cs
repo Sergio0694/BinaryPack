@@ -25,17 +25,7 @@ namespace BinaryPack.Unit.Internals
             List<T>? result = ListProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (list == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.AreEqual(list.Count, result!.Count);
-                Assert.IsTrue(list.Zip(result).All(p =>
-                {
-                    if (p.First == null && p.Second == null) return true;
-                    return p.First?.Equals(p.Second) == true;
-                }));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(list, result));
         }
 
         [TestMethod]
@@ -93,13 +83,7 @@ namespace BinaryPack.Unit.Internals
             List<DateTime>? result = ListProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
-            if (list == null) Assert.IsNull(result);
-            else
-            {
-                Assert.IsNotNull(result);
-                Assert.AreEqual(list.Count, result!.Count);
-                Assert.IsTrue(MemoryMarshal.AsBytes(list.ToArray().AsSpan()).SequenceEqual(MemoryMarshal.AsBytes(result.ToArray().AsSpan())));
-            }
+            Assert.IsTrue(StructuralComparer.IsMatch(list, result));
         }
 
         [TestMethod]
