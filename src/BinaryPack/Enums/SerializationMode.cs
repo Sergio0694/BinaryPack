@@ -14,19 +14,19 @@ namespace BinaryPack.Enums
         Explicit = 0,
 
         /// <summary>
-        /// All the properties with both setter and a getter
+        /// All the public properties with both setter and a getter
         /// </summary>
         Properties = 1,
 
         /// <summary>
-        /// All the non readonly fields
+        /// All the public and not readonly fields
         /// </summary>
         Fields = 2,
 
         /// <summary>
-        /// All the public members respecting either <see cref="Properties"/> or <see cref="Fields"/> criterias
+        /// Includes also non public members respecting the current search criterias
         /// </summary>
-        PublicMembersOnly = 4,
+        NonPublicMembers = 4,
 
         /// <summary>
         /// All the members respecting either <see cref="Properties"/> or <see cref="Fields"/> criterias

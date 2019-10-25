@@ -18,6 +18,6 @@ namespace BinaryPack.Attributes
         /// Creates a new <see cref="BinarySerializationAttribute"/> instance with the specified mode
         /// </summary>
         /// <param name="mode">The requested mode to use to serialize the target object</param>
-        public BinarySerializationAttribute(SerializationMode mode) => Mode = mode;
+        public BinarySerializationAttribute(SerializationMode mode = SerializationMode.Properties) => Mode = mode;
     }
 }

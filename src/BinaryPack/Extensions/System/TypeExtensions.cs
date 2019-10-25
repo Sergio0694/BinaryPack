@@ -1,5 +1,10 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using BinaryPack.Attributes;
+using BinaryPack.Enums;
 
 namespace System
 {
@@ -8,6 +13,54 @@ namespace System
     /// </summary>
     internal static class TypeExtensions
     {
+        /// <summary>
+        /// Enumerates all the members of the input <see cref="Type"/> that are supported for serialization
+        /// </summary>
+        /// <param name="type">The input type to analyze</param>
+        [Pure]
+        public static IEnumerable<MemberInfo> GetSerializableMembers(this Type type)
+        {
+            BinarySerializationAttribute attribute = type.GetCustomAttribute<BinarySerializationAttribute>();
+            SerializationMode mode = attribute?.Mode ?? SerializationMode.Properties;
+            IReadOnlyCollection<MemberInfo> members = (mode switch
+            {
+                /* If the mode is set to explicit, we query all the members of the
+                 * target type, both public and not public, and return the ones that
+                 * would respect either the Properties or Fields modes, and that
+                 * are explicitly marked as serializable members. */
+                SerializationMode.Explicit =>
+
+                from member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                where (member.MemberType == MemberTypes.Property ||
+                       member.MemberType == MemberTypes.Field) &&
+                      member.IsDefined(typeof(SerializableMemberAttribute)) &&
+                      (member is FieldInfo fieldInfo && !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral ||
+                       member is PropertyInfo propertyInfo && propertyInfo.CanRead && propertyInfo.CanWrite)
+                orderby member.Name
+                select member,
+
+                /* For all other modes, we first retrieve all the candidate members from the
+                 * input type - that is, public instance members by default, plus non public members
+                 * too if the PublicMembersOnly flag is not selected. Then we filter out either
+                 * properties or fields (or neither of them) as requested, skip the members
+                 * that are marked as non serializable and finally select the available members as before. */
+                _ =>
+
+                from member in type.GetMembers(
+                    BindingFlags.Public | BindingFlags.Instance |
+                    (mode.HasFlag(SerializationMode.NonPublicMembers) ? BindingFlags.NonPublic : BindingFlags.Default))
+                where (mode.HasFlag(SerializationMode.Properties) && member.MemberType == MemberTypes.Property ||
+                       mode.HasFlag(SerializationMode.Fields) && member.MemberType == MemberTypes.Field) &&
+                      !member.IsDefined(typeof(IgnoredMemberAttribute)) &&
+                      (member is FieldInfo fieldInfo && !fieldInfo.IsInitOnly && !fieldInfo.IsLiteral ||
+                       member is PropertyInfo propertyInfo && propertyInfo.CanRead && propertyInfo.CanWrite)
+                orderby member.Name
+                select member
+            }).ToArray();
+
+            return members;
+        }
+
         /// <summary>
         /// Gets the syze in bytes of the given type
         /// </summary>
