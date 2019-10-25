@@ -13,7 +13,7 @@ namespace BinaryPack.Serialization.Processors
     /// </summary>
     /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
-    internal sealed partial class DictionaryProcessor<K, V> : TypeProcessor<Dictionary<K, V>>
+    internal sealed partial class DictionaryProcessor<K, V> : TypeProcessor<Dictionary<K, V>?>
     {
         /// <summary>
         /// The <see cref="Type"/> instance for the nested <see cref="Dictionary{TKey,TValue}"/>.Entry <see langword="struct"/>
@@ -31,7 +31,7 @@ namespace BinaryPack.Serialization.Processors
             il.DeclareLocals<Locals.Write>();
             il.DeclareLocal(EntryType.MakeByRefType());
 
-            //int count = obj == null ? -1 : obj._count - obj.freeCount;
+            //int count = obj?.Count ?? - 1;
             Label
                 isNotNull = il.DefineLabel(),
                 countLoaded = il.DefineLabel();
@@ -41,10 +41,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Br_S, countLoaded);
             il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(Dictionary<K, V>).GetField("_count", BindingFlags.NonPublic | BindingFlags.Instance));
-            il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(Dictionary<K, V>).GetField("_freeCount", BindingFlags.NonPublic | BindingFlags.Instance));
-            il.Emit(OpCodes.Sub);
+            il.EmitReadMember(typeof(Dictionary<K, V>).GetProperty(nameof(Dictionary<K, V>.Count)));
             il.MarkLabel(countLoaded);
             il.EmitStoreLocal(Locals.Write.Count);
 
@@ -66,7 +63,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Ldelema, EntryType);
             il.EmitStoreLocal(Locals.Write.RefEntry);
 
-            // int i = 0; while (i < count) { }
+            // for (int i = 0; i < count;;) { }
             Label check = il.DefineLabel();
             il.EmitLoadInt32(0);
             il.EmitStoreLocal(Locals.Write.I);
@@ -81,27 +78,17 @@ namespace BinaryPack.Serialization.Processors
             il.EmitLoadInt32(-1);
             il.Emit(OpCodes.Blt_S, emptyEntry);
 
-            // ...(r0.key, ref writer);
+            // TypeProcessor<T>.Serializer(r0.key, ref writer);
             il.EmitLoadLocal(Locals.Write.RefEntry);
             il.EmitReadMember(EntryType.GetField("key"));
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+            il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(K)));
 
-            // StringProcessor/ObjectProcessor<K>.Serialize(...);
-            MethodInfo keyMethodInfo = typeof(K) == typeof(string)
-                ? StringProcessor.Instance.SerializerInfo.MethodInfo
-                : KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(K));
-            il.EmitCall(keyMethodInfo);
-
-            // ...(r0.value, ref writer);
+            // TypeProcessor<T>.Serializer(r0.value, ref writer);
             il.EmitLoadLocal(Locals.Write.RefEntry);
             il.EmitReadMember(EntryType.GetField("value"));
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-
-            // StringProcessor/ObjectProcessor<K>.Serialize(...);
-            MethodInfo valueMethodInfo = typeof(V) == typeof(string)
-                ? StringProcessor.Instance.SerializerInfo.MethodInfo
-                : KnownMembers.TypeProcessor.SerializerInfo(typeof(ObjectProcessor<>), typeof(V));
-            il.EmitCall(valueMethodInfo);
+            il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(V)));
 
             il.MarkLabel(emptyEntry);
 
@@ -111,7 +98,7 @@ namespace BinaryPack.Serialization.Processors
             il.EmitAddOffset(EntryType);
             il.EmitStoreLocal(Locals.Write.RefEntry);
 
-            // Loop check
+            // i++
             il.MarkLabel(check);
             il.EmitLoadLocal(Locals.Write.I);
             il.EmitLoadLocal(Locals.Write.Count);
