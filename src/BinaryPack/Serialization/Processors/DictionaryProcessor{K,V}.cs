@@ -94,8 +94,9 @@ namespace BinaryPack.Serialization.Processors
 
             // r0 = ref Unsafe.Add(ref r0, 1);
             il.EmitLoadLocal(Locals.Write.RefEntry);
-            il.EmitLoadInt32(1);
-            il.EmitAddOffset(EntryType);
+            il.Emit(OpCodes.Sizeof, EntryType);
+            il.Emit(OpCodes.Conv_I);
+            il.Emit(OpCodes.Add);
             il.EmitStoreLocal(Locals.Write.RefEntry);
 
             // i++
@@ -112,9 +113,7 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            throw new NotImplementedException();
+            il.Emit(OpCodes.Ret); // TODO
         }
     }
 }
-
-
