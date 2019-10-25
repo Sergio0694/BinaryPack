@@ -71,6 +71,20 @@ namespace BinaryPack.Models
 
         public IList<string?>? P13 { get; set; }
 
+        public Dictionary<int, JsonResponseModel?>? P14 { get; set; }
+
+        public Dictionary<int, JsonResponseModel?>? P15 { get; set; }
+
+        public Dictionary<int, JsonResponseModel?>? P16 { get; set; }
+
+        public Dictionary<int, DateTime?>? P17 { get; set; }
+
+        public Dictionary<string, int?>? P18 { get; set; }
+
+        public Dictionary<string, int?>? P19 { get; set; }
+
+        public Dictionary<string, JsonResponseModel?>? P20 { get; set; }
+
         /// <inheritdoc/>
         public void Initialize()
         {
@@ -105,6 +119,31 @@ namespace BinaryPack.Models
             P12_1 = Enumerable.Range(0, 128).Select(_ => RandomProvider.NextInt()).ToList();
             PN12 = Enumerable.Range(0, 145).Select(i => i % 2 == 0 ? RandomProvider.NextInt() : default(int?)).ToList();
             P13 = Enumerable.Range(0, 128).Select(i => i % 2 == 0 ? RandomProvider.NextString(i + 10) : null).ToArray();
+            P14 = null;
+            P15 = new Dictionary<int, JsonResponseModel?>();
+            P16 = new Dictionary<int, JsonResponseModel?>
+            {
+                [0] = new JsonResponseModel(true),
+                [17] = new JsonResponseModel(true),
+                [144] = null,
+                [145] = new JsonResponseModel(true)
+            };
+            P17 = new Dictionary<int, DateTime?>
+            {
+                [0] = null,
+                [1] = DateTime.MaxValue,
+                [2] = DateTime.Now,
+                [99] = null,
+                [243894234] = DateTime.UtcNow
+            };
+            P18 = null;
+            P19 = new Dictionary<string, int?> { ["Hello world"] = 7 };
+            P20 = new Dictionary<string, JsonResponseModel?>
+            {
+                ["Hello"] = new JsonResponseModel(true),
+                ["World"] = new JsonResponseModel(true),
+                ["!"] = new JsonResponseModel(true)
+            };
         }
 
         /// <inheritdoc/>
@@ -158,7 +197,14 @@ namespace BinaryPack.Models
                 (PN12 != null && other.PN12 != null && PN12.Count == other.PN12.Count && PN12.Zip(other.PN12).All(t => t.First == t.Second) ||
                  PN12 == null && other.PN12 == null) &&
                 (P13 != null && other.P13 != null && P13.Count == other.P13.Count && P13.Zip(other.P13).All(t => t.First == t.Second) ||
-                 P13 == null && other.P13 == null);
+                 P13 == null && other.P13 == null) &&
+                StructuralComparer.IsMatch(P14, other.P14) &&
+                StructuralComparer.IsMatch(P15, other.P15) &&
+                StructuralComparer.IsMatch(P16, other.P16) &&
+                StructuralComparer.IsMatch(P17, other.P17) &&
+                StructuralComparer.IsMatch(P18, other.P18) &&
+                StructuralComparer.IsMatch(P19, other.P19) &&
+                StructuralComparer.IsMatch(P20, other.P20);
         }
     }
 

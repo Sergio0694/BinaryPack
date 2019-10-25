@@ -65,6 +65,14 @@ namespace BinaryPack.Serialization.Reflection
                     Type itemType = objectType.GenericTypeArguments[0];
                     processorType = typeof(IEnumerableProcessor<>).MakeGenericType(itemType);
                 }
+                else if (objectType.IsGenericType &&
+                         objectType.IsGenericType(typeof(Dictionary<,>)))
+                {
+                    Type
+                        keyType = objectType.GenericTypeArguments[0],
+                        valueType = objectType.GenericTypeArguments[1];
+                    processorType = typeof(DictionaryProcessor<,>).MakeGenericType(keyType, valueType);
+                }
                 else processorType = typeof(ObjectProcessor<>).MakeGenericType(objectType);
 
                 // Access the static TypeProcessor<T> instance to get the requested dynamic method

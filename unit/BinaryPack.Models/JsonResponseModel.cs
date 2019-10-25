@@ -14,6 +14,13 @@ namespace BinaryPack.Models
     [Serializable]
     public sealed class JsonResponseModel : IInitializable, IEquatable<JsonResponseModel>
     {
+        public JsonResponseModel() { }
+
+        public JsonResponseModel(bool initialize)
+        {
+            if (initialize) Initialize();
+        }
+
         public string? Id { get; set; }
 
         public string? Type { get; set; }
