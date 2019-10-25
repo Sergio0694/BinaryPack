@@ -55,5 +55,8 @@ namespace BinaryPack.Unit
 
         [TestMethod]
         public void JsonResponseSample() => TestRunner.Test<JsonResponseModel>();
+
+        [TestMethod]
+        public void ValidationReferenceTypeModel() => TestRunner.Test<ValidationReferenceTypeModel>();
     }
 }

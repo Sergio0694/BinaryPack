@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.Contracts;
+using System.Linq;
 using BinaryPack.Attributes;
 
 namespace System.Reflection.Emit
@@ -9,6 +10,19 @@ namespace System.Reflection.Emit
     internal static class ILGeneratorExtensions
     {
         /// <summary>
+        /// Declares a local variable with the name specified by the given <typeparamref name="T"/> value
+        /// </summary>
+        /// <typeparam name="T">The type to use to retrieve the type of local to declare</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="local">The name of the local variable to declare</param>
+        public static void DeclareLocal<T>(this ILGenerator il, T local) where T : Enum
+        {
+            FieldInfo fieldInfo = typeof(T).GetField(local.ToString(), BindingFlags.Public | BindingFlags.Static);
+            LocalTypeAttribute attribute = fieldInfo.GetCustomAttribute<LocalTypeAttribute>();
+            il.DeclareLocal(attribute.Type);
+        }
+
+        /// <summary>
         /// Declares local variables with the types specified in the public members of a given type
         /// </summary>
         /// <typeparam name="T">The type to use to retrieve the types of locals to declare</typeparam>
@@ -17,7 +31,7 @@ namespace System.Reflection.Emit
         {
             foreach (Type type in
                 from field in typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static)
-                let attribute = field.GetCustomAttributes().OfType<LocalTypeAttribute>().FirstOrDefault()
+                let attribute = field.GetCustomAttributes<LocalTypeAttribute>().FirstOrDefault()
                 where attribute != null
                 select attribute.Type)
             {
@@ -307,6 +321,35 @@ namespace System.Reflection.Emit
         {
             il.Emit(OpCodes.Conv_U);
             il.Emit(OpCodes.Localloc);
+        }
+
+        /// <summary>
+        /// Creates a new try block scope that is automatically closed when it's not needed anymore
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <returns>An <see cref="IDisposable"/> instance that's responsible for closing the try scope</returns>
+        [Pure]
+        public static IDisposable EmitTryBlockScope(this ILGenerator il)
+        {
+            il.BeginExceptionBlock();
+
+            return new TryBlock(il);
+        }
+
+        /// <summary>
+        /// A <see langword="class"/> used as a proxy for the <see cref="EmitTryBlock"/> method
+        /// </summary>
+        private sealed class TryBlock : IDisposable
+        {
+            /// <summary>
+            /// The <see cref="ILGenerator"/> instance currently in use
+            /// </summary>
+            private readonly ILGenerator IL;
+
+            public TryBlock(ILGenerator il) => IL = il;
+
+            /// <inheritdoc/>
+            public void Dispose() => IL.EndExceptionBlock();
         }
     }
 }
