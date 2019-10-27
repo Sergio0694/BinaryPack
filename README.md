@@ -1,4 +1,4 @@
-![BinaryPackIcon](https://user-images.githubusercontent.com/10199417/67103112-d8852800-f1c4-11e9-9679-8cb344e988dc.png)
+![BinaryPackIcon](https://user-images.githubusercontent.com/10199417/67103112-d8852800-f1c4-11e9-9679-8cb344e988dc.png) [![NuGet](https://img.shields.io/nuget/v/BinaryPack.svg?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/BinaryPack/) [![NuGet](https://img.shields.io/nuget/dt/BinaryPack.svg?style=for-the-badge)](https://www.nuget.org/stats/packages/BinaryPack?groupby=Version)
 [![AppVeyor](https://img.shields.io/appveyor/ci/Sergio0694/binarypack/master.svg?style=for-the-badge&logo=appveyor)](https://ci.appveyor.com/project/Sergio0694/binarypack/master/)
 
 # What is it?
@@ -7,10 +7,21 @@
 
 # Table of Contents
 
+- [Installing from NuGet](#installing-from-nuget)
 - [Quick start](#quick-start)
   - [Supported properties](#supported-properties)
 - [Requirements](#requirements)
 - [Special thanks](#special-thanks)
+
+# Installing from NuGet
+
+To install **BinaryPack**, run the following command in the **Package Manager Console**
+
+```
+Install-Package BinaryPack
+```
+
+More details available [here](https://www.nuget.org/packages/BinaryPack/).
 
 # Quick start
 
