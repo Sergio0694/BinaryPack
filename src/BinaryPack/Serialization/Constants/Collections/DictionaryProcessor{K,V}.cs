@@ -1,11 +1,11 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections
 {
-    internal sealed partial class IDictionaryProcessor<K, V>
+    internal sealed partial class DictionaryProcessor<K, V>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="IDictionaryProcessor{K,V}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="DictionaryProcessor{K,V}"/>
         /// </summary>
         private static class Locals
         {
@@ -15,14 +15,21 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="System.Collections.Generic.IEnumerator{T}"/> instance used to enumerate over the input items
+                /// The <see cref="int"/> local variable to track the number of items in the source <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance
                 /// </summary>
-                IEnumeratorT,
+                [LocalType(typeof(int))]
+                Count,
 
                 /// <summary>
-                /// The <see cref="System.Collections.Generic.KeyValuePair{TKey,TValue}"/> instance with the current pair of values
+                /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
-                KeyValuePairKV,
+                [LocalType(typeof(int))]
+                I,
+
+                /// <summary>
+                /// The <see langword="ref"/> <typeparamref name="K"/> variable, used to iterate arrays of reference types
+                /// </summary>
+                RefEntry
             }
 
             /// <summary>

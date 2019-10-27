@@ -1,6 +1,6 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections
 {
     internal sealed partial class ICollectionProcessor<T>
     {

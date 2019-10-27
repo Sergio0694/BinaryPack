@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
+using BinaryPack.Serialization.Processors.Collections;
 using BinaryPack.Serialization.Reflection;
 
 namespace BinaryPack.Serialization.Processors

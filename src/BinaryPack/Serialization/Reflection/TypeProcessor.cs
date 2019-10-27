@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Processors;
+using BinaryPack.Serialization.Processors.Collections;
 
 namespace BinaryPack.Serialization.Reflection
 {

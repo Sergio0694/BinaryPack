@@ -7,7 +7,7 @@ using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections
 {
     /// <summary>
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="Dictionary{K,V}"/> types
