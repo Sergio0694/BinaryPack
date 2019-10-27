@@ -87,7 +87,7 @@ Here are three full benchmarks executed with the benchmark sample included in th
 ### Large JSON response (~9MB)
 |          Method |      Categories |        Mean | Ratio |      Gen 0 |     Gen 1 |    Gen 2 |   Allocated |
 |---------------- |---------------- |------------:|------:|-----------:|----------:|---------:|------------:|
-|   ewtonsoftJson |   Serialization |    72.31 ms |  1.00 |   857.1429 |         - |        - |   4072600 B |
+|  NewtonsoftJson |   Serialization |    72.31 ms |  1.00 |   857.1429 |         - |        - |   4072600 B |
 | BinaryFormatter |   Serialization |    80.40 ms |  1.11 |  1571.4286 |  428.5714 |        - |   7557513 B |
 |     NetCoreJson |   Serialization |    85.77 ms |  1.19 |  1833.3333 |         - |        - |   8085480 B |
 |   XmlSerializer |   Serialization |    87.49 ms |  1.21 |  5833.3333 |         - |        - |  25062624 B |
