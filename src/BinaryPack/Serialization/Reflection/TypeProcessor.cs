@@ -29,8 +29,7 @@ namespace BinaryPack.Serialization.Reflection
                  * just the use of a specific processor. For now, those case
                  * are just marked as not supported. */
                 Type processorType;
-                if (objectType.IsGenericType &&
-                    objectType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                if (objectType.IsGenericType(typeof(Nullable<>)))
                 {
                     Type structType = objectType.GenericTypeArguments[0];
                     processorType = typeof(NullableProcessor<>).MakeGenericType(structType);
@@ -45,35 +44,27 @@ namespace BinaryPack.Serialization.Reflection
                     Type elementType = objectType.GetElementType();
                     processorType = typeof(ArrayProcessor<>).MakeGenericType(elementType);
                 }
-                else if (objectType.IsGenericType &&
-                         objectType.GetGenericTypeDefinition() == typeof(List<>))
+                else if (objectType.IsGenericType(typeof(List<>)))
                 {
                     Type itemType = objectType.GenericTypeArguments[0];
                     processorType = typeof(ListProcessor<>).MakeGenericType(itemType);
                 }
-                else if (objectType.IsInterface &&
-                         objectType.IsGenericType &&
-                         objectType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                else if (objectType.IsGenericType(typeof(ICollection<>)))
                 {
                     Type itemType = objectType.GenericTypeArguments[0];
                     processorType = typeof(ICollectionProcessor<>).MakeGenericType(itemType);
                 }
-                else if (objectType.IsInterface &&
-                         objectType.IsGenericType &&
-                         objectType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                else if (objectType.IsGenericType(typeof(IEnumerable<>)))
                 {
                     Type itemType = objectType.GenericTypeArguments[0];
                     processorType = typeof(IEnumerableProcessor<>).MakeGenericType(itemType);
                 }
-                else if (objectType.IsGenericType &&
-                         objectType.IsGenericType(typeof(Dictionary<,>)))
+                else if (objectType.IsGenericType(typeof(Dictionary<,>)))
                 {
                     Type[] generics = objectType.GenericTypeArguments;
                     processorType = typeof(DictionaryProcessor<,>).MakeGenericType(generics);
                 }
-                else if (objectType.IsInterface &&
-                         objectType.IsGenericType &&
-                         objectType.IsGenericType(typeof(IDictionary<,>)))
+                else if (objectType.IsGenericType(typeof(IDictionary<,>)))
                 {
                     Type[] generics = objectType.GenericTypeArguments;
                     processorType = typeof(IDictionaryProcessor<,>).MakeGenericType(generics);

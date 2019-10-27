@@ -63,13 +63,11 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitReadMember(memberInfo);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(memberInfo.GetMemberType()));
                 }
-                else if (memberInfo.GetMemberType().IsInterface &&
-                         memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>))))
+                else if (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>)))
                 {
                     /* Second special case, for generic interface enumerable types. This case only applies to properties
                      * of one of the generic interfaces mentioned above, and it includes two fast paths and a
@@ -162,10 +160,8 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IEnumerable<>).MakeGenericType(memberInfo.GetMemberType().GenericTypeArguments[0])));
                     il.MarkLabel(propertyHandled);
                 }
-                else if (memberInfo.GetMemberType().IsInterface &&
-                         memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>))))
+                else if (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>)))
                 {
                     /* Third special case, for generic interface dictionary types. As with the enumerable
                      * interfaces, we first check whether the current property value is a Dictionary<K, V>
@@ -272,13 +268,11 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryReader.ReadT(memberInfo.GetMemberType()));
                     il.EmitWriteMember(memberInfo);
                 }
-                else if (memberInfo.GetMemberType().IsInterface &&
-                         memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>))))
+                else if (memberInfo.GetMemberType().IsGenericType(typeof(IList<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyList<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(ICollection<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyCollection<>)) ||
+                         memberInfo.GetMemberType().IsGenericType(typeof(IEnumerable<>)))
                 {
                     /* When deserializing a property of one of these interface types, we first load
                      * a byte from the reader, which includes the id of the TypeSerializer<T> instance that
@@ -329,10 +323,8 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitWriteMember(memberInfo);
                     il.MarkLabel(end);
                 }
-                else if (memberInfo.GetMemberType().IsInterface &&
-                         memberInfo.GetMemberType().IsGenericType &&
-                         (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) ||
-                          memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>))))
+                else if (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)) || 
+                         memberInfo.GetMemberType().IsGenericType(typeof(IReadOnlyDictionary<,>)))
                 {
                     // if (reader.Read<bool>() == DictionaryProcessor<,>.Id) { }
                     Type[] generics = memberInfo.GetMemberType().GenericTypeArguments;

@@ -99,7 +99,8 @@ namespace System
         /// <param name="type">The input type to analyze</param>
         /// <param name="target">The generic type to compare the input type to</param>
         [Pure]
-        public static bool IsGenericType(this Type type, Type target) => type.GetGenericTypeDefinition() == target;
+        public static bool IsGenericType(this Type type, Type target) => type.IsGenericType &&
+                                                                         type.GetGenericTypeDefinition() == target;
 
         /// <summary>
         /// Gets a generic instantiation of a nested type for a given generic type
