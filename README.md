@@ -59,7 +59,7 @@ Here is a list of the property types currently supported by the library:
 
 ✅ .NET collections: `List<T>`, `T[]`, `IList<T>`, `ICollection<T>`, `IEnumerable<T>`, etc.
 
-✅ .NET dictionaries: `Dictionary<TKey, TValue>` and `IDictionary<TKey, TValue>`
+✅ .NET dictionaries: `Dictionary<TKey, TValue>`, `IDictionary<TKey, TValue>` and `IReadOnlyDictionary<TKey, TValue>`
 
 # Benchmarks
 Here are three full benchmarks executed with the benchmark sample included in this repository. The error and standard deviation columns have been removed to fit each table in the horizontal space available for the README file reader on GitHub. The JSON response model used in the first two benchmarks is the [JsonResponseModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/JsonResponseModel.cs) class, using 240 child items in the first case, and 2000 in the second. The class used in the last benchmark is instead [NeuralNetworkLayerModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/NeuralNetworkLayerModel.cs).
