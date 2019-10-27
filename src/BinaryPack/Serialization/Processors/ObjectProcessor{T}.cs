@@ -180,7 +180,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // writer.Write<byte>(DictionaryProcessor<,>.Id);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitLoadInt32(typeof(ListProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitLoadInt32(typeof(DictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // DictionaryProcessor<K, V>.Instance.Serializer(dictionary, stream);

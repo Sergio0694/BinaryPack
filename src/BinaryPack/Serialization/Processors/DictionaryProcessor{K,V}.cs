@@ -14,7 +14,7 @@ namespace BinaryPack.Serialization.Processors
     /// </summary>
     /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
-    [ProcessorId(4)]
+    [ProcessorId(0)]
     internal sealed partial class DictionaryProcessor<K, V> : TypeProcessor<Dictionary<K, V>?>
     {
         /// <summary>
