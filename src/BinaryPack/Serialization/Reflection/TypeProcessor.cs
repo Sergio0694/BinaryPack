@@ -28,48 +28,18 @@ namespace BinaryPack.Serialization.Reflection
                  * the serialization and deserialization, which is not limited to
                  * just the use of a specific processor. For now, those case
                  * are just marked as not supported. */
-                Type processorType;
-                if (objectType.IsGenericType(typeof(Nullable<>)))
+                Type processorType = objectType switch
                 {
-                    Type structType = objectType.GenericTypeArguments[0];
-                    processorType = typeof(NullableProcessor<>).MakeGenericType(structType);
-                }
-                else if (objectType == typeof(string))
-                {
-                    processorType = typeof(StringProcessor);
-                }
-                else if (objectType.IsArray &&
-                         objectType == objectType.GetElementType().MakeArrayType())
-                {
-                    Type elementType = objectType.GetElementType();
-                    processorType = typeof(ArrayProcessor<>).MakeGenericType(elementType);
-                }
-                else if (objectType.IsGenericType(typeof(List<>)))
-                {
-                    Type itemType = objectType.GenericTypeArguments[0];
-                    processorType = typeof(ListProcessor<>).MakeGenericType(itemType);
-                }
-                else if (objectType.IsGenericType(typeof(ICollection<>)))
-                {
-                    Type itemType = objectType.GenericTypeArguments[0];
-                    processorType = typeof(ICollectionProcessor<>).MakeGenericType(itemType);
-                }
-                else if (objectType.IsGenericType(typeof(IEnumerable<>)))
-                {
-                    Type itemType = objectType.GenericTypeArguments[0];
-                    processorType = typeof(IEnumerableProcessor<>).MakeGenericType(itemType);
-                }
-                else if (objectType.IsGenericType(typeof(Dictionary<,>)))
-                {
-                    Type[] generics = objectType.GenericTypeArguments;
-                    processorType = typeof(DictionaryProcessor<,>).MakeGenericType(generics);
-                }
-                else if (objectType.IsGenericType(typeof(IDictionary<,>)))
-                {
-                    Type[] generics = objectType.GenericTypeArguments;
-                    processorType = typeof(IDictionaryProcessor<,>).MakeGenericType(generics);
-                }
-                else processorType = typeof(ObjectProcessor<>).MakeGenericType(objectType);
+                    _ when objectType.IsGenericType(typeof(Nullable<>)) => typeof(NullableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
+                    _ when objectType == typeof(string) => typeof(StringProcessor),
+                    _ when objectType.IsLinearArrayType() => typeof(ArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
+                    _ when objectType.IsGenericType(typeof(List<>)) => typeof(ListProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
+                    _ when objectType.IsGenericType(typeof(ICollection<>)) => typeof(ICollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
+                    _ when objectType.IsGenericType(typeof(IEnumerable<>)) => typeof(IEnumerableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
+                    _ when objectType.IsGenericType(typeof(Dictionary<,>)) => typeof(DictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
+                    _ when objectType.IsGenericType(typeof(IDictionary<,>)) => typeof(IDictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
+                    _ => typeof(ObjectProcessor<>).MakeGenericType(objectType)
+                };
 
                 // Access the static TypeProcessor<T> instance to get the requested dynamic method
                 PropertyInfo instanceInfo = processorType.GetProperty(nameof(ArrayProcessor<object>.Instance)); // Guaranteed to be there for all processors
