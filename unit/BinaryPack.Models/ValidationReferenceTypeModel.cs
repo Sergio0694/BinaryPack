@@ -85,6 +85,10 @@ namespace BinaryPack.Models
 
         public IDictionary<string, JsonResponseModel?>? P20 { get; set; }
 
+        public IReadOnlyDictionary<string, int?>? P21 { get; set; }
+
+        public IReadOnlyDictionary<string, JsonResponseModel?>? P22 { get; set; }
+
         /// <inheritdoc/>
         public void Initialize()
         {
@@ -143,6 +147,13 @@ namespace BinaryPack.Models
                 ["Hello"] = new JsonResponseModel(true),
                 ["World"] = new JsonResponseModel(true),
                 ["!"] = new JsonResponseModel(true)
+            };
+            P21 = new Dictionary<string, int?> { ["Hello world 2"] = 14 };
+            P22 = new Dictionary<string, JsonResponseModel?>
+            {
+                ["Hello"] = new JsonResponseModel(true),
+                ["World"] = new JsonResponseModel(true),
+                ["2!"] = new JsonResponseModel(true)
             };
         }
 
@@ -204,7 +215,9 @@ namespace BinaryPack.Models
                 StructuralComparer.IsMatch(P17, other.P17) &&
                 StructuralComparer.IsMatch(P18, other.P18) &&
                 StructuralComparer.IsMatch(P19, other.P19) &&
-                StructuralComparer.IsMatch(P20, other.P20);
+                StructuralComparer.IsMatch(P20, other.P20) &&
+                StructuralComparer.IsMatch(P21 as Dictionary<string, int?>, other.P21 as Dictionary<string, int?>) &&
+                StructuralComparer.IsMatch(P22 as Dictionary<string, JsonResponseModel?>, other.P22 as Dictionary<string, JsonResponseModel?>);
         }
     }
 

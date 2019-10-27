@@ -14,6 +14,7 @@ namespace BinaryPack.Serialization.Processors
     /// </summary>
     /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
+    /// <remarks>This processor also works with <see cref="IReadOnlyDictionary{TKey,TValue}"/> instances, as they share the same member accesses</remarks>
     [ProcessorId(1)]
     internal sealed partial class IDictionaryProcessor<K, V> : TypeProcessor<IDictionary<K, V>?>
     {

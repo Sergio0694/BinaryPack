@@ -190,23 +190,17 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
-                    // IDictionary<K, V> support
+                    // writer.Write<byte>(IDictionaryProcessor<,>.Id);
                     il.MarkLabel(isNotDictionary);
-                    if (memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>)))
-                    {
-                        // writer.Write<byte>(IDictionaryProcessor<,>.Id);
-                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                        il.EmitLoadInt32(typeof(IDictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
-                        il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitLoadInt32(typeof(IDictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
-                        // IDictionaryProcessor<K, V>.Instance.Serializer(obj.Property, stream);
-                        il.EmitLoadArgument(Arguments.Write.T);
-                        il.EmitReadMember(memberInfo);
-                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                        il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
-                    }
-                    else throw new NotSupportedException("The IReadOnlyDictionary<TKey, TValue> interface is not supported");
-                    
+                    // IDictionaryProcessor<K, V>.Instance.Serializer(obj.Property, stream);
+                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitReadMember(memberInfo);
+                    il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
                     il.MarkLabel(propertyHandled);
                 }
                 else
