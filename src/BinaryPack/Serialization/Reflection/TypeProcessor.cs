@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Processors;
+using BinaryPack.Serialization.Processors.Collections;
 
 namespace BinaryPack.Serialization.Reflection
 {
@@ -35,6 +36,7 @@ namespace BinaryPack.Serialization.Reflection
                     _ when objectType.IsLinearArrayType() => typeof(ArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
                     _ when objectType.IsGenericType(typeof(List<>)) => typeof(ListProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(ICollection<>)) => typeof(ICollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
+                    _ when objectType.IsGenericType(typeof(IReadOnlyCollection<>)) => typeof(IReadOnlyCollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(IEnumerable<>)) => typeof(IEnumerableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(Dictionary<,>)) => typeof(DictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
                     _ when objectType.IsGenericType(typeof(IDictionary<,>)) => typeof(IDictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),

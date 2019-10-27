@@ -1,11 +1,11 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections
 {
-    internal sealed partial class DictionaryProcessor<K, V>
+    internal sealed partial class ListProcessor<T>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="DictionaryProcessor{K,V}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ListProcessor{T}"/>
         /// </summary>
         private static class Locals
         {
@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the number of items in the source <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance
+                /// The <see cref="int"/> local variable to track the count of the source <see cref="System.Collections.Generic.List{T}"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
                 Count,
@@ -27,9 +27,9 @@ namespace BinaryPack.Serialization.Processors
                 I,
 
                 /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="K"/> variable, used to iterate arrays of reference types
+                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
                 /// </summary>
-                RefEntry
+                RefT
             }
 
             /// <summary>
@@ -38,9 +38,14 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance being deserialized
+                /// The target <see cref="System.Collections.Generic.List{T}"/> instance
                 /// </summary>
-                DictionaryKV,
+                ListT,
+
+                /// <summary>
+                /// The target array of type <typeparamref name="T"/> to load and inject
+                /// </summary>
+                ArrayT,
 
                 /// <summary>
                 /// The <see cref="int"/> local variable to track the count of the target <see cref="System.Collections.Generic.List{T}"/>
@@ -52,8 +57,14 @@ namespace BinaryPack.Serialization.Processors
                 /// The <see cref="int"/> local variable for the loop counter
                 /// </summary>
                 [LocalType(typeof(int))]
-                I
+                I,
+
+                /// <summary>
+                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// </summary>
+                RefT
             }
         }
     }
 }
+

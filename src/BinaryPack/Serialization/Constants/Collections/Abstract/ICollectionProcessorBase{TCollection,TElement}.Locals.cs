@@ -1,11 +1,11 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections.Abstract
 {
-    internal sealed partial class ICollectionProcessor<T>
+    internal abstract partial class ICollectionProcessorBase<TCollection, TElement>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ICollectionProcessor{T}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ICollectionProcessorBase{TCollection, TElement}"/>
         /// </summary>
         private static class Locals
         {
@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="System.Collections.Generic.IEnumerator{T}"/> instance used to enumerate over the input items
+                /// The <see cref="System.Collections.Generic.IEnumerator{TElement}"/> instance used to enumerate over the input items
                 /// </summary>
                 IEnumeratorT
             }
@@ -26,12 +26,12 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The <typeparamref name="T"/> array that will contain the items being deserialized
+                /// The <typeparamref name="TElement"/> array that will contain the items being deserialized
                 /// </summary>
                 ArrayT,
 
                 /// <summary>
-                /// The number of items that were serialized from the original <see cref="System.Collections.Generic.ICollection{T}"/> instance
+                /// The number of items that were serialized from the original <typeparamref name="TCollection"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
                 Count,
@@ -43,7 +43,7 @@ namespace BinaryPack.Serialization.Processors
                 I,
 
                 /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="T"/> variable used to quickly index items in the resulting <typeparamref name="T"/> array
+                /// The <see langword="ref"/> <typeparamref name="TElement"/> variable used to quickly index items in the resulting <typeparamref name="TElement"/> array
                 /// </summary>
                 RefT
             }

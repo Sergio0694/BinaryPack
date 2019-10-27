@@ -7,27 +7,27 @@ using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Collections
 {
     /// <summary>
-    /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="IDictionary{K,V}"/> types
+    /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="IDictionary{TKee,TValue}"/> types
     /// </summary>
-    /// <typeparam name="K">The type of the keys in the dictionary to serialize and deserialize</typeparam>
-    /// <typeparam name="V">The type of the values in the dictionary to serialize and deserialize</typeparam>
+    /// <typeparam name="TKey">The type of the keys in the dictionary to serialize and deserialize</typeparam>
+    /// <typeparam name="TValue">The type of the values in the dictionary to serialize and deserialize</typeparam>
     /// <remarks>This processor also works with <see cref="IReadOnlyDictionary{TKey,TValue}"/> instances, as they share the same member accesses</remarks>
     [ProcessorId(1)]
-    internal sealed partial class IDictionaryProcessor<K, V> : TypeProcessor<IDictionary<K, V>?>
+    internal sealed partial class IDictionaryProcessor<TKey, TValue> : TypeProcessor<IDictionary<TKey, TValue>?>
     {
         /// <summary>
-        /// Gets the singleton <see cref="IDictionaryProcessor{K,V}"/> instance to use
+        /// Gets the singleton <see cref="IDictionaryProcessor{TKey,TValue}"/> instance to use
         /// </summary>
-        public static IDictionaryProcessor<K, V> Instance { get; } = new IDictionaryProcessor<K, V>();
+        public static IDictionaryProcessor<TKey, TValue> Instance { get; } = new IDictionaryProcessor<TKey, TValue>();
 
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
         {
-            il.DeclareLocal(typeof(IEnumerator<KeyValuePair<K, V>>));
-            il.DeclareLocal(typeof(KeyValuePair<K, V>));
+            il.DeclareLocal(typeof(IEnumerator<KeyValuePair<TKey, TValue>>));
+            il.DeclareLocal(typeof(KeyValuePair<TKey, TValue>));
 
             // writer.Write(obj?.Count ?? -1);
             Label
@@ -40,7 +40,7 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Br_S, countLoaded);
             il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(ICollection<KeyValuePair<K, V>>).GetProperty(nameof(ICollection<K>.Count)));
+            il.EmitReadMember(typeof(ICollection<KeyValuePair<TKey, TValue>>).GetProperty(nameof(ICollection<TKey>.Count)));
             il.MarkLabel(countLoaded);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
@@ -51,9 +51,9 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Ret);
             il.MarkLabel(enumeration);
 
-            // using IEnumerator<KeyValuePair<K, V>> enumerator = obj.GetEnumerator();
+            // using IEnumerator<KeyValuePair<TKey, TValue>> enumerator = obj.GetEnumerator();
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitCallvirt(typeof(IEnumerable<KeyValuePair<K, V>>).GetMethod(nameof(IEnumerable<KeyValuePair<K, V>>.GetEnumerator)));
+            il.EmitCallvirt(typeof(IEnumerable<KeyValuePair<TKey, TValue>>).GetMethod(nameof(IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator)));
             il.EmitStoreLocal(Locals.Write.IEnumeratorT);
             using (il.EmitTryBlockScope())
             {
@@ -64,45 +64,45 @@ namespace BinaryPack.Serialization.Processors
                 il.Emit(OpCodes.Br_S, moveNext);
                 il.MarkLabel(loop);
 
-                // KeyValuePair<K, V> pair = enumerator.Current;
+                // KeyValuePair<TKey, TValue> pair = enumerator.Current;
                 il.EmitLoadLocal(Locals.Write.IEnumeratorT);
-                il.EmitReadMember(typeof(IEnumerator<KeyValuePair<K, V>>).GetProperty(nameof(IEnumerator<KeyValuePair<K, V>>.Current)));
+                il.EmitReadMember(typeof(IEnumerator<KeyValuePair<TKey, TValue>>).GetProperty(nameof(IEnumerator<KeyValuePair<TKey, TValue>>.Current)));
                 il.EmitStoreLocal(Locals.Write.KeyValuePairKV);
 
                 // Key serialization
-                if (typeof(K).IsUnmanaged())
+                if (typeof(TKey).IsUnmanaged())
                 {
                     // writer.Write(r0.key);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadLocalAddress(Locals.Write.KeyValuePairKV);
-                    il.EmitReadMember(typeof(KeyValuePair<K, V>).GetProperty(nameof(KeyValuePair<K, V>.Key)));
-                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(K)));
+                    il.EmitReadMember(typeof(KeyValuePair<TKey, TValue>).GetProperty(nameof(KeyValuePair<TKey, TValue>.Key)));
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(TKey)));
                 }
                 else
                 {
-                    // TypeProcessor<T>.Serializer(r0.key, ref writer);
+                    // TypeProcessor<TKey>.Serializer(r0.key, ref writer);
                     il.EmitLoadLocalAddress(Locals.Write.KeyValuePairKV);
-                    il.EmitReadMember(typeof(KeyValuePair<K, V>).GetProperty(nameof(KeyValuePair<K, V>.Key)));
+                    il.EmitReadMember(typeof(KeyValuePair<TKey, TValue>).GetProperty(nameof(KeyValuePair<TKey, TValue>.Key)));
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(K)));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(TKey)));
                 }
 
                 // Value serialization
-                if (typeof(V).IsUnmanaged())
+                if (typeof(TValue).IsUnmanaged())
                 {
                     // writer.Write(r0.value);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitLoadLocalAddress(Locals.Write.KeyValuePairKV);
-                    il.EmitReadMember(typeof(KeyValuePair<K, V>).GetProperty(nameof(KeyValuePair<K, V>.Value)));
-                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(V)));
+                    il.EmitReadMember(typeof(KeyValuePair<TKey, TValue>).GetProperty(nameof(KeyValuePair<TKey, TValue>.Value)));
+                    il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(TValue)));
                 }
                 else
                 {
-                    // TypeProcessor<T>.Serializer(r0.value, ref writer);
+                    // TypeProcessor<TValue>.Serializer(r0.value, ref writer);
                     il.EmitLoadLocalAddress(Locals.Write.KeyValuePairKV);
-                    il.EmitReadMember(typeof(KeyValuePair<K, V>).GetProperty(nameof(KeyValuePair<K, V>.Value)));
+                    il.EmitReadMember(typeof(KeyValuePair<TKey, TValue>).GetProperty(nameof(KeyValuePair<TKey, TValue>.Value)));
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(V)));
+                    il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(TValue)));
                 }
 
                 // while (enumerator.MoveNext()) { }
@@ -124,7 +124,7 @@ namespace BinaryPack.Serialization.Processors
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
-            il.DeclareLocal(typeof(Dictionary<K, V>));
+            il.DeclareLocal(typeof(Dictionary<TKey, TValue>));
             il.DeclareLocals<Locals.Read>();
 
             // int count = reader.Read<int>();
@@ -140,9 +140,9 @@ namespace BinaryPack.Serialization.Processors
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
 
-            // Dictionary<K, V> dictionary = new Dictionary<K, V>();
+            // Dictionary<K, V> dictionary = new Dictionary<TKey, TValue>();
             il.MarkLabel(isNotNull);
-            il.Emit(OpCodes.Newobj, typeof(Dictionary<K, V>).GetConstructor(Type.EmptyTypes));
+            il.Emit(OpCodes.Newobj, typeof(Dictionary<TKey, TValue>).GetConstructor(Type.EmptyTypes));
             il.EmitStoreLocal(Locals.Read.DictionaryKV);
 
             // for (int i = 0; i < count; i++) { }
@@ -156,20 +156,20 @@ namespace BinaryPack.Serialization.Processors
             // dictionary(...);
             il.EmitLoadLocal(Locals.Read.DictionaryKV);
 
-            // K key = reader.Read<K>()/TypeProcessor<K>.Deserializer(ref reader);
+            // TKey key = reader.Read<TKey>()/TypeProcessor<TKey>.Deserializer(ref reader);
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(typeof(K).IsUnmanaged()
-                ? KnownMembers.BinaryReader.ReadT(typeof(K))
-                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(K)));
+            il.EmitCall(typeof(TKey).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(TKey))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(TKey)));
 
-            // V value = reader.Read<V>()/TypeProcessor<V>.Deserializer(ref reader);
+            // TValue value = reader.Read<TValue>()/TypeProcessor<TValue>.Deserializer(ref reader);
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-            il.EmitCall(typeof(V).IsUnmanaged()
-                ? KnownMembers.BinaryReader.ReadT(typeof(V))
-                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(V)));
+            il.EmitCall(typeof(TValue).IsUnmanaged()
+                ? KnownMembers.BinaryReader.ReadT(typeof(TValue))
+                : KnownMembers.TypeProcessor.DeserializerInfo(typeof(TValue)));
 
             // dictionary.Add(key, value);
-            il.EmitCallvirt(typeof(Dictionary<K, V>).GetMethod(nameof(Dictionary<K, V>.Add)));
+            il.EmitCallvirt(typeof(Dictionary<TKey, TValue>).GetMethod(nameof(Dictionary<TKey, TValue>.Add)));
 
             // i++;
             il.EmitLoadLocal(Locals.Read.I);

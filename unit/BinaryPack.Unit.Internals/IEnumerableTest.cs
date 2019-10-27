@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
-using BinaryPack.Serialization.Processors;
+using BinaryPack.Serialization.Processors.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BinaryPack.Unit.Internals
