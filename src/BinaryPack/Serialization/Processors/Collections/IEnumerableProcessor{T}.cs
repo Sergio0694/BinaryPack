@@ -13,7 +13,7 @@ namespace BinaryPack.Serialization.Processors.Collections
     /// A <see langword="class"/> responsible for creating the serializers and deserializers for <see cref="IEnumerable{T}"/> types
     /// </summary>
     /// <typeparam name="T">The type of items in <see cref="IEnumerable{T}"/> instances to serialize and deserialize</typeparam>
-    [ProcessorId(3)]
+    [ProcessorId(4)]
     internal sealed partial class IEnumerableProcessor<T> : TypeProcessor<IEnumerable<T>?>
     {
         /// <summary>
