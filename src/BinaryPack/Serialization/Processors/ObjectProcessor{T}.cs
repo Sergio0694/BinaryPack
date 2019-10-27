@@ -131,7 +131,8 @@ namespace BinaryPack.Serialization.Processors
                      * and deserialize to a single target T[] array. To do so, we check the type of the property:
                      * if it's either ICollection<T> or a type that is assignable to it, we just serialize the
                      * property with the ICollectionProcessor<T> type. If that's not the case, then we're out of luck and
-                     * we're forced to fallback to the IEnumerableProcessor<T> type. */
+                     * we're forced to fallback to the IEnumerableProcessor<T> type.
+                     * We do this same exact procedure for the IReadOnlyCollection<T> interface as well. */
                     il.MarkLabel(isNotArray);
                     if (memberInfo.GetMemberType() == typeof(ICollection<>).MakeGenericType(itemType) ||
                         typeof(ICollection<>).MakeGenericType(itemType).IsAssignableFrom(memberInfo.GetMemberType()))
@@ -147,6 +148,20 @@ namespace BinaryPack.Serialization.Processors
                         il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                         il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
                         il.Emit(OpCodes.Br_S, propertyHandled);
+                    }
+                    else if (memberInfo.GetMemberType() == typeof(IReadOnlyCollection<>).MakeGenericType(itemType) ||
+                             typeof(IReadOnlyCollection<>).MakeGenericType(itemType).IsAssignableFrom(memberInfo.GetMemberType()))
+                    {
+                        // writer.Write<byte>(IReadOnlyCollectionProcessor<>.Id);
+                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                        il.EmitLoadInt32(typeof(IReadOnlyCollectionProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                        il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
+
+                        // IReadOnlyCollectionProcessor<T>.Instance.Serializer(obj.Property, stream);
+                        il.EmitLoadArgument(Arguments.Write.T);
+                        il.EmitReadMember(memberInfo);
+                        il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
+                        il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IReadOnlyCollection<>).MakeGenericType(itemType)));
                     }
 
                     // writer.Write<byte>(IEnumerableProcessor<>.Id);
@@ -279,11 +294,12 @@ namespace BinaryPack.Serialization.Processors
                         list = il.DefineLabel(),
                         array = il.DefineLabel(),
                         iCollection = il.DefineLabel(),
+                        iReadOnlyCollection = il.DefineLabel(),
                         iEnumerable = il.DefineLabel(),
                         end = il.DefineLabel();
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(byte)));
-                    il.Emit(OpCodes.Switch, new[] { list, array, iCollection });
+                    il.Emit(OpCodes.Switch, new[] { list, array, iCollection, iReadOnlyCollection });
                     il.Emit(OpCodes.Br_S, iEnumerable);
 
                     // case ListProcessor<T>.Id: obj.Property = ListProcessor<T>.Deserializer(ref reader);
@@ -307,6 +323,14 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
+                    il.EmitWriteMember(memberInfo);
+                    il.Emit(OpCodes.Br_S, end);
+
+                    // case IReadOnlyCollectionProcessor<T>.Id: obj.Property = IReadOnlyCollectionProcessor<T>.Deserializer(ref reader);
+                    il.MarkLabel(iReadOnlyCollection);
+                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IReadOnlyCollection<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
                     il.Emit(OpCodes.Br_S, end);
 
