@@ -15,16 +15,16 @@ namespace BinaryPack.Unit.Internals
     public class DictionaryTest
     {
         // Test method for a generic dictionary
-        public static void Test<K, V>(Dictionary<K, V?>? dictionary)
-            where K : IEquatable<K>
-            where V : class, IEquatable<V>
+        public static void Test<TKey, TValue>(Dictionary<TKey, TValue?>? dictionary)
+            where TKey : IEquatable<TKey>
+            where TValue : class, IEquatable<TValue>
         {
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
-            DictionaryProcessor<K, V?>.Instance.Serializer(dictionary, ref writer);
+            DictionaryProcessor<TKey, TValue?>.Instance.Serializer(dictionary, ref writer);
             Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
             BinaryReader reader = new BinaryReader(span);
-            Dictionary<K, V?>? result = DictionaryProcessor<K, V?>.Instance.Deserializer(ref reader);
+            Dictionary<TKey, TValue?>? result = DictionaryProcessor<TKey, TValue?>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsTrue(StructuralComparer.IsMatch(dictionary, result));

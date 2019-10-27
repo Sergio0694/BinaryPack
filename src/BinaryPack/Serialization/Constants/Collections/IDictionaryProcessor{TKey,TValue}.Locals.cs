@@ -2,10 +2,10 @@
 
 namespace BinaryPack.Serialization.Processors.Collections
 {
-    internal sealed partial class IDictionaryProcessor<K, V>
+    internal sealed partial class IDictionaryProcessor<TKey, TValue>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="IDictionaryProcessor{K,V}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="IDictionaryProcessor{TKey,TValue}"/>
         /// </summary>
         private static class Locals
         {
@@ -31,7 +31,7 @@ namespace BinaryPack.Serialization.Processors.Collections
             public enum Read
             {
                 /// <summary>
-                /// The target <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance being deserialized
+                /// The target <see cref="System.Collections.Generic.Dictionary{TKey,TValue}"/> instance being deserialized
                 /// </summary>
                 DictionaryKV,
 

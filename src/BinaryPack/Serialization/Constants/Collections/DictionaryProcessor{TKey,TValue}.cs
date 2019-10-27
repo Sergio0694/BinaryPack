@@ -2,10 +2,10 @@
 
 namespace BinaryPack.Serialization.Processors.Collections
 {
-    internal sealed partial class DictionaryProcessor<K, V>
+    internal sealed partial class DictionaryProcessor<TKey, TValue>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="DictionaryProcessor{K,V}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="DictionaryProcessor{TKey,TValue}"/>
         /// </summary>
         private static class Locals
         {
@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Processors.Collections
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the number of items in the source <see cref="System.Collections.Generic.Dictionary{K,V}"/> instance
+                /// The <see cref="int"/> local variable to track the number of items in the source <see cref="System.Collections.Generic.Dictionary{TKey,TValue}"/> instance
                 /// </summary>
                 [LocalType(typeof(int))]
                 Count,
