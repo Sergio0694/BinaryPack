@@ -16,6 +16,8 @@ Of course you shouldn't take my word for it, so this README includes a number of
 - [Installing from NuGet](#installing-from-nuget)
 - [Quick start](#quick-start)
   - [Supported properties](#supported-properties)
+  - [Attributes](#attributes)
+  - [FAQ](#faq)
 - [Benchmarks](#benchmarks)
 - [Requirements](#requirements)
 - [Special thanks](#special-thanks)
@@ -60,6 +62,38 @@ Here is a list of the property types currently supported by the library:
 ✅ .NET collections: `List<T>`, `T[]`, `IList<T>`, `ICollection<T>`, `IEnumerable<T>`, etc.
 
 ✅ .NET dictionaries: `Dictionary<TKey, TValue>`, `IDictionary<TKey, TValue>` and `IReadOnlyDictionary<TKey, TValue>`
+
+## Attributes
+**BinaryPack** has a series of attributes that can be used to customize how the `BinaryConverter` class handles the serialization of input objects. By default, it will serialize all public properties of a type, but this behavior can be changed by using the `BinarySerialization` attribute. Here's an example:
+
+```C#
+[BinarySerialization(SerializationMode.Properties | SerializationMode.NonPublicMembers)]
+public class MyModel
+{
+    internal string Id { get; set; }    
+    
+    public int Valud { get; set; }    
+    
+    [IgnoredMember]
+    public DateTime Timestamp { get; set; }
+}
+```
+
+Similarly, there's also a `SerializableMember` that can be used when the mode is set to `SerializationMode.Explicit`.
+
+## FAQ
+
+#### Why is this library faster than the competition?
+
+> There are a number of reasons for this. First of all, **BinaryPack** dynamically generates code to serialize and deserialize every type you need. This means that it doesn't need to inspect types using reflection while serializing/deserializing, eg. to see what fields it needs to read etc. - it just creates the right methods once that work directly on instances of each type, and read/write members one after the other exactly as you would do if you were to write that code manually. This also allows **BinaryPack** to have some extremely optimized code paths that would otherwise be completely impossible. Then, unlike the JSON/XML/MessagePack formats, **BinaryPack** doesn't need to include any additional metadata for the serialized items, which saves time. This allows it to use the minimum possible space to serialize every value, which also makes the serialized files as small as possible.
+
+#### Are there some downsides with this approach?
+
+> Yes, skipping all the metadata means that the **BinaryPack** format is not partcularly resilient to changes. This means that if you add or remove one of the serialized members of a type, it will not be possible to read previously serialized instances of that model. Because of this, **BinaryPack** should not be used with important data and is best suited for caching models or for quick serialization of data being exhanged between different clients.
+
+#### Is this compatible with UWP?
+
+> Unfortunately not at the moment, UWP is still on .NET Standard 2.0 and doesn't support dynamic code generation due to how the .NET Native compiler is implemented. Hopefully it will be possible to use **BinaryPack** on UWP when it moves to .NET 5 and the new MonoAOT compiler in the second half of 2020.
 
 # Benchmarks
 Here are three full benchmarks executed with the benchmark sample included in this repository. The error and standard deviation columns have been removed to fit each table in the horizontal space available for the README file reader on GitHub. The JSON response model used in the first two benchmarks is the [JsonResponseModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/JsonResponseModel.cs) class, using 240 child items in the first case, and 2000 in the second. The class used in the last benchmark is instead [NeuralNetworkLayerModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/NeuralNetworkLayerModel.cs).
