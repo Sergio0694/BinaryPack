@@ -40,7 +40,7 @@ namespace BinaryPack.Serialization.Reflection
                     _ when objectType.IsGenericType(typeof(IEnumerable<>)) => typeof(IEnumerableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(Dictionary<,>)) => typeof(DictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
                     _ when objectType.IsGenericType(typeof(IDictionary<,>)) => typeof(IDictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
-                    _ when objectType.IsGenericType(typeof(IReadOnlyDictionary<,>)) => typeof(IDictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
+                    _ when objectType.IsGenericType(typeof(IReadOnlyDictionary<,>)) => typeof(IReadOnlyDictionaryProcessor<,>).MakeGenericType(objectType.GenericTypeArguments),
                     _ => typeof(ObjectProcessor<>).MakeGenericType(objectType)
                 };
 
