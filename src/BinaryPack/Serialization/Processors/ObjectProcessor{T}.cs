@@ -206,13 +206,15 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
                     il.Emit(OpCodes.Br_S, propertyHandled);
 
-                    // writer.Write<byte>(IDictionaryProcessor<,>.Id);
+                    // writer.Write<byte>(IDictionaryProcessor<,>.Id/IReadOnlyDictionaryProcessor<,>.Id);
                     il.MarkLabel(isNotDictionary);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitLoadInt32(typeof(IDictionaryProcessor<,>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitLoadInt32((memberInfo.GetMemberType().IsGenericType(typeof(IDictionary<,>))
+                        ? typeof(IDictionaryProcessor<,>)
+                        : typeof(IReadOnlyDictionaryProcessor<,>)).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
-                    // IDictionaryProcessor<Tkey, TValue>.Instance.Serializer(obj.Property, stream);
+                    // TypeProcessor<TKey, TValue>.Instance.Serializer(obj.Property, stream);
                     il.EmitLoadArgument(Arguments.Write.T);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
@@ -361,11 +363,11 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
                     il.Emit(OpCodes.Br_S, end);
 
-                    // Dictionary<TKey, TValue> dictionary = IDictionaryProcessor<TKey, TValue>.Deserializer(ref reader);
+                    // Dictionary<TKey, TValue> dictionary = TypeProcessor<TKey, TValue>.Deserializer(ref reader);
                     il.MarkLabel(isNotDictionary);
                     il.EmitLoadLocal(Locals.Read.T);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IDictionary<,>).MakeGenericType(generics)));
+                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(memberInfo.GetMemberType()));
 
                     // obj.Property = dictionary;
                     il.MarkLabel(end);

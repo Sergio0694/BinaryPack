@@ -1,11 +1,11 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors.Collections
+namespace BinaryPack.Serialization.Processors.Collections.Abstract
 {
-    internal sealed partial class IDictionaryProcessor<TKey, TValue>
+    internal abstract partial class IDictionaryProcessorBase<TDictionary, TCollection, TKey, TValue>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="IDictionaryProcessor{TKey,TValue}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="IDictionaryProcessorBase{TDictionary,TCollection,TKey,TValue}"/>
         /// </summary>
         private static class Locals
         {
