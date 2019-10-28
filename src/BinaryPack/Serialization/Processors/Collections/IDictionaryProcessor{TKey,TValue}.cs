@@ -9,7 +9,6 @@ namespace BinaryPack.Serialization.Processors.Collections
     /// </summary>
     /// <typeparam name="TKey">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary to serialize and deserialize</typeparam>
-    /// <remarks>This processor also works with <see cref="IReadOnlyDictionary{TKey,TValue}"/> instances, as they share the same member accesses</remarks>
     [ProcessorId(1)]
     internal sealed class IDictionaryProcessor<TKey, TValue> : IDictionaryProcessorBase<IDictionary<TKey, TValue>, ICollection<KeyValuePair<TKey, TValue>>, TKey, TValue>
     {
