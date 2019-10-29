@@ -33,7 +33,7 @@ namespace BinaryPack.Serialization.Reflection
                 {
                     _ when objectType.IsGenericType(typeof(Nullable<>)) => typeof(NullableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType == typeof(string) => typeof(StringProcessor),
-                    _ when objectType.IsLinearArrayType() => typeof(ArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
+                    _ when objectType.IsSZArray => typeof(ArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
                     _ when objectType.IsGenericType(typeof(List<>)) => typeof(ListProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(ICollection<>)) => typeof(ICollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(IReadOnlyCollection<>)) => typeof(IReadOnlyCollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),

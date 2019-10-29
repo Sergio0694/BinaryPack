@@ -15,8 +15,7 @@ namespace BinaryPack.Serialization.Processors.Collections.Abstract
     /// <typeparam name="TCollection">The underlying <see cref="IEnumerable{T}"/> type for the current <typeparamref name="TDictionary"/> type</typeparam>
     /// <typeparam name="TKey">The type of the keys in the dictionary to serialize and deserialize</typeparam>
     /// <typeparam name="TValue">The type of the values in the dictionary to serialize and deserialize</typeparam>
-    internal abstract partial class IDictionaryProcessorBase<TDictionary, TCollection, TKey, TValue>
-        : TypeProcessor<TDictionary?>
+    internal abstract partial class IDictionaryProcessorBase<TDictionary, TCollection, TKey, TValue> : TypeProcessor<TDictionary?>
         where TDictionary : class, TCollection
         where TCollection : IEnumerable<KeyValuePair<TKey, TValue>>
     {

@@ -94,14 +94,6 @@ namespace System
         }
 
         /// <summary>
-        /// Checks whether or not the input type is a 1D array type
-        /// </summary>
-        /// <param name="type">The input type to analyze</param>
-        [Pure]
-        public static bool IsLinearArrayType(this Type type) => type.IsArray &&
-                                                                type == type.GetElementType().MakeArrayType();
-
-        /// <summary>
         /// Checks whether or not the input type is a generic type that matches a given definition
         /// </summary>
         /// <param name="type">The input type to analyze</param>
