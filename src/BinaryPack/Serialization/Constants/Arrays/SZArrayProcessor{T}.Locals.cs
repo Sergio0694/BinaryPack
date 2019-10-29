@@ -1,11 +1,11 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Arrays
 {
-    internal sealed partial class ArrayProcessor<T>
+    internal sealed partial class SZArrayProcessor<T>
     {
         /// <summary>
-        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ArrayProcessor{T}"/>
+        /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="SZArrayProcessor{T}"/>
         /// </summary>
         private static class Locals
         {

@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 using BinaryPack.Attributes;
 using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
+using BinaryPack.Serialization.Processors.Arrays;
 using BinaryPack.Serialization.Processors.Collections;
 using BinaryPack.Serialization.Reflection;
 
@@ -112,7 +113,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // writer.Write<byte>(ArrayProcessor<>.Id);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitLoadInt32(typeof(ArrayProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
+                    il.EmitLoadInt32(typeof(SZArrayProcessor<>).GetCustomAttribute<ProcessorIdAttribute>().Id);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // ArrayProcessor<T>.Instance.Serializer(array, stream);

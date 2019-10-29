@@ -5,23 +5,23 @@ using System.Runtime.InteropServices;
 using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
-using BinaryPack.Serialization.Processors;
+using BinaryPack.Serialization.Processors.Arrays;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BinaryPack.Unit.Internals
 {
     [TestClass]
-    public class ArrayTest
+    public class SZArrayTest
     {
         // Test method for a generic arrays of reference types
         public static void Test<T>(T[]? array) where T : class, IEquatable<T>
         {
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
-            ArrayProcessor<T>.Instance.Serializer(array, ref writer);
+            SZArrayProcessor<T>.Instance.Serializer(array, ref writer);
             Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
             BinaryReader reader = new BinaryReader(span);
-            T[]? result = ArrayProcessor<T>.Instance.Deserializer(ref reader);
+            T[]? result = SZArrayProcessor<T>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsTrue(StructuralComparer.IsMatch(array, result));
@@ -76,10 +76,10 @@ namespace BinaryPack.Unit.Internals
         {
             // Serialization
             BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
-            ArrayProcessor<DateTime>.Instance.Serializer(array, ref writer);
+            SZArrayProcessor<DateTime>.Instance.Serializer(array, ref writer);
             Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
             BinaryReader reader = new BinaryReader(span);
-            DateTime[]? result = ArrayProcessor<DateTime>.Instance.Deserializer(ref reader);
+            DateTime[]? result = SZArrayProcessor<DateTime>.Instance.Deserializer(ref reader);
 
             // Equality check
             Assert.IsTrue(StructuralComparer.IsMatch(array, result));

@@ -5,19 +5,19 @@ using BinaryPack.Serialization.Constants;
 using BinaryPack.Serialization.Processors.Abstract;
 using BinaryPack.Serialization.Reflection;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Arrays
 {
     /// <summary>
-    /// A <see langword="class"/> responsible for creating the serializers and deserializers for array types
+    /// A <see langword="class"/> responsible for creating the serializers and deserializers for 1D array types
     /// </summary>
     /// <typeparam name="T">The type of items in arrays to serialize and deserialize</typeparam>
     [ProcessorId(1)]
-    internal sealed partial class ArrayProcessor<T> : TypeProcessor<T[]?>
+    internal sealed partial class SZArrayProcessor<T> : TypeProcessor<T[]?>
     {
         /// <summary>
-        /// Gets the singleton <see cref="ArrayProcessor{T}"/> instance to use
+        /// Gets the singleton <see cref="SZArrayProcessor{T}"/> instance to use
         /// </summary>
-        public static ArrayProcessor<T> Instance { get; } = new ArrayProcessor<T>();
+        public static SZArrayProcessor<T> Instance { get; } = new SZArrayProcessor<T>();
 
         /// <inheritdoc/>
         protected override void EmitSerializer(ILGenerator il)
