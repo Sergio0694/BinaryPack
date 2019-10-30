@@ -21,7 +21,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
         {
             if (typeof(TArray).IsArray &&
                 typeof(TArray).GetArrayRank() > 1 &&
-                !typeof(TArray).IsVariableBoundArray) return;
+                typeof(TArray).IsVariableBoundArray) return;
 
             throw new ArgumentException($"{nameof(ArrayProcessor<TArray>)} only works on ND, 0-index arrays, not on [{typeof(TArray)}]");
         }
@@ -39,7 +39,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
         /// <summary>
         /// The <see cref="MethodInfo"/> instance mapping the method to retrieve the address of a given item in an array of type <typeparamref name="TArray"/>
         /// </summary>
-        private static readonly MethodInfo AddressMethod = typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo AddressMethod = typeof(TArray).GetMethod("Address", Enumerable.Repeat(typeof(int), Rank).ToArray());
 
         /// <summary>
         /// Gets the singleton <see cref="ArrayProcessor{TArray}"/> instance to use
@@ -64,6 +64,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.Emit(OpCodes.Ret);
 
             // int length = obj.Length;
+            il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(Array).GetProperty(nameof(Array.Length)));
             il.EmitStoreLocal(Locals.Write.Length);

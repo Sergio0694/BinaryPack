@@ -35,7 +35,7 @@ namespace BinaryPack.Serialization.Reflection
             /// Gets the <see cref="Span{T}"/> constructor (actually, a <see cref="MethodInfo"/> instance) that takes a <see langword="ref"/> and a size
             /// </summary>
             /// <param name="type">The type parameter to use for the target <see cref="Span{T}"/> type to use</param>
-            public static MethodInfo RefConstructor(Type type) => typeof(MemoryMarshal).GetMethod(nameof(MemoryMarshal.CreateSpan));
+            public static MethodInfo RefConstructor(Type type) => typeof(MemoryMarshal).GetMethod(nameof(MemoryMarshal.CreateSpan)).MakeGenericMethod(type);
         }
     }
 }
