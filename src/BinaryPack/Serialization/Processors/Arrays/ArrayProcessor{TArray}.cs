@@ -74,13 +74,6 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // if (length == 0) return;
-            Label isNotEmpty = il.DefineLabel();
-            il.EmitLoadLocal(Locals.Write.Length);
-            il.Emit(OpCodes.Brtrue_S, isNotEmpty);
-            il.Emit(OpCodes.Ret);
-            il.MarkLabel(isNotEmpty);
-
             // writer.Write(obj.GetLength([0..Rank]));
             for (int i = 0; i < Rank; i++)
             {
@@ -90,6 +83,13 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 il.EmitCallvirt(typeof(Array).GetMethod(nameof(Array.GetLength)));
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
             }
+
+            // if (length == 0) return;
+            Label isNotEmpty = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Write.Length);
+            il.Emit(OpCodes.Brtrue_S, isNotEmpty);
+            il.Emit(OpCodes.Ret);
+            il.MarkLabel(isNotEmpty);
 
             /* Just like in SZArrayProcessor<T>, we can copy the whole memory buffer
              * directly if T is unmanaged, otherwise we go over all the array items
