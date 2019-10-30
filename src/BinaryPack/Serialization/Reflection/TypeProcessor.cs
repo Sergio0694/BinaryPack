@@ -4,6 +4,8 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Processors;
+using BinaryPack.Serialization.Processors.Abstract;
+using BinaryPack.Serialization.Processors.Arrays;
 using BinaryPack.Serialization.Processors.Collections;
 
 namespace BinaryPack.Serialization.Reflection
@@ -11,7 +13,7 @@ namespace BinaryPack.Serialization.Reflection
     internal static partial class KnownMembers
     {
         /// <summary>
-        /// A <see langword="class"/> containing methods from types inherited from <see cref="ArrayProcessor{T}"/>
+        /// A <see langword="class"/> containing methods from types inherited from <see cref="Processors.Abstract.TypeProcessor{T}"/>
         /// </summary>
         public static class TypeProcessor
         {
@@ -33,7 +35,8 @@ namespace BinaryPack.Serialization.Reflection
                 {
                     _ when objectType.IsGenericType(typeof(Nullable<>)) => typeof(NullableProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType == typeof(string) => typeof(StringProcessor),
-                    _ when objectType.IsSZArray => typeof(ArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
+                    _ when objectType.IsSZArray => typeof(SZArrayProcessor<>).MakeGenericType(objectType.GetElementType()),
+                    _ when objectType.IsArray && objectType.GetArrayRank() > 1 => typeof(ArrayProcessor<>).MakeGenericType(objectType),
                     _ when objectType.IsGenericType(typeof(List<>)) => typeof(ListProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(ICollection<>)) => typeof(ICollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
                     _ when objectType.IsGenericType(typeof(IReadOnlyCollection<>)) => typeof(IReadOnlyCollectionProcessor<>).MakeGenericType(objectType.GenericTypeArguments[0]),
@@ -45,7 +48,7 @@ namespace BinaryPack.Serialization.Reflection
                 };
 
                 // Access the static TypeProcessor<T> instance to get the requested dynamic method
-                PropertyInfo instanceInfo = processorType.GetProperty(nameof(ArrayProcessor<object>.Instance)); // Guaranteed to be there for all processors
+                PropertyInfo instanceInfo = processorType.GetProperty(nameof(StringProcessor.Instance)); // Guaranteed to be there for all processors
                 object processorInstance = instanceInfo.GetValue(null);
                 FieldInfo fieldInfo = processorType.GetField(name);
                 object genericMethod = fieldInfo.GetValue(processorInstance);
@@ -59,14 +62,14 @@ namespace BinaryPack.Serialization.Reflection
             /// </summary>
             /// <param name="objectType">The type of the item being handled by the requested processor</param>
             [Pure]
-            public static MethodInfo SerializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(ArrayProcessor<object>.SerializerInfo));
+            public static MethodInfo SerializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(TypeProcessor<object>.SerializerInfo));
 
             /// <summary>
             /// Gets the <see cref="MethodInfo"/> instance for the dynamic deserializer of a given type
             /// </summary>
             /// <param name="objectType">The type of the item being handled by the requested processor</param>
             [Pure]
-            public static MethodInfo DeserializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(ArrayProcessor<object>.DeserializerInfo));
+            public static MethodInfo DeserializerInfo(Type objectType) => GetMethodInfo(objectType, nameof(TypeProcessor<object>.DeserializerInfo));
         }
     }
 }

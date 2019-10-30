@@ -52,4 +52,3 @@ namespace BinaryPack.Serialization.Reflection
         }
     }
 }
-

@@ -1,8 +1,8 @@
 ﻿using BinaryPack.Attributes;
 
-namespace BinaryPack.Serialization.Processors
+namespace BinaryPack.Serialization.Processors.Arrays
 {
-    internal sealed partial class ArrayProcessor<T>
+    internal sealed partial class ArrayProcessor<TArray>
     {
         /// <summary>
         /// A <see langword="class"/> that exposes hardcoded indices for local variables for <see cref="ArrayProcessor{T}"/>
@@ -15,7 +15,7 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the source <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the length of the source <typeparamref name="TArray"/> array
                 /// </summary>
                 [LocalType(typeof(int))]
                 Length,
@@ -27,7 +27,7 @@ namespace BinaryPack.Serialization.Processors
                 I,
 
                 /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// The <see langword="ref"/> <typeparamref name="TArray"/> variable, used to iterate arrays of reference types
                 /// </summary>
                 RefT
             }
@@ -38,12 +38,12 @@ namespace BinaryPack.Serialization.Processors
             public enum Read
             {
                 /// <summary>
-                /// The target <typeparamref name="T"/> array
+                /// The target <typeparamref name="TArray"/> array
                 /// </summary>
                 ArrayT,
 
                 /// <summary>
-                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="T"/> array
+                /// The <see cref="int"/> local variable to track the length of the target <typeparamref name="TArray"/> array
                 /// </summary>
                 [LocalType(typeof(int))]
                 Length,
@@ -55,7 +55,7 @@ namespace BinaryPack.Serialization.Processors
                 I,
 
                 /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="T"/> variable, used to iterate arrays of reference types
+                /// The <see langword="ref"/> <typeparamref name="TArray"/> variable, used to iterate arrays of reference types
                 /// </summary>
                 RefT
             }

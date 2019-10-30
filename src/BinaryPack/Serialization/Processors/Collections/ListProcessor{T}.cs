@@ -17,7 +17,7 @@ namespace BinaryPack.Serialization.Processors.Collections
     internal sealed partial class ListProcessor<T> : TypeProcessor<List<T>?>
     {
         /// <summary>
-        /// Gets the singleton <see cref="ArrayProcessor{T}"/> instance to use
+        /// Gets the singleton <see cref="ListProcessor{T}"/> instance to use
         /// </summary>
         public static ListProcessor<T> Instance { get; } = new ListProcessor<T>();
 
