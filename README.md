@@ -59,7 +59,9 @@ Here is a list of the property types currently supported by the library:
 
 ✅ Unmanaged types: eg. `System.Numerics.Vector2`, and all `unmanaged` value types
 
-✅ .NET collections: `List<T>`, `T[]`, `IList<T>`, `ICollection<T>`, `IEnumerable<T>`, etc.
+✅ .NET arrays: `T[]`, `T[,]`, `T[,,]`, etc.
+
+✅ .NET collections: `List<T>`, `IList<T>`, `ICollection<T>`, `IEnumerable<T>`, etc.
 
 ✅ .NET dictionaries: `Dictionary<TKey, TValue>`, `IDictionary<TKey, TValue>` and `IReadOnlyDictionary<TKey, TValue>`
 
