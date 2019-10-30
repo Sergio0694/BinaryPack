@@ -199,7 +199,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
             else
             {
                 // ref T r0 = ref obj[0, ..., 0];
-                il.EmitLoadArgument(Locals.Read.ArrayT);
+                il.EmitLoadLocal(Locals.Read.ArrayT);
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
                 il.EmitCall(AddressMethod);
