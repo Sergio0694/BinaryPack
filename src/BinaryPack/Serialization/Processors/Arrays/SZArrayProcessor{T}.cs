@@ -55,12 +55,11 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.EmitLoadInt32(0);
             il.Emit(OpCodes.Ble_S, end);
 
-            /* The generic type parameter T doesn't have constraints, and there are three
-             * main cases that need to be handled. This is all done while building the
-             * method, so there are no actual checks being performed during serialization.
+            /* The generic type parameter T doesn't have constraints, and there are two
+             * cases that need to be handled. This is all done while building the method,
+             * so there are no actual checks being performed during serialization.
              * If T is unmanaged, the whole array is written directly to the stream.
-             * If T is a string, the dedicated serializer is invoked. For all other
-             * cases,the standard object serializer is used. */
+             * Otherwise, the right object serializer is used depending on the current type. */
             if (typeof(T).IsUnmanaged())
             {
                 // writer.Write(obj.AsSpan());
