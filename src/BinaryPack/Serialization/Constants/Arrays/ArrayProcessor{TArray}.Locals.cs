@@ -55,7 +55,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 I,
 
                 /// <summary>
-                /// The <see langword="ref"/> <typeparamref name="TArrayT"/> variable, used to iterate arrays of reference types
+                /// The <see langword="ref"/> <typeparamref name="TArray"/> variable, used to iterate arrays of reference types
                 /// </summary>
                 RefT
             }

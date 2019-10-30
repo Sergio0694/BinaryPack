@@ -37,6 +37,11 @@ namespace BinaryPack.Serialization.Processors.Arrays
         private static readonly int Rank = typeof(TArray).GetArrayRank();
 
         /// <summary>
+        /// The <see cref="MethodInfo"/> instance mapping the method to retrieve the address of a given item in an array of type <typeparamref name="TArray"/>
+        /// </summary>
+        private static readonly MethodInfo AddressMethod = typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>
         /// Gets the singleton <see cref="ArrayProcessor{TArray}"/> instance to use
         /// </summary>
         public static ArrayProcessor<TArray> Instance { get; } = new ArrayProcessor<TArray>();
@@ -95,7 +100,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 il.EmitLoadArgument(Arguments.Write.T);
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
-                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitCall(AddressMethod);
                 il.EmitLoadLocal(Locals.Write.Length);
                 il.EmitCall(KnownMembers.Span.RefConstructor(T));
                 il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(T));
@@ -106,7 +111,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 il.EmitLoadArgument(Arguments.Write.T);
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
-                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitCall(AddressMethod);
                 il.EmitStoreLocal(Locals.Write.RefT);
 
                 // for (int i = 0; i < length; i++) { }
@@ -185,7 +190,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 il.EmitLoadLocal(Locals.Read.ArrayT);
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
-                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitCall(AddressMethod);
                 il.EmitLoadLocal(Locals.Read.Length);
                 il.EmitCall(KnownMembers.Span.RefConstructor(T));
                 il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(T));
@@ -196,7 +201,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 il.EmitLoadArgument(Locals.Read.ArrayT);
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
-                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitCall(AddressMethod);
                 il.EmitStoreLocal(Locals.Read.RefT);
 
                 // for (int i = 0; i < length; i++) { }
