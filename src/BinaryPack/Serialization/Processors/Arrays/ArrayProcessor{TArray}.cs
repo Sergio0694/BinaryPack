@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BinaryPack.Serialization.Constants;
@@ -48,18 +49,18 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.DeclareLocals<Locals.Write>();
             if (!T.IsUnmanaged()) il.DeclareLocal(T.MakeByRefType());
 
-            // int length = obj?.Length ?? -1;
-            Label
-                isNotNull = il.DefineLabel(),
-                lengthLoaded = il.DefineLabel();
+            // if (obj == null) { writer.Write(-1); return; }
+            Label isNotNull = il.DefineLabel();
             il.EmitLoadArgument(Arguments.Write.T);
             il.Emit(OpCodes.Brtrue_S, isNotNull);
+            il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadInt32(-1);
-            il.Emit(OpCodes.Br_S, lengthLoaded);
-            il.MarkLabel(isNotNull);
+            il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
+            il.Emit(OpCodes.Ret);
+
+            // int length = obj.Length;
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(Array).GetProperty(nameof(Array.Length)));
-            il.MarkLabel(lengthLoaded);
             il.EmitStoreLocal(Locals.Write.Length);
 
             // writer.Write(length);
@@ -67,13 +68,12 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.EmitLoadLocal(Locals.Write.Length);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
-            // if (length <= 0) return;
-            Label isNotNullOrEmpty = il.DefineLabel();
+            // if (length == 0) return;
+            Label isNotEmpty = il.DefineLabel();
             il.EmitLoadLocal(Locals.Write.Length);
-            il.EmitLoadInt32(0);
-            il.Emit(OpCodes.Bgt_S, isNotNullOrEmpty);
+            il.Emit(OpCodes.Brtrue_S, isNotEmpty);
             il.Emit(OpCodes.Ret);
-            il.MarkLabel(isNotNullOrEmpty);
+            il.MarkLabel(isNotEmpty);
 
             // writer.Write(obj.GetLength([0..Rank]));
             for (int i = 0; i < Rank; i++)
@@ -96,7 +96,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
                 for (int i = 0; i < Rank; i++)
                     il.EmitLoadInt32(0);
                 il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
-                il.EmitLoadLocal(Locals.Write.Length); 
+                il.EmitLoadLocal(Locals.Write.Length);
                 il.EmitCall(KnownMembers.Span.RefConstructor(T));
                 il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(T));
             }
@@ -145,6 +145,93 @@ namespace BinaryPack.Serialization.Processors.Arrays
         /// <inheritdoc/>
         protected override void EmitDeserializer(ILGenerator il)
         {
+            il.DeclareLocal(typeof(TArray));
+            il.DeclareLocals<Locals.Read>();
+            if (!T.IsUnmanaged()) il.DeclareLocal(T.MakeByRefType());
+
+            // int length = reader.Read<int>();
+            il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+            il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
+            il.EmitStoreLocal(Locals.Read.Length);
+
+            // if (length == -1) return null;
+            Label isNotNull = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Length);
+            il.EmitLoadInt32(-1);
+            il.Emit(OpCodes.Bne_Un_S, isNotNull);
+            il.Emit(OpCodes.Ldnull);
+            il.Emit(OpCodes.Ret);
+
+            // T[...,] array = new T[a, ..., b];
+            il.MarkLabel(isNotNull);
+            for (int i = 0; i < Rank; i++)
+            {
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(int)));
+            }
+
+            il.Emit(OpCodes.Newobj, typeof(TArray).GetConstructor(Enumerable.Repeat(typeof(int), Rank).ToArray()));
+            il.EmitStoreLocal(Locals.Read.ArrayT);
+
+            // if (length > 0) { }
+            Label end = il.DefineLabel();
+            il.EmitLoadLocal(Locals.Read.Length);
+            il.Emit(OpCodes.Brfalse_S, end);
+
+            if (T.IsUnmanaged())
+            {
+                // reader.Read(MemoryMarshal.CreateSpan(ref obj[0, ..., 0], length));
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitLoadLocal(Locals.Read.ArrayT);
+                for (int i = 0; i < Rank; i++)
+                    il.EmitLoadInt32(0);
+                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitLoadLocal(Locals.Read.Length);
+                il.EmitCall(KnownMembers.Span.RefConstructor(T));
+                il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(T));
+            }
+            else
+            {
+                // ref T r0 = ref obj[0, ..., 0];
+                il.EmitLoadArgument(Locals.Read.ArrayT);
+                for (int i = 0; i < Rank; i++)
+                    il.EmitLoadInt32(0);
+                il.EmitCall(typeof(TArray).GetMethod("Address", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.EmitStoreLocal(Locals.Read.RefT);
+
+                // for (int i = 0; i < length; i++) { }
+                Label check = il.DefineLabel();
+                il.EmitLoadInt32(0);
+                il.EmitStoreLocal(Locals.Read.I);
+                il.Emit(OpCodes.Br_S, check);
+                Label loop = il.DefineLabel();
+                il.MarkLabel(loop);
+
+                // Unsafe.Add(ref r0, i) = TypeProcessor.Deserializer(ref reader);
+                il.EmitLoadLocal(Locals.Read.RefT);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitAddOffset(T);
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(T));
+                il.EmitStoreToAddress(T);
+
+                // i++;
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadInt32(1);
+                il.Emit(OpCodes.Add);
+                il.EmitStoreLocal(Locals.Read.I);
+
+                // Loop check
+                il.MarkLabel(check);
+                il.EmitLoadLocal(Locals.Read.I);
+                il.EmitLoadLocal(Locals.Read.Length);
+                il.Emit(OpCodes.Blt_S, loop);
+            }
+
+            // return array;
+            il.MarkLabel(end);
+            il.EmitLoadLocal(Locals.Read.ArrayT);
+            il.Emit(OpCodes.Ret);
         }
     }
 }
