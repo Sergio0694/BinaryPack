@@ -13,6 +13,16 @@ namespace BinaryPack.Serialization.Processors.Arrays
     internal sealed partial class BitArrayProcessor : TypeProcessor<BitArray?>
     {
         /// <summary>
+        /// The <see cref="FieldInfo"/> instance mapping the length of a given <see cref="BitArray"/> instance
+        /// </summary>
+        private static readonly FieldInfo LengthField = typeof(BitArray).GetField("m_length", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>
+        /// The <see cref="FieldInfo"/> instance mapping the internal <see cref="int"/> array for a given <see cref="BitArray"/> instance
+        /// </summary>
+        private static readonly FieldInfo ArrayField = typeof(BitArray).GetField("m_array", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        /// <summary>
         /// Gets the singleton <see cref="BitArrayProcessor"/> instance to use
         /// </summary>
         public static BitArrayProcessor Instance { get; } = new BitArrayProcessor();
@@ -33,13 +43,13 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(BitArray).GetField("m_length", BindingFlags.NonPublic | BindingFlags.Instance));
+            il.EmitReadMember(LengthField);
             il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(int)));
 
             // writer.Write(new Span<int>(obj.m_array));
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitReadMember(typeof(BitArray).GetField("m_array", BindingFlags.NonPublic | BindingFlags.Instance));
+            il.EmitReadMember(ArrayField);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(int)));
             il.EmitCall(KnownMembers.BinaryWriter.WriteSpanT(typeof(int)));
             il.Emit(OpCodes.Ret);
@@ -73,7 +83,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
             // reader.Read(new Span<int>(array.m_array));
             il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
             il.EmitLoadLocal(Locals.Read.BitArray);
-            il.EmitReadMember(typeof(BitArray).GetField("m_array", BindingFlags.NonPublic | BindingFlags.Instance));
+            il.EmitReadMember(ArrayField);
             il.Emit(OpCodes.Newobj, KnownMembers.Span.ArrayConstructor(typeof(int)));
             il.EmitCall(KnownMembers.BinaryReader.ReadSpanT(typeof(int)));
 
