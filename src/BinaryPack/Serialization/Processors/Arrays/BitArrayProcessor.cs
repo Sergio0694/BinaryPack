@@ -30,6 +30,7 @@ namespace BinaryPack.Serialization.Processors.Arrays
             il.Emit(OpCodes.Ret);
 
             // writer.Write(obj.m_length);
+            il.MarkLabel(isNotNull);
             il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
             il.EmitLoadArgument(Arguments.Write.T);
             il.EmitReadMember(typeof(BitArray).GetField("m_length", BindingFlags.NonPublic | BindingFlags.Instance));
