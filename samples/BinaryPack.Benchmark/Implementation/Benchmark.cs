@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BinaryPack.Models.Interfaces;
@@ -16,7 +17,7 @@ namespace BinaryPack.Benchmark.Implementations
     [MemoryDiagnoser]
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     [CategoriesColumn]
-    public partial class Benchmark<T> where T : class, IInitializable, new()
+    public partial class Benchmark<T> where T : class, IInitializable, IEquatable<T>, new()
     {
         private const string SERIALIZATION = "Serialization";
 
@@ -49,6 +50,7 @@ namespace BinaryPack.Benchmark.Implementations
         public void Setup()
         {
             Model.Initialize();
+            T deserializedModel;
 
             // Newtonsoft
             using (MemoryStream stream = new MemoryStream())
@@ -65,7 +67,9 @@ namespace BinaryPack.Benchmark.Implementations
                 stream.Seek(0, SeekOrigin.Begin);
                 using StreamReader textReader = new StreamReader(stream);
                 using JsonTextReader jsonReader = new JsonTextReader(textReader);
-                _ = serializer.Deserialize<T>(jsonReader);
+                deserializedModel = serializer.Deserialize<T>(jsonReader);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with Newtonsoft.Json");
             }
 
             // Binary formatter
@@ -77,7 +81,9 @@ namespace BinaryPack.Benchmark.Implementations
                 BinaryFormatterData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = formatter.Deserialize(stream);
+                deserializedModel = (T)formatter.Deserialize(stream);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with BinaryFormatter");
             }
 
             // .NETCore JSON
@@ -90,7 +96,9 @@ namespace BinaryPack.Benchmark.Implementations
                 DotNetCoreJsonData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
+                deserializedModel = System.Text.Json.JsonSerializer.DeserializeAsync<T>(stream).Result;
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with System.Text.Json");
             }
 
             // DataContractJson
@@ -102,7 +110,9 @@ namespace BinaryPack.Benchmark.Implementations
                 DataContractJsonData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = serializer.ReadObject(stream);
+                deserializedModel = (T)serializer.ReadObject(stream);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with DataContractJson");
             }
 
             // XML serializer
@@ -114,7 +124,9 @@ namespace BinaryPack.Benchmark.Implementations
                 XmlSerializerData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = serializer.Deserialize(stream);
+                deserializedModel = (T)serializer.Deserialize(stream);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with XmlSerializer");
             }
 
             // Portable Xaml
@@ -126,6 +138,7 @@ namespace BinaryPack.Benchmark.Implementations
 
                 stream.Seek(0, SeekOrigin.Begin);
                 _ = Portable.Xaml.XamlServices.Load(stream);
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with Portable.Xaml");
             }
 
             // Utf8Json
@@ -136,7 +149,9 @@ namespace BinaryPack.Benchmark.Implementations
                 Utf8JsonData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = Utf8JsonSerializer.Deserialize<T>(stream);
+                deserializedModel = Utf8JsonSerializer.Deserialize<T>(stream);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with Utf8Json");
             }
 
             // MessagePack
@@ -147,7 +162,9 @@ namespace BinaryPack.Benchmark.Implementations
                 MessagePackData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+                deserializedModel = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with MessagePack");
             }
 
             // BinaryPack
@@ -158,7 +175,9 @@ namespace BinaryPack.Benchmark.Implementations
                 BinaryPackData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                _ = BinaryConverter.Deserialize<T>(stream);
+                deserializedModel = BinaryConverter.Deserialize<T>(stream);
+
+                if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with BinaryPack");
             }
         }
     }

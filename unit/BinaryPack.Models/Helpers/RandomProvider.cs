@@ -44,7 +44,7 @@ namespace BinaryPack.Models.Helpers
         /// Creates a new random <see cref="DateTime"/> value
         /// </summary>
         [Pure]
-        public static DateTime NextDateTime() => DateTime.Today.AddSeconds(Random.Next(0, 31536000));
+        public static DateTime NextDateTime() => DateTime.Today.AddSeconds(Random.Next(0, 31536000)).ToUniversalTime();
 
         private const string Characters = "!?\"'#$&()*+,-.0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz{}";
 
