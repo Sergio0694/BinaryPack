@@ -1,14 +1,13 @@
 ![BinaryPackIcon](https://user-images.githubusercontent.com/10199417/67103112-d8852800-f1c4-11e9-9679-8cb344e988dc.png) [![NuGet](https://img.shields.io/nuget/v/BinaryPack.svg?style=for-the-badge&logo=nuget)](https://www.nuget.org/packages/BinaryPack/) [![NuGet](https://img.shields.io/nuget/dt/BinaryPack.svg?style=for-the-badge)](https://www.nuget.org/stats/packages/BinaryPack?groupby=Version)
 [![AppVeyor](https://img.shields.io/appveyor/ci/Sergio0694/binarypack/master.svg?style=for-the-badge&logo=appveyor)](https://ci.appveyor.com/project/Sergio0694/binarypack/master/)
 
-# What is it?
-
-**BinaryPack** is a binary serialization library inspired by `MessagePack`, but faster and producing even smaller files. The goal of this project is to be able to use **BinaryPack** as a drop-in replacement for JSON/XML/MessagePack serialization, when the serialized models don't need to be shared with other applications or with web services. **BinaryPack** is built to be as fast and memory efficient as possible: it uses virtually no memory allocations, and the serialized data is packed to take up as little space as possible. Whenever you're using either JSON, MessagePack, XML or some other format to cache data for your apps, to send data between clients or to save data that is not critical, you can try using **BinaryPack** over your previous serialization library - it will provide the same basic functionalities to serialize and deserialize models, but with much higher performance and less memory usage.
+**BinaryPack** is a binary serialization library inspired by `MessagePack`, but even faster, more efficient and producing smaller files. The goal of this project is to be able to use **BinaryPack** as a drop-in replacement for JSON, XML, `MessagePack` or `BinaryFormatter` serialization, when the serialized models don't need to be shared with other applications or with web services. **BinaryPack** is built to be as fast and memory efficient as possible: it uses virtually no memory allocations, and the serialized data is packed to take up as little space as possible. Whenever you're using either JSON, `MessagePack`, XML or some other format to cache data for your apps, to send data between clients or to save data that is not critical, you can try using **BinaryPack** over your previous serialization library - it will provide the same basic functionalities to serialize and deserialize models, but with much higher performance and less memory usage.
 
 ### Alright, it's "faster and more efficient", but how much?
-Of course you shouldn't take my word for it, so this README includes a number of benchmarks that were performed on a number of different models. The benchmark code and all the models used can be found in this repository. To summarize:
-- **BinaryPack** was consistently the faster library, both during serialization and deserialization. The performance difference ranged from **7.6x** faster than `Newtonsoft.Json`, **7x** than [`Utf8Json`](https://github.com/neuecc/Utf8Json) and **1.9x** than `MessagePack` when serializing a small JSON response, to **245x** faster than `Newtonsoft.Json`, **129x** than `Utf8Json` and **3.9x** than `MessagePack` when dealing with mostly binary data (eg. a model with a large `float[]` array, or another `unmanaged` type).
-- The memory usage was on average on par with `Utf8Json`, except when deserializing mostly binary data, in which case **BinaryPack** used **1/100** the memory of `Utf8Json`, and **1/2** that of `MessagePack`. **BinaryPack** also almost always resulted in the lowest number of GC collections during serialization and deserialization of models.
+![BinaryPack-benchmark](https://i.imgur.com/WJYuBXK.png)
+This benchmark was performed with the [JsonResponseModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/JsonResponseModel.cs) class available in the repository, which contains a number of `string`, `int`, `double` and `DateTime` properties, as well as a collection of other nested models, representing an example of a JSON response from a REST API. This README also includes a number of benchmarks that were performed on a number of different models. The benchmark code and all the models used can be found in this repository as well. To summarize:
+- **BinaryPack** was consistently the fastest library, both during serialization and deserialization. The performance difference ranged from **7.6x** faster than `Newtonsoft.Json`, **7x** than [`Utf8Json`](https://github.com/neuecc/Utf8Json) and **1.9x** than `MessagePack` when serializing a small JSON response, to **245x** faster than `Newtonsoft.Json`, **129x** than `Utf8Json` and **3.9x** than `MessagePack` when dealing with mostly binary data (eg. a model with a large `float[]` array).
+- The memory usage was on average on par or better than `Utf8Json`, except when deserializing mostly binary data, in which case **BinaryPack** used **1/100** the memory of `Utf8Json`, and **1/2** that of `MessagePack`. **BinaryPack** also almost always resulted in the lowest number of GC collections during serialization and deserialization of models.
 - In all cases, the **BinaryPack** serialization resulted in the smallest file on disk.
 
 # Table of Contents
@@ -100,46 +99,27 @@ Similarly, there's also a `SerializableMember` that can be used when the mode is
 > Unfortunately not at the moment, UWP is still on .NET Standard 2.0 and doesn't support dynamic code generation due to how the .NET Native compiler is implemented. Hopefully it will be possible to use **BinaryPack** on UWP when it moves to .NET 5 and the new MonoAOT compiler in the second half of 2020.
 
 # Benchmarks
-Here are three full benchmarks executed with the benchmark sample included in this repository. The error and standard deviation columns have been removed to fit each table in the horizontal space available for the README file reader on GitHub. The JSON response model used in the first two benchmarks is the [JsonResponseModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/JsonResponseModel.cs) class, using 240 child items in the first case, and 2000 in the second. The class used in the last benchmark is instead [NeuralNetworkLayerModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/NeuralNetworkLayerModel.cs).
+Here are three full benchmarks executed with the benchmark sample included in this repository. The error and standard deviation columns have been removed to fit each table in the horizontal space available for the README file reader on GitHub. As mentioned before, the JSON response model used in the first two benchmarks is the [JsonResponseModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/JsonResponseModel.cs) class. The class used in the last benchmark is instead [NeuralNetworkLayerModel](https://github.com/Sergio0694/BinaryPack/blob/master/unit/BinaryPack.Models/NeuralNetworkLayerModel.cs).
 
-### Small JSON response (~800KB)
+### JSON response
 
-|          Method |      Categories |       Mean | Ratio |     Gen 0 |    Gen 1 |    Gen 2 |  Allocated |
-|---------------- |---------------- |-----------:|------:|----------:|---------:|---------:|-----------:|
-|  NewtonsoftJson |   Serialization |   8.961 ms |  1.00 |  359.3750 | 234.3750 | 218.7500 |   616388 B |
-| BinaryFormatter |   Serialization |   9.310 ms |  1.04 |  375.0000 | 171.8750 |  93.7500 |  1331250 B |
-|     NetCoreJson |   Serialization |   9.753 ms |  1.09 |  437.5000 | 218.7500 | 203.1250 |  1006896 B |
-|   XmlSerializer |   Serialization |  10.521 ms |  1.17 |  875.0000 | 171.8750 | 156.2500 |  3039637 B |
-|        Utf8Json |   Serialization |   7.847 ms |  0.88 |  156.2500 | 156.2500 | 156.2500 |      243 B |
-|     MessagePack |   Serialization |   2.141 ms |  0.24 |  222.6563 | 222.6563 | 222.6563 |     1187 B |
-|      **BinaryPack** |   Serialization |   **1.124 ms** |  **0.13** |   **23.4375** |  **23.4375** |  **23.4375** |      **158 B** |
-|                 |                 |            |       |           |          |          |            |
-|  NewtonsoftJson | Deserialization |  13.828 ms |  1.00 |  484.3750 | 234.3750 |        - |  2866728 B |
-| BinaryFormatter | Deserialization |  16.316 ms |  1.18 |  906.2500 | 437.5000 | 156.2500 |  5083706 B |
-|     NetCoreJson | Deserialization |  16.109 ms |  1.16 |  375.0000 | 187.5000 |        - |  2329120 B |
-|   XmlSerializer | Deserialization |  13.918 ms |  1.01 |  500.0000 | 296.8750 |  62.5000 |  2715815 B |
-|        Utf8Json | Deserialization |   7.004 ms |  0.51 |  468.7500 | 296.8750 | 125.0000 |  2000148 B |
-|     MessagePack | Deserialization |   3.381 ms |  0.24 |  550.7813 | 382.8125 | 187.5000 |  2253308 B |
-|      **BinaryPack** | Deserialization |   **1.171 ms** |  **0.08** |  **369.1406** | **183.5938** |        - |  2222632 B |
-
-### Large JSON response (~9MB)
-|          Method |      Categories |        Mean | Ratio |      Gen 0 |     Gen 1 |    Gen 2 |   Allocated |
-|---------------- |---------------- |------------:|------:|-----------:|----------:|---------:|------------:|
-|  NewtonsoftJson |   Serialization |    72.31 ms |  1.00 |   857.1429 |         - |        - |   4072600 B |
-| BinaryFormatter |   Serialization |    80.40 ms |  1.11 |  1571.4286 |  428.5714 |        - |   7557513 B |
-|     NetCoreJson |   Serialization |    85.77 ms |  1.19 |  1833.3333 |         - |        - |   8085480 B |
-|   XmlSerializer |   Serialization |    87.49 ms |  1.21 |  5833.3333 |         - |        - |  25062624 B |
-|        Utf8Json |   Serialization |    62.59 ms |  0.87 |          - |         - |        - |        72 B |
-|     MessagePack |   Serialization |    22.79 ms |  0.32 |   187.5000 |  187.5000 | 187.5000 |       325 B |
-|      **BinaryPack** |   Serialization |    **15.71 ms** |  **0.22** |    78.1250 |   78.1250 |  78.1250 |       198 B |
-|                 |                 |             |       |            |           |          |             |
-|  NewtonsoftJson | Deserialization |   129.27 ms |  1.00 |  3750.0000 | 1500.0000 | 250.0000 |  22250810 B |
-| BinaryFormatter | Deserialization |   157.14 ms |  1.22 |  7000.0000 | 2750.0000 | 750.0000 |  39735018 B |
-|     NetCoreJson | Deserialization |   140.78 ms |  1.09 |  3000.0000 | 1250.0000 | 250.0000 |  17723686 B |
-|   XmlSerializer | Deserialization |   148.37 ms |  1.15 |  4250.0000 | 1750.0000 | 500.0000 |  23398808 B |
-|        Utf8Json | Deserialization |    79.97 ms |  0.62 |  3142.8571 | 1428.5714 | 428.5714 |  17421427 B |
-|     MessagePack | Deserialization |    42.08 ms |  0.33 |  2937.5000 | 1312.5000 | 437.5000 |  16682502 B |
-|      **BinaryPack** | Deserialization |    **29.61 ms** |  **0.23** |  3062.5000 | 1281.2500 | 406.2500 |  17133154 B |
+|          Method |      Categories |        Mean | Ratio |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |
+|---------------- |---------------- |------------:|------:|---------:|---------:|---------:|----------:|
+|  NewtonsoftJson |   Serialization |  1.083.1 us |  1.00 | 156.2500 | 121.0938 | 107.4219 |  205083 B |
+| BinaryFormatter |   Serialization |  1.446.6 us |  1.34 | 132.8125 |  68.3594 |  37.1094 |  402558 B |
+|     NetCoreJson |   Serialization |  1.147.0 us |  1.06 | 199.2188 | 142.5781 | 140.6250 |  252407 B |
+|   XmlSerializer |   Serialization |  1.274.5 us |  1.18 | 250.0000 | 146.4844 | 107.4219 |  604205 B |
+|        Utf8Json |   Serialization |    744.4 us |  0.69 | 140.6250 | 140.6250 | 140.6250 |     495 B |
+|     MessagePack |   Serialization |    217.3 us |  0.20 |  61.0352 |  61.0352 |  61.0352 |     432 B |
+|      **BinaryPack** |   Serialization |    **168.1 us** |  **0.16** |  **26.6113** |  **26.6113** |  **26.6113** |     **108 B** |
+|                 |                 |             |       |          |          |          |           |
+|  NewtonsoftJson | Deserialization |  2.092.1 us |  1.00 |  66.4063 |  19.5313 |        - |  304320 B |
+| BinaryFormatter | Deserialization |  1.466.9 us |  0.70 | 130.8594 |  48.8281 |        - |  676136 B |
+|     NetCoreJson | Deserialization |  1.964.5 us |  0.94 |  50.7813 |  15.6250 |        - |  220856 B |
+|   XmlSerializer | Deserialization |  2.098.6 us |  1.00 | 132.8125 |  70.3125 |  35.1563 |  461000 B |
+|        Utf8Json | Deserialization |    887.0 us |  0.42 | 165.0391 | 131.8359 | 109.3750 |  237159 B |
+|     MessagePack | Deserialization |    337.0 us |  0.16 |  87.4023 |  53.2227 |  35.1563 |  241462 B |
+|      **BinaryPack** | Deserialization |    **168.8 us** |  **0.08** |  **46.6309** |  **13.9160** |        - |  **215192 B** |
 
 ### Neural network layer model
 |          Method |      Categories |        Mean | Ratio |     Gen 0 |    Gen 1 |    Gen 2 | Allocated |
