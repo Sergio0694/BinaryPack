@@ -27,6 +27,14 @@ namespace BinaryPack.Models.Helpers
         public static int NextInt() => Random.Next();
 
         /// <summary>
+        /// Creates a new random <see cref="int"/> value in a given interval
+        /// </summary>
+        /// <param name="min">The minim value in the interval</param>
+        /// <param name="max">The maximum value in the interval</param>
+        [Pure]
+        public static int NextInt(int min, int max) => Random.Next(min, max);
+
+        /// <summary>
         /// Creates a new random <see cref="double"/> value
         /// </summary>
         [Pure]

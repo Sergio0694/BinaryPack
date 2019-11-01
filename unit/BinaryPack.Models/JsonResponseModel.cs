@@ -42,16 +42,16 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Id = RandomProvider.NextString(40);
+            Id = RandomProvider.NextString(6);
             Type = nameof(JsonResponseModel);
             Count = RandomProvider.NextInt();
             CreationTime = RandomProvider.NextDateTime();
             UpdateTime = RandomProvider.NextDateTime();
             ExpirationTime = RandomProvider.NextDateTime();
-            PreviousPageId = RandomProvider.NextString(40);
-            FollowingPageId = RandomProvider.NextString(40);
+            PreviousPageId = RandomProvider.NextString(6);
+            FollowingPageId = RandomProvider.NextString(6);
             ModelContainers = new List<ApiModelContainer>();
-            for (int i = 0; i < 2000; i++)
+            for (int i = 0; i < 50; i++)
             {
                 var model = new ApiModelContainer();
                 model.Initialize();
@@ -93,7 +93,7 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Id = RandomProvider.NextString(40);
+            Id = RandomProvider.NextString(6);
             Type = nameof(JsonResponseModel);
             Model = new RestApiModel();
             Model.Initialize();
@@ -174,14 +174,24 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Id = RandomProvider.NextString(40);
+            Id = RandomProvider.NextString(6);
             Type = nameof(RestApiModel);
-            Parent = RandomProvider.NextString(40);
-            Author = RandomProvider.NextString(40);
-            Title = RandomProvider.NextString(120);
-            Text = RandomProvider.NextString(500);
-            Url = RandomProvider.NextString(100);
-            HtmlContent = RandomProvider.NextString(800);
+            Parent = RandomProvider.NextString(6);
+            Author = RandomProvider.NextString(6);
+            Title = RandomProvider.NextString(RandomProvider.NextInt(40, 120));
+            if (RandomProvider.NextBool())
+            {
+                
+                Text = RandomProvider.NextString(RandomProvider.NextInt(80, 400));
+                Url = null;
+                HtmlContent = RandomProvider.NextString(RandomProvider.NextInt(100, 600));
+            }
+            else
+            {
+                Text = null;
+                Url = RandomProvider.NextString(RandomProvider.NextInt(80, 120));
+                HtmlContent = null;
+            }
             Upvotes = RandomProvider.NextInt();
             Downvotes = RandomProvider.NextInt();
             VotesRatio = Upvotes / (float)Downvotes;
@@ -197,9 +207,9 @@ namespace BinaryPack.Models
             Flag3 = RandomProvider.NextBool();
             Flag4 = RandomProvider.NextBool();
             Flag5 = RandomProvider.NextBool();
-            if (RandomProvider.NextBool()) Optional1 = RandomProvider.NextString(20);
-            if (RandomProvider.NextBool()) Optional2 = RandomProvider.NextString(20);
-            if (RandomProvider.NextBool()) Optional3 = RandomProvider.NextString(20);
+            if (RandomProvider.NextBool()) Optional1 = RandomProvider.NextString(RandomProvider.NextInt(6, 20));
+            if (RandomProvider.NextBool()) Optional2 = RandomProvider.NextString(RandomProvider.NextInt(6, 20));
+            if (RandomProvider.NextBool()) Optional3 = RandomProvider.NextString(RandomProvider.NextInt(6, 20));
             if (RandomProvider.NextBool())
             {
                 Info = new MediaInfoModel();
@@ -261,11 +271,11 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Id = RandomProvider.NextString(40);
+            Id = RandomProvider.NextString(6);
             AlbumUrl = RandomProvider.NextString(100);
             Property = RandomProvider.NextBool();
             Images = new List<ImageModel>();
-            int count = RandomProvider.NextInt() % 50 + 1;
+            int count = RandomProvider.NextInt() % 4 + 1;
             for (int i = 0; i < count; i++)
             {
                 var model = new ImageModel();
@@ -305,7 +315,7 @@ namespace BinaryPack.Models
         /// <inheritdoc/>
         public void Initialize()
         {
-            Url = RandomProvider.NextString(200);
+            Url = RandomProvider.NextString(RandomProvider.NextInt(140, 200));
             Width = RandomProvider.NextInt();
             Height = RandomProvider.NextInt();
             AspectRatio = Width / (float)Height;
