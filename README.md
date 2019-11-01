@@ -65,6 +65,8 @@ Here is a list of the property types currently supported by the library:
 
 ✅ .NET dictionaries: `Dictionary<TKey, TValue>`, `IDictionary<TKey, TValue>` and `IReadOnlyDictionary<TKey, TValue>`
 
+✅ Other .NET types: `BitArray`
+
 ## Attributes
 **BinaryPack** has a series of attributes that can be used to customize how the `BinaryConverter` class handles the serialization of input objects. By default, it will serialize all public properties of a type, but this behavior can be changed by using the `BinarySerialization` attribute. Here's an example:
 
