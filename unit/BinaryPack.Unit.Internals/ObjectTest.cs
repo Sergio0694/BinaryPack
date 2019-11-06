@@ -55,5 +55,21 @@ namespace BinaryPack.Unit.Internals
         [TestMethod]
         public void ValidationReferenceType() => Test<ValidationReferenceTypeModel>();
 
+        [TestMethod]
+        public void ValidationValueType()
+        {
+            // Initialization
+            ValidationValueTypeModel model = new ValidationValueTypeModel();
+            model.Initialize();
+
+            // Serialization
+            BinaryWriter writer = new BinaryWriter(BinaryWriter.DefaultSize);
+            ObjectProcessor<ValidationValueTypeModel>.Instance.Serializer(model, ref writer);
+            Span<byte> span = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(writer.Span.GetPinnableReference()), writer.Span.Length);
+            BinaryReader reader = new BinaryReader(span);
+            ValidationValueTypeModel result = ObjectProcessor<ValidationValueTypeModel>.Instance.Deserializer(ref reader);
+
+            Assert.IsTrue(model.Equals(result));
+        }
     }
 }
