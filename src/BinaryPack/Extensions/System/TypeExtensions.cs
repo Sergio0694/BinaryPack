@@ -69,28 +69,46 @@ namespace System
         public static int GetSize(this Type type) => (int)typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf)).MakeGenericMethod(type).Invoke(null, null);
 
         /// <summary>
-        /// Helper <see langword="class"/> for the <see cref="IsUnmanaged"/> method
+        /// Checks whether the input type is a <see cref="ValueTuple"/> instance of any kind
         /// </summary>
-        /// <typeparam name="T">The type to check against the <see langword="unmanaged"/> constraint</typeparam>
-        private static class _IsUnmanaged<T> where T : unmanaged { }
+        /// <param name="type">The input type to analyze</param>
+        /// <remarks>Code from <see href="https://www.tabsoverspaces.com/233605-checking-whether-the-type-is-a-tuple-valuetuple"/></remarks>
+        /// <returns><see langword="true"/> if <paramref name="type"/> represents a <see cref="ValueTuple"/>, <see langword="false"/> otherwise</returns>
+        [Pure]
+        public static bool IsValueTuple(this Type type)
+        {
+            if (!type.IsGenericType) return false;
+
+            Type openType = type.GetGenericTypeDefinition();
+            return
+                openType == typeof(ValueTuple<>) ||
+                openType == typeof(ValueTuple<,>) ||
+                openType == typeof(ValueTuple<,,>) ||
+                openType == typeof(ValueTuple<,,,>) ||
+                openType == typeof(ValueTuple<,,,,>) ||
+                openType == typeof(ValueTuple<,,,,,>) ||
+                openType == typeof(ValueTuple<,,,,,,>) ||
+                openType == typeof(ValueTuple<,,,,,,,>) && type.GetGenericArguments()[7].IsValueTuple();
+        }
 
         /// <summary>
         /// Checks whether or not the input type respects the <see langword="unmanaged"/> constraint
         /// </summary>
         /// <param name="type">The input type to analyze</param>
+        /// <remarks>Code partially from <see href="https://stackoverflow.com/questions/53968920"/></remarks>
+        /// <returns><see langword="true"/> if <paramref name="type"/> respects the <see langword="unmanaged"/> constraint, <see langword="false"/> otherwise</returns>
         [Pure]
         public static bool IsUnmanaged(this Type type)
         {
-            try
-            {
-                _ = typeof(_IsUnmanaged<>).MakeGenericType(type);
-                return true;
-            }
-            catch (ArgumentException)
-            {
-                // Not unmanaged
-                return false;
-            }
+            if (!type.IsValueType) return false;
+            if (type.IsGenericType && !type.IsValueTuple()) return false;
+
+            return
+                type.IsPrimitive ||
+                type == typeof(decimal) ||
+                type.IsPointer ||
+                type.IsEnum ||
+                type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).All(f => f.FieldType.IsUnmanaged());
         }
 
         /// <summary>
