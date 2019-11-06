@@ -61,7 +61,7 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // writer.Write(obj.Property);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(memberInfo.GetMemberType()));
                 }
@@ -87,7 +87,7 @@ namespace BinaryPack.Serialization.Processors
                         propertyHandled = il.DefineLabel();
 
                     // if (obj.Property is List<T> list) { }
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.Emit(OpCodes.Isinst, typeof(List<>).MakeGenericType(itemType));
                     il.Emit(OpCodes.Brfalse_S, isNotList);
@@ -98,7 +98,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // ListProcessor<T>.Instance.Serializer(list, stream);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(List<>).MakeGenericType(itemType)));
@@ -106,7 +106,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // else if (obj.Property is T[] array) { }
                     il.MarkLabel(isNotList);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.Emit(OpCodes.Isinst, itemType.MakeArrayType());
                     il.Emit(OpCodes.Brfalse_S, isNotArray);
@@ -117,7 +117,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // ArrayProcessor<T>.Instance.Serializer(array, stream);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(itemType.MakeArrayType()));
@@ -144,7 +144,7 @@ namespace BinaryPack.Serialization.Processors
                         il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                         // ICollectionProcessor<T>.Instance.Serializer(obj.Property, stream);
-                        il.EmitLoadArgument(Arguments.Write.T);
+                        il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                         il.EmitReadMember(memberInfo);
                         il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                         il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
@@ -159,7 +159,7 @@ namespace BinaryPack.Serialization.Processors
                         il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                         // IReadOnlyCollectionProcessor<T>.Instance.Serializer(obj.Property, stream);
-                        il.EmitLoadArgument(Arguments.Write.T);
+                        il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                         il.EmitReadMember(memberInfo);
                         il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                         il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IReadOnlyCollection<>).MakeGenericType(itemType)));
@@ -171,7 +171,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // IEnumerableProcessor<T>.Instance.Serializer(obj.Property, stream);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(IEnumerable<>).MakeGenericType(memberInfo.GetMemberType().GenericTypeArguments[0])));
@@ -190,7 +190,7 @@ namespace BinaryPack.Serialization.Processors
                         propertyHandled = il.DefineLabel();
 
                     // if (obj.Property is Dictionary<TKey, TValue> dictionary) { }
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.Emit(OpCodes.Isinst, typeof(Dictionary<,>).MakeGenericType(generics));
                     il.Emit(OpCodes.Brfalse_S, isNotDictionary);
@@ -201,7 +201,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // DictionaryProcessor<TKey, TValue>.Instance.Serializer(dictionary, stream);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
@@ -216,7 +216,7 @@ namespace BinaryPack.Serialization.Processors
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(byte)));
 
                     // TypeProcessor<TKey, TValue>.Instance.Serializer(obj.Property, stream);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
@@ -227,7 +227,7 @@ namespace BinaryPack.Serialization.Processors
                     /* In all other cases, from Nullable<T> types to T[] arrays, we use reflection to
                      * determine the right TypeProcessor<T> instance to use, then just invoke it
                      * after retrieving the current value of the property of that type. */
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, typeof(T), memberInfo);
                     il.EmitReadMember(memberInfo);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(memberInfo.GetMemberType()));
