@@ -283,7 +283,8 @@ namespace System.Reflection.Emit
                     il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
                     break;
                 case PropertyInfo property when property.CanWrite:
-                    il.EmitCall(property.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, property.SetMethod, null);
+                    if (property.GetMethod.IsStatic || property.DeclaringType.IsValueType) il.EmitCall(property.SetMethod);
+                    else il.EmitCallvirt(property.SetMethod);
                     break;
                 default: throw new ArgumentException($"The input {member.GetType()} instance can't be written");
             }
