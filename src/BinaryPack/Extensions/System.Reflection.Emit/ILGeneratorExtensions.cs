@@ -110,11 +110,10 @@ namespace System.Reflection.Emit
         /// <typeparam name="T">The type of index to use</typeparam>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="index">The index of the argument to load the address for</param>
-        /// <param name="argumentType">The type of argument to load</param>
         /// <param name="member">The member that will be read from the loaded argument</param>
-        public static void EmitLoadArgumentForMemberRead<T>(this ILGenerator il, T index, Type argumentType, MemberInfo member) where T : Enum
+        public static void EmitLoadArgumentForMemberRead<T>(this ILGenerator il, T index, MemberInfo member) where T : Enum
         {
-            il.EmitLoadArgumentForMemberRead((int)(object)index, argumentType, member);
+            il.EmitLoadArgumentForMemberRead((int)(object)index, member);
         }
 
         /// <summary>
@@ -122,9 +121,8 @@ namespace System.Reflection.Emit
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
         /// <param name="index">The index of the argument to load the address for</param>
-        /// <param name="argumentType">The type of argument to load</param>
         /// <param name="member">The member that will be read from the loaded argument</param>
-        public static void EmitLoadArgumentForMemberRead(this ILGenerator il, int index, Type argumentType, MemberInfo member)
+        public static void EmitLoadArgumentForMemberRead(this ILGenerator il, int index, MemberInfo member)
         {
             switch (member)
             {
@@ -132,7 +130,7 @@ namespace System.Reflection.Emit
                     il.EmitLoadArgument(index);
                     break;
                 case PropertyInfo _:
-                    if (argumentType.IsValueType) il.EmitLoadArgumentAddress(index);
+                    if (member.DeclaringType.IsValueType) il.EmitLoadArgumentAddress(index);
                     else il.EmitLoadArgument(index);
                     break;
                 default: throw new ArgumentException($"The input {member.GetType()} instance can't be read");
