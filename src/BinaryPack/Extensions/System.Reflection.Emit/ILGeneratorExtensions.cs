@@ -189,6 +189,37 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
+        /// Loads the local variable at a specified index with the appropriate instruction to be able to write a given member
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load</param>
+        /// <param name="member">The member that will be read from the loaded argument</param>
+        public static void EmitLoadLocalForMemberWrite<T>(this ILGenerator il, T index, MemberInfo member) where T : Enum
+        {
+            il.EmitLoadLocalForMemberWrite((int)(object)index, member);
+        }
+
+        /// <summary>
+        /// Loads the local variable at a specified index with the appropriate instruction to be able to write a given member
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to load</param>
+        /// <param name="member">The member that will be read from the loaded local variable</param>
+        public static void EmitLoadLocalForMemberWrite(this ILGenerator il, int index, MemberInfo member)
+        {
+            switch (member)
+            {
+                case FieldInfo _:
+                case PropertyInfo _:
+                    if (member.DeclaringType.IsValueType) il.EmitLoadLocalAddress(index);
+                    else il.EmitLoadLocal(index);
+                    break;
+                default: throw new ArgumentException($"The input {member.GetType()} instance can't be read");
+            }
+        }
+
+        /// <summary>
         /// Puts the appropriate <see langword="stloc"/> instruction to write a local variable onto the stream of instructions
         /// </summary>
         /// <typeparam name="T">The type of index to use</typeparam>

@@ -276,7 +276,7 @@ namespace BinaryPack.Serialization.Processors
                 if (memberInfo.GetMemberType().IsUnmanaged())
                 {
                     // obj.Property = reader.Read<TProperty>();
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.BinaryReader.ReadT(memberInfo.GetMemberType()));
                     il.EmitWriteMember(memberInfo);
@@ -307,7 +307,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // case ListProcessor<T>.Id: obj.Property = ListProcessor<T>.Deserializer(ref reader);
                     il.MarkLabel(list);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(List<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
@@ -315,7 +315,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // case ArrayProcessor<T>.Id: obj.Property = ArrayProcessor<T>.Deserializer(ref reader);
                     il.MarkLabel(array);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(itemType.MakeArrayType()));
                     il.EmitWriteMember(memberInfo);
@@ -323,7 +323,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // case ICollectionProcessor<T>.Id: obj.Property = ICollectionProcessor<T>.Deserializer(ref reader);
                     il.MarkLabel(iCollection);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(ICollection<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
@@ -331,7 +331,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // case IReadOnlyCollectionProcessor<T>.Id: obj.Property = IReadOnlyCollectionProcessor<T>.Deserializer(ref reader);
                     il.MarkLabel(iReadOnlyCollection);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IReadOnlyCollection<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
@@ -339,7 +339,7 @@ namespace BinaryPack.Serialization.Processors
 
                     // default: obj.Property = IEnumerableProcessor<T>.Deserializer(ref reader);
                     il.MarkLabel(iEnumerable);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(IEnumerable<>).MakeGenericType(itemType)));
                     il.EmitWriteMember(memberInfo);
@@ -359,14 +359,14 @@ namespace BinaryPack.Serialization.Processors
                     il.Emit(OpCodes.Bne_Un_S, isNotDictionary);
 
                     // Dictionary<TKey, TValue> dictionary = DictionaryProcessor<TKey, TValue>.Deserializer(ref reader);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(Dictionary<,>).MakeGenericType(generics)));
                     il.Emit(OpCodes.Br_S, end);
 
                     // Dictionary<TKey, TValue> dictionary = TypeProcessor<TKey, TValue>.Deserializer(ref reader);
                     il.MarkLabel(isNotDictionary);
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(memberInfo.GetMemberType()));
 
@@ -377,7 +377,7 @@ namespace BinaryPack.Serialization.Processors
                 else
                 {
                     // Fallback to the right TypeProcessor<T> for all other types
-                    il.EmitLoadLocal(Locals.Read.T);
+                    il.EmitLoadLocalForMemberWrite(Locals.Read.T, memberInfo);
                     il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
                     il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(memberInfo.GetMemberType()));
                     il.EmitWriteMember(memberInfo);
