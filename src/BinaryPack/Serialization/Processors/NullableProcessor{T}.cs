@@ -41,7 +41,7 @@ namespace BinaryPack.Serialization.Processors
                     isNotNull = il.DefineLabel(),
                     write = il.DefineLabel();
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitLoadArgumentForMemberRead(Arguments.Write.T, HasValueField);
                 il.EmitReadMember(HasValueField);
                 il.Emit(OpCodes.Brtrue_S, isNotNull);
                 il.EmitLoadInt32(-1);
@@ -49,7 +49,7 @@ namespace BinaryPack.Serialization.Processors
 
                 // else writer.Write<sbyte>(obj.value);
                 il.MarkLabel(isNotNull);
-                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitLoadArgumentForMemberRead(Arguments.Write.T, ValueField);
                 il.EmitReadMember(ValueField);
                 il.MarkLabel(write);
                 il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(sbyte)));
@@ -65,7 +65,7 @@ namespace BinaryPack.Serialization.Processors
 
                 // writer.Write(hasValue = obj.hasValue);
                 il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                il.EmitLoadArgument(Arguments.Write.T);
+                il.EmitLoadArgumentForMemberRead(Arguments.Write.T, HasValueField);
                 il.EmitReadMember(HasValueField);
                 il.Emit(OpCodes.Dup);
                 il.EmitStoreLocal(Locals.Write.HasValue);
@@ -80,14 +80,14 @@ namespace BinaryPack.Serialization.Processors
                 {
                     // writer.Write(obj.value);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, ValueField);
                     il.EmitReadMember(ValueField);
                     il.EmitCall(KnownMembers.BinaryWriter.WriteT(typeof(T)));
                 }
                 else
                 {
                     // TypeProcessor<T>.Serializer(obj.value, ref writer);
-                    il.EmitLoadArgument(Arguments.Write.T);
+                    il.EmitLoadArgumentForMemberRead(Arguments.Write.T, ValueField);
                     il.EmitReadMember(ValueField);
                     il.EmitLoadArgument(Arguments.Write.RefBinaryWriter);
                     il.EmitCall(KnownMembers.TypeProcessor.SerializerInfo(typeof(T)));
