@@ -146,20 +146,11 @@ namespace BinaryPack.Serialization.Processors
 
                 // else { }
                 il.MarkLabel(isNotNull);
-                if (typeof(T).IsUnmanaged())
-                {
-                    // return reader.Read<T>();
-                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.BinaryReader.ReadT(typeof(T)));
-                    il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(new[] { typeof(T) }));
-                }
-                else
-                {
-                    // return TypeProcessor.Deserializer(ref reader);
-                    il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
-                    il.EmitCall(KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));
-                }
-                
+                il.EmitLoadArgument(Arguments.Read.RefBinaryReader);
+                il.EmitCall(typeof(T).IsUnmanaged()
+                    ? KnownMembers.BinaryReader.ReadT(typeof(T))                // return (T?)reader.Read<T>();
+                    : KnownMembers.TypeProcessor.DeserializerInfo(typeof(T)));  // return (T?)TypeProcessor.Deserializer(ref reader);
+                il.Emit(OpCodes.Newobj, typeof(T?).GetConstructor(new[] { typeof(T) }));
                 il.MarkLabel(end);
             }
 
