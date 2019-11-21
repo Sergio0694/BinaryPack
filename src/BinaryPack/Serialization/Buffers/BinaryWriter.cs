@@ -13,7 +13,7 @@ namespace BinaryPack.Serialization.Buffers
         /// <summary>
         /// The default size to use to create new <see cref="BinaryWriter"/> instances
         /// </summary>
-        public const int DefaultSize = 128;
+        public const int DefaultSize = 1024;
 
         /// <summary>
         /// The <see cref="byte"/> array current in use
@@ -85,7 +85,7 @@ namespace BinaryPack.Serialization.Buffers
         /// Ensures the buffer in use has the capacity to contain the specified amount of new data
         /// </summary>
         /// <param name="count">The size in bytes of the new data to insert into the buffer</param>
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureCapacity(int count)
         {
             int
