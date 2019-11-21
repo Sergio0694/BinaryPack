@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BinaryPack.Models;
 using BinaryPack.Models.Helpers;
 using BinaryPack.Serialization.Buffers;
 using BinaryPack.Serialization.Processors;
@@ -44,5 +45,16 @@ namespace BinaryPack.Unit.Internals
         [TestMethod]
         public void NullableDateTime2() => Test<DateTime>(DateTime.Now);
 
+        [TestMethod]
+        public void NullableManagedValueType1() => Test<ValidationValueTypeModel>(null);
+
+        [TestMethod]
+        public void NullableManagedValueType2()
+        {
+            ValidationValueTypeModel? model = new ValidationValueTypeModel();
+            model.Value.Initialize();
+
+            Test(model);
+        }
     }
 }

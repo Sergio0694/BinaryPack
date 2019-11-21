@@ -9,7 +9,7 @@ namespace BinaryPack.Models
     /// <summary>
     /// A value type model that does not respect the <see langword="unmanaged"/> constraint, used to help test the <see cref="ValidationReferenceTypeModel"/> type
     /// </summary>
-    public struct ValidationValueTypeModel : IInitializable, IEquatable<ValidationValueTypeModel?>
+    public struct ValidationValueTypeModel : IInitializable, IEquatable<ValidationValueTypeModel>, IEquatable<ValidationValueTypeModel?>
     {
         public bool P1 { get; set; }
 
@@ -26,14 +26,20 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
+        public bool Equals(ValidationValueTypeModel other)
+        {
+            return
+                P1 == other.P1 &&
+                P2.Equals(other.P2) &&
+                (P3 == null == (other.P3 == null) ||
+                 P3?.Zip(other.P3).All(t => t.First == t.Second) == true);
+        }
+
+        /// <inheritdoc/>
         public bool Equals(ValidationValueTypeModel? other)
         {
             if (!other.HasValue) return false;
-            return
-                P1 == other.Value.P1 &&
-                P2.Equals(other.Value.P2) &&
-                (P3 == null == (other.Value.P3 == null) ||
-                 P3?.Zip(other.Value.P3).All(t => t.First == t.Second) == true);
+            return Equals(other.Value);
         }
     }
 }
