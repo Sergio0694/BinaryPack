@@ -85,6 +85,59 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
+        /// Puts the appropriate <see langword="ldarga"/> instruction to read the address of an argument onto the stream of instructions
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load the address for</param>
+        public static void EmitLoadArgumentAddress<T>(this ILGenerator il, T index) where T : Enum => il.EmitLoadArgumentAddress((int)(object)index);
+
+        /// <summary>
+        /// Puts the appropriate <see langword="ldarga"/> instruction to read the address of an argument onto the stream of instructions
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load the address for</param>
+        public static void EmitLoadArgumentAddress(this ILGenerator il, int index)
+        {
+            if (index <= 255) il.Emit(OpCodes.Ldarga_S, (byte)index);
+            else if (index <= 65534) il.Emit(OpCodes.Ldarga, (short)index);
+            else throw new ArgumentOutOfRangeException($"Invalid argument index {index}");
+        }
+
+        /// <summary>
+        /// Loads the argument at a specified index with the appropriate instruction to be able to load a given member
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load the address for</param>
+        /// <param name="member">The member that will be read from the loaded argument</param>
+        public static void EmitLoadArgumentForMemberRead<T>(this ILGenerator il, T index, MemberInfo member) where T : Enum
+        {
+            il.EmitLoadArgumentForMemberRead((int)(object)index, member);
+        }
+
+        /// <summary>
+        /// Loads the argument at a specified index with the appropriate instruction to be able to load a given member
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load the address for</param>
+        /// <param name="member">The member that will be read from the loaded argument</param>
+        public static void EmitLoadArgumentForMemberRead(this ILGenerator il, int index, MemberInfo member)
+        {
+            switch (member)
+            {
+                case FieldInfo _:
+                    il.EmitLoadArgument(index);
+                    break;
+                case PropertyInfo _:
+                    if (member.DeclaringType.IsValueType) il.EmitLoadArgumentAddress(index);
+                    else il.EmitLoadArgument(index);
+                    break;
+                default: throw new ArgumentException($"The input {member.GetType()} instance can't be read");
+            }
+        }
+
+        /// <summary>
         /// Puts the appropriate <see langword="ldloc"/> instruction to read a local variable onto the stream of instructions
         /// </summary>
         /// <typeparam name="T">The type of index to use</typeparam>
@@ -133,6 +186,37 @@ namespace System.Reflection.Emit
             if (index <= 255) il.Emit(OpCodes.Ldloca_S, (byte)index);
             else if (index <= 65534) il.Emit(OpCodes.Ldloca, (short)index);
             else throw new ArgumentOutOfRangeException($"Invalid local index {index}");
+        }
+
+        /// <summary>
+        /// Loads the local variable at a specified index with the appropriate instruction to be able to write a given member
+        /// </summary>
+        /// <typeparam name="T">The type of index to use</typeparam>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the argument to load</param>
+        /// <param name="member">The member that will be read from the loaded argument</param>
+        public static void EmitLoadLocalForMemberWrite<T>(this ILGenerator il, T index, MemberInfo member) where T : Enum
+        {
+            il.EmitLoadLocalForMemberWrite((int)(object)index, member);
+        }
+
+        /// <summary>
+        /// Loads the local variable at a specified index with the appropriate instruction to be able to write a given member
+        /// </summary>
+        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
+        /// <param name="index">The index of the local variable to load</param>
+        /// <param name="member">The member that will be read from the loaded local variable</param>
+        public static void EmitLoadLocalForMemberWrite(this ILGenerator il, int index, MemberInfo member)
+        {
+            switch (member)
+            {
+                case FieldInfo _:
+                case PropertyInfo _:
+                    if (member.DeclaringType.IsValueType) il.EmitLoadLocalAddress(index);
+                    else il.EmitLoadLocal(index);
+                    break;
+                default: throw new ArgumentException($"The input {member.GetType()} instance can't be read");
+            }
         }
 
         /// <summary>
@@ -199,7 +283,8 @@ namespace System.Reflection.Emit
                     il.Emit(field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, field);
                     break;
                 case PropertyInfo property when property.CanWrite:
-                    il.EmitCall(property.GetMethod.IsStatic ? OpCodes.Call : OpCodes.Callvirt, property.SetMethod, null);
+                    if (property.GetMethod.IsStatic || property.DeclaringType.IsValueType) il.EmitCall(property.SetMethod);
+                    else il.EmitCallvirt(property.SetMethod);
                     break;
                 default: throw new ArgumentException($"The input {member.GetType()} instance can't be written");
             }
