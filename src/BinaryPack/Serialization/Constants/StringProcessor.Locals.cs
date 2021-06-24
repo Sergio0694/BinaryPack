@@ -1,5 +1,4 @@
-﻿using System;
-using BinaryPack.Attributes;
+﻿using BinaryPack.Attributes;
 
 namespace BinaryPack.Serialization.Processors
 {
@@ -16,16 +15,16 @@ namespace BinaryPack.Serialization.Processors
             public enum Write
             {
                 /// <summary>
-                /// The <see cref="byte"/>* local variable
-                /// </summary>
-                [LocalType(typeof(Span<byte>))]
-                SpanByte,
-
-                /// <summary>
                 /// The <see cref="int"/> local variable to track the length of the source <see cref="string"/>
                 /// </summary>
                 [LocalType(typeof(int))]
-                Length
+                Length,
+
+                /// <summary>
+                /// The <see cref="byte"/> array local variable
+                /// </summary>
+                [LocalType(typeof(byte[]))]
+                ByteArray
             }
 
             /// <summary>
@@ -40,10 +39,16 @@ namespace BinaryPack.Serialization.Processors
                 Length,
 
                 /// <summary>
-                /// The <see cref="byte"/>* pointer to the <see cref="string"/> data being read
+                /// The <see cref="string"/> local variable
                 /// </summary>
-                [LocalType(typeof(byte*))]
-                BytePtr
+                [LocalType(typeof(string))]
+                String,
+
+                /// <summary>
+                /// The <see cref="byte"/> array local variable
+                /// </summary>
+                [LocalType(typeof(byte[]))]
+                ByteArray
             }
         }
     }

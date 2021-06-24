@@ -399,17 +399,6 @@ namespace System.Reflection.Emit
         }
 
         /// <summary>
-        /// Loads a buffer of type <see cref="byte"/> onto the execution stack, through the use of <see langword="stackalloc"/>
-        /// </summary>
-        /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
-        /// <remarks>This method assumes that the size in bytes of the buffer to allocate is on top of the execution stack</remarks>
-        public static void EmitStackalloc(this ILGenerator il)
-        {
-            il.Emit(OpCodes.Conv_U);
-            il.Emit(OpCodes.Localloc);
-        }
-
-        /// <summary>
         /// Creates a new try block scope that is automatically closed when it's not needed anymore
         /// </summary>
         /// <param name="il">The input <see cref="ILGenerator"/> instance to use to emit instructions</param>
