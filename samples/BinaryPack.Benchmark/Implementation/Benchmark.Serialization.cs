@@ -109,7 +109,7 @@ namespace BinaryPack.Benchmark.Implementations
         {
             using Stream stream = new MemoryStream();
 
-            MessagePack.MessagePackSerializer.Serialize(stream, Model, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+            MessagePack.MessagePackSerializer.Serialize(stream, Model);
         }
 
         /// <summary>

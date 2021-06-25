@@ -106,7 +106,7 @@ namespace BinaryPack.Benchmark.Implementations
         {
             using Stream stream = new MemoryStream(MessagePackData);
 
-            _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+            _ = MessagePack.MessagePackSerializer.Deserialize<T>(stream);
         }
 
         /// <summary>

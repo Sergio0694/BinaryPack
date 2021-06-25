@@ -157,12 +157,12 @@ namespace BinaryPack.Benchmark.Implementations
             // MessagePack
             using (MemoryStream stream = new MemoryStream())
             {
-                MessagePack.MessagePackSerializer.Serialize(stream, Model, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+                MessagePack.MessagePackSerializer.Serialize(stream, Model);
 
                 MessagePackData = stream.GetBuffer();
 
                 stream.Seek(0, SeekOrigin.Begin);
-                deserializedModel = MessagePack.MessagePackSerializer.Deserialize<T>(stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+                deserializedModel = MessagePack.MessagePackSerializer.Deserialize<T>(stream);
 
                 if (!Model.Equals(deserializedModel)) throw new InvalidOperationException("Failed comparison with MessagePack");
             }

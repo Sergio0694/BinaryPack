@@ -1,6 +1,8 @@
 ﻿using System;
 using BinaryPack.Models.Interfaces;
 
+#nullable enable
+
 namespace BinaryPack.Models
 {
     /// <summary>
@@ -21,7 +23,7 @@ namespace BinaryPack.Models
         }
 
         /// <inheritdoc/>
-        public bool Equals(MessagePackSampleModel other)
+        public bool Equals(MessagePackSampleModel? other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;

@@ -45,7 +45,7 @@ namespace BinaryPack.Comparison.Implementation
             });
 
             // MessagePack
-            var messagePack = CalculateFileSize(stream => MessagePackSerializer.Serialize(stream, model, ContractlessStandardResolver.Instance));
+            var messagePack = CalculateFileSize(stream => MessagePackSerializer.Serialize(stream, model));
 
             // BinaryPack
             var binaryPack = CalculateFileSize(stream => BinaryConverter.Serialize(model, stream));
