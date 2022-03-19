@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>Sergio Pedri</Authors>
     <Company>Sergio Pedri</Company>
     <Description>A fast and memory efficient binary serialization library, powered by dynamic IL generation and inspired by MessagePack</Description>
@@ -14,8 +14,8 @@
     <RepositoryUrl>https://github.com/Sergio0694/BinaryPack</RepositoryUrl>
     <PackageTags>dotnet net netcore netstandard csharp library compression serialization json messagepack binary pack</PackageTags>
     <PackageIconUrl>https://i.imgur.com/PyEEJrt.png</PackageIconUrl>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <PackageReleaseNotes>• Fixed a stackoverflow with invalid data</PackageReleaseNotes>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <PackageReleaseNotes>• Fixed string deserialization with non-ASCII characters</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
