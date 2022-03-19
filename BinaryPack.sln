@@ -1,7 +1,6 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29411.108
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack", "src\BinaryPack\BinaryPack.csproj", "{F687958F-FCF9-430F-9C5E-857DD9C43DBA}"
 EndProject
@@ -24,11 +23,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack.Benchmark", "sam
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack.Unit.Internals", "unit\BinaryPack.Unit.Internals\BinaryPack.Unit.Internals.csproj", "{5BE9164D-2E4D-4CA3-A673-E9120A8EC597}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryPack.Comparison", "samples\BinaryPack.Comparison\BinaryPack.Comparison.csproj", "{A1501CED-18CF-475A-98F0-A2658C23B686}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinaryPack.Comparison", "samples\BinaryPack.Comparison\BinaryPack.Comparison.csproj", "{A1501CED-18CF-475A-98F0-A2658C23B686}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		unit\BinaryPack.Models\BinaryPack.Models.projitems*{44d0250e-ac2d-48af-a426-847ef917d151}*SharedItemsImports = 13
+		unit\BinaryPack.Models\BinaryPack.Models.projitems*{4d7b806f-68f3-4493-98ca-e78760d4f94f}*SharedItemsImports = 5
+		unit\BinaryPack.Models\BinaryPack.Models.projitems*{5be9164d-2e4d-4ca3-a673-e9120a8ec597}*SharedItemsImports = 5
+		unit\BinaryPack.Models\BinaryPack.Models.projitems*{a1501ced-18cf-475a-98f0-a2658c23b686}*SharedItemsImports = 5
+		unit\BinaryPack.Models\BinaryPack.Models.projitems*{daa147b5-fc6c-4e96-a068-797ef15ef702}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
