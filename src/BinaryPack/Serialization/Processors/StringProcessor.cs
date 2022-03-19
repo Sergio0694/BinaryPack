@@ -66,11 +66,12 @@ namespace BinaryPack.Serialization.Processors
             il.EmitCallvirt(typeof(ArrayPool<byte>).GetMethod(nameof(ArrayPool<byte>.Rent)));
             il.EmitStoreLocal(Locals.Write.ByteArray);
 
-            // _ = Encoding.UTF8.GetBytes(obj, 0, length, array, 0);
+            // _ = Encoding.UTF8.GetBytes(obj, 0, obj.Length, array, 0);
             il.EmitReadMember(typeof(Encoding).GetProperty(nameof(Encoding.UTF8)));
             il.EmitLoadArgument(Arguments.Write.T);
-            il.EmitLoadInt32(0);
-            il.EmitLoadLocal(Locals.Write.Length);
+            il.EmitLoadInt32(0);            
+            il.EmitLoadArgument(Arguments.Write.T);
+            il.EmitReadMember(typeof(string).GetProperty(nameof(string.Length)));
             il.EmitLoadLocal(Locals.Write.ByteArray);
             il.EmitLoadInt32(0);
             il.EmitCallvirt(typeof(Encoding).GetMethod(nameof(Encoding.GetBytes), new[] { typeof(string), typeof(int), typeof(int), typeof(byte[]), typeof(int) }));
